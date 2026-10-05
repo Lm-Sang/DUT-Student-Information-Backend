@@ -1,0 +1,39 @@
+{
+  "name": "dut-student-information-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.js",
+  "type": "module",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "check": "node --check src/server.js",
+    "test:db": "node scripts/test-database.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lm-Sang/DUT-Student-Information-Backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Lm-Sang/DUT-Student-Information-Backend/issues"
+  },
+  "homepage": "https://github.com/Lm-Sang/DUT-Student-Information-Backend#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mssql": "^12.7.3",
+    "ssh2": "^1.17.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
