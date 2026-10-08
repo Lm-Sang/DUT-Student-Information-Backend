@@ -15,6 +15,27 @@ function parseBoolean(value, fallback = false) {
   return value.toLowerCase() === 'true';
 }
 
+function parseInteger(name, value, fallback, min, max) {
+  const number = Number(value ?? fallback);
+  if (!Number.isInteger(number) || number < min || number > max) {
+    throw new Error(`${name} must be an integer between ${min} and ${max}.`);
+  }
+  return number;
+}
+
+function parseBaseUrl(name, value) {
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`${name} must be an absolute HTTP(S) URL.`);
+  }
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
+    throw new Error(`${name} must be an HTTP(S) URL without credentials, query or fragment.`);
+  }
+  return url.href.replace(/\/$/, '');
+}
+
 function parseList(value) {
   return (value ?? '')
     .split(',')
@@ -112,5 +133,25 @@ export const env = Object.freeze({
       process.env.MICROSOFT_SSO_ADMIN_CALLBACK_URL ??
       'http://localhost:3003/api/admin/auth/microsoft/callback',
     jwtSecret: process.env.MICROSOFT_SSO_JWT_SECRET ?? '',
+  }),
+  curriculum: Object.freeze({
+    primaryDatabase: process.env.CURRICULUM_PRIMARY_DATABASE || 'DHBK_CDS',
+    metadataDatabase: process.env.CURRICULUM_METADATA_DATABASE || 'DATA_GVien1',
+  }),
+  publicApis: Object.freeze({
+    sources: Object.freeze({
+      'course-registration': parseBaseUrl(
+        'COURSE_REGISTRATION_API_BASE_URL',
+        process.env.COURSE_REGISTRATION_API_BASE_URL ?? 'https://dangkytinchi.dut.udn.vn',
+      ),
+      tkb: parseBaseUrl(
+        'TKB_API_BASE_URL',
+        process.env.TKB_API_BASE_URL ?? 'https://timetable.dut.udn.vn',
+      ),
+    }),
+    timeoutMs: parseInteger('PUBLIC_API_TIMEOUT_MS', process.env.PUBLIC_API_TIMEOUT_MS, 8000, 100, 60000),
+    maxResponseBytes: parseInteger(
+      'PUBLIC_API_MAX_RESPONSE_BYTES', process.env.PUBLIC_API_MAX_RESPONSE_BYTES, 5242880, 1024, 20971520,
+    ),
   }),
 });

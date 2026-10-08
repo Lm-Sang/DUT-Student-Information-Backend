@@ -11,6 +11,8 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "check": "node --check src/server.js",
+    "test": "node --test tests/public-api.test.js tests/curriculum-api.test.js",
+    "test:curriculum:live": "node scripts/smoke-curriculum-api.js",
     "test:db": "node scripts/test-database.js"
   },
   "repository": {

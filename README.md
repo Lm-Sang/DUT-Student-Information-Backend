@@ -13,6 +13,34 @@ npm run dev
 
 Kiem tra server tai `GET /api/health`.
 
+## API public
+
+Da trien khai 39 route GET goi HTTP den Course Registration/TKB va 2 route GET
+doc SQL cho danh sach/khung CTDT tai `/api/public`. Cac route khong yeu cau dang nhap.
+
+- `/api/public/course-registration/*`: khoa, nganh, giang vien, lop,
+  chuong trinh dao tao, hoc ky, lop hoc phan va dot dang ky.
+- `/api/public/tkb/*`: danh muc, phong hoc, thoi khoa bieu va thong ke.
+- `/api/public/academic-programs?facultyId=102`: danh sach CTDT cong bo theo khoa.
+- `/api/public/academic-programs/1021049/curriculum`: tong quan, hoc phan,
+  hoc phan thay the va dieu kien cua toan bo khung CTDT.
+
+Khung CTDT doc `primary -> DHBK_CDS`, bo sung metadata tu
+`secondary -> DATA_GVien1`. Da kiem tra ca 91 CTDT khoa CNTT qua API:
+7244 dong khung va 5883 dieu kien. CTDT `1024045` moi co hoc ky 1-2 trong nguon;
+response bao cac hoc ky chua co du lieu qua `coverage`.
+Xem [cach goi API khung, response va bang/cot SQL](docs/CURRICULUM_API.md).
+
+Base URL mac dinh la `https://dangkytinchi.dut.udn.vn` va
+`https://timetable.dut.udn.vn`, cau hinh qua `COURSE_REGISTRATION_API_BASE_URL`
+va `TKB_API_BASE_URL`. Course Registration da kiem tra goi thanh cong;
+dia chi TKB hien tra `404` voi route `/api/Faculty` cua source `tkb-be`.
+Ung dung `d_dut` goi bo route khac, `/api/Timetable/*`, bang token SSO;
+kiem tra khong token tra `401`. Cac route TKB ca nhan nay chua mount trong `src`.
+
+Xem [danh sach route, query va response](docs/PUBLIC_API_INTEGRATION.md).
+Chay bo kiem thu API bang `npm test`.
+
 ## Cau hinh moi truong
 
 Sao chep `.env.example` thanh `.env` va dien cac gia tri bi mat. Backend chay
@@ -68,6 +96,8 @@ src/
 |   |-- students/  # API nghiep vu cua student
 |   |-- admin/     # API nghiep vu cua admin
 |   |-- users/     # User data dung chung
+|   |-- public/    # Public GET integrations: Course Registration/TKB
+|   |-- curriculum/ # Public programs and full curricula from SQL
 |   `-- health/
 |-- shared/        # Middleware, error va utility dung chung
 |-- app.js         # Khoi tao Express app
@@ -78,7 +108,12 @@ Moi module export `{ basePath, router }` qua `index.js` va duoc mount trong
 `src/app.js`. Ben trong module, luong phu thuoc la:
 
 `route -> controller -> service -> repository`.
+Module public dung `HTTP client` thay cho repository de goi BE nguon.
 
 ## Tai lieu kien truc
 
 - [Thiet ke SSO va tich hop Course Registration](docs/AUTH_AND_COURSE_REGISTRATION_INTEGRATION.md)
+- [API public da trien khai](docs/PUBLIC_API_INTEGRATION.md)
+- [API danh sach va khung CTDT doc SQL](docs/CURRICULUM_API.md)
+- [Nguon khung chuong trinh dao tao chung tren sv.dut.udn.vn](docs/PUBLIC_CURRICULUM_SOURCE.md)
+- [Truy nguon SQL va JSON danh muc/khung CTDT theo khoa](docs/CURRICULUM_DATABASE_TRACE.md)
