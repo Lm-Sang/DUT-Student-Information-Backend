@@ -11,6 +11,8 @@ npm install
 npm run dev
 ```
 
+Yeu cau Node.js >= 24 de dung SQLite tich hop cho kho state/phien SSO.
+
 Kiem tra server tai `GET /api/health`.
 
 ## API public
@@ -84,7 +86,12 @@ Microsoft SSO trong `D:\res\course-registration` su dung cong SSO cua truong
 Entra ID. Hai bien callback phia tren la redirect URL gui den cong SSO, can
 duoc cong SSO chap nhan. Repo tham khao khong cung cap tenant ID, client ID hay
 SSO signing secret that. `MICROSOFT_SSO_JWT_SECRET` can duoc cap rieng truoc khi
-co the xac thuc token SSO. Cac route auth hien moi la khung, chua xu ly callback.
+co the xac thuc token SSO. Da dung khung login/callback/me/logout cho sinh vien;
+state dung mot lan, logout thu hoi JWT ngay qua kho SQLite. Callback frontend
+de trong (`STUDENT_SSO_FRONTEND_CALLBACK_URL=`) cho doi frontend ghep sau;
+API doi code mot lan thanh JWT da san sang. Phan quyen de `pending`
+cho ban bo sung sau. Auth admin tach rieng tai `src/modules/auth/admin/` va tat
+mac dinh (`ENABLE_ADMIN_AUTH=false`). Xem [khung SSO va note phan quyen](docs/SSO_SCAFFOLD.md).
 
 ## Cau truc source
 
@@ -92,7 +99,7 @@ co the xac thuc token SSO. Cac route auth hien moi la khung, chua xu ly callback
 src/
 |-- config/        # Bien moi truong va ket noi database
 |-- modules/
-|   |-- auth/      # Shared SSO logic; student/admin entry points
+|   |-- auth/      # Student SSO + shared logic; admin/ is optional, disabled by default
 |   |-- students/  # API nghiep vu cua student
 |   |-- admin/     # API nghiep vu cua admin
 |   |-- users/     # User data dung chung
@@ -112,6 +119,7 @@ Module public dung `HTTP client` thay cho repository de goi BE nguon.
 
 ## Tai lieu kien truc
 
+- [Khung SSO da trien khai va note bo sung cac cap quyen](docs/SSO_SCAFFOLD.md)
 - [Thiet ke SSO va tich hop Course Registration](docs/AUTH_AND_COURSE_REGISTRATION_INTEGRATION.md)
 - [API public da trien khai](docs/PUBLIC_API_INTEGRATION.md)
 - [API danh sach va khung CTDT doc SQL](docs/CURRICULUM_API.md)

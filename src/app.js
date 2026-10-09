@@ -3,7 +3,7 @@ import helmet from 'helmet';
 
 import { corsMiddleware } from './config/cors.js';
 import adminModule from './modules/admin/index.js';
-import { adminAuthModule, studentAuthModule } from './modules/auth/index.js';
+import { studentAuthModule } from './modules/auth/index.js';
 import defaultCurriculumModule from './modules/curriculum/index.js';
 import healthModule from './modules/health/index.js';
 import defaultPublicModule from './modules/public/index.js';
@@ -15,7 +15,6 @@ import { notFoundHandler } from './shared/middlewares/not-found.middleware.js';
 const modules = [
   healthModule,
   studentAuthModule,
-  adminAuthModule,
   studentsModule,
   adminModule,
   usersModule,
@@ -24,6 +23,7 @@ const modules = [
 export function createApp({
   publicModule = defaultPublicModule,
   curriculumModule = defaultCurriculumModule,
+  adminAuthModule,
 } = {}) {
   const app = express();
 
@@ -35,6 +35,8 @@ export function createApp({
   for (const module of [...modules, publicModule, curriculumModule]) {
     app.use(module.basePath, module.router);
   }
+
+  if (adminAuthModule) app.use(adminAuthModule.basePath, adminAuthModule.router);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

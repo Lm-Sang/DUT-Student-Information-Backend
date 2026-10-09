@@ -4,6 +4,7 @@
   "description": "",
   "main": "src/server.js",
   "type": "module",
+  "engines": { "node": ">=24.0.0" },
   "directories": {
     "doc": "docs"
   },
@@ -11,7 +12,7 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "check": "node --check src/server.js",
-    "test": "node --test tests/public-api.test.js tests/curriculum-api.test.js",
+    "test": "node --test tests/public-api.test.js tests/curriculum-api.test.js tests/auth-api.test.js",
     "test:curriculum:live": "node scripts/smoke-curriculum-api.js",
     "test:db": "node scripts/test-database.js"
   },

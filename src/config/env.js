@@ -77,6 +77,14 @@ const corsOrigins = Object.freeze(
 export const env = Object.freeze({
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: parsePort('PORT', process.env.PORT, 3003),
+  features: Object.freeze({
+    adminAuthEnabled: parseBoolean(process.env.ENABLE_ADMIN_AUTH, false),
+  }),
+  auth: Object.freeze({
+    databasePath: process.env.AUTH_DATABASE_PATH || '.data/auth.sqlite',
+    stateTtlMs: 600000,
+    handoffTtlMs: 60000,
+  }),
   app: Object.freeze({
     name: process.env.APP_NAME ?? 'DUT Student Information Backend',
     url: process.env.APP_URL ?? 'http://localhost:3003',
@@ -133,6 +141,10 @@ export const env = Object.freeze({
       process.env.MICROSOFT_SSO_ADMIN_CALLBACK_URL ??
       'http://localhost:3003/api/admin/auth/microsoft/callback',
     jwtSecret: process.env.MICROSOFT_SSO_JWT_SECRET ?? '',
+    jwtIssuer: process.env.MICROSOFT_SSO_JWT_ISSUER || undefined,
+    jwtAudience: process.env.MICROSOFT_SSO_JWT_AUDIENCE || undefined,
+    studentFrontendCallbackUrl: process.env.STUDENT_SSO_FRONTEND_CALLBACK_URL || '',
+    adminFrontendCallbackUrl: process.env.ADMIN_SSO_FRONTEND_CALLBACK_URL || '',
   }),
   curriculum: Object.freeze({
     primaryDatabase: process.env.CURRICULUM_PRIMARY_DATABASE || 'DHBK_CDS',
