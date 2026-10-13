@@ -2,6 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 
 import { corsMiddleware } from './config/cors.js';
+import defaultAnnouncementsModule from './modules/announcements/index.js';
 import adminModule from './modules/admin/index.js';
 import { studentAuthModule } from './modules/auth/index.js';
 import defaultCurriculumModule from './modules/curriculum/index.js';
@@ -23,6 +24,7 @@ const modules = [
 export function createApp({
   publicModule = defaultPublicModule,
   curriculumModule = defaultCurriculumModule,
+  announcementsModule = defaultAnnouncementsModule,
   adminAuthModule,
 } = {}) {
   const app = express();
@@ -32,7 +34,7 @@ export function createApp({
   app.use(corsMiddleware);
   app.use(express.json());
 
-  for (const module of [...modules, publicModule, curriculumModule]) {
+  for (const module of [...modules, publicModule, curriculumModule, announcementsModule]) {
     app.use(module.basePath, module.router);
   }
 

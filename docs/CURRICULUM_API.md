@@ -9,6 +9,7 @@ không yêu cầu đăng nhập hoặc token SSO. Module đọc SQL bằng tài 
 | --- | --- | --- |
 | GET | `/api/public/academic-programs?facultyId=102` | Toàn bộ CTĐT công bố của khoa CNTT, mặc định trình độ Đại học |
 | GET | `/api/public/academic-programs/1021049/curriculum` | Tổng quan, toàn bộ dòng khung và điều kiện của một CTĐT |
+| GET | `/api/public/academic-programs/1024034/curriculum` | CTĐT trong ảnh tham chiếu: 62 dòng khung và 50 điều kiện học phần (kiểm tra ngày 11/10/2026) |
 
 ```powershell
 npm run dev
@@ -85,9 +86,10 @@ Response lỗi dùng `{ "success": false, "message": "..." }`:
 ```dotenv
 CURRICULUM_PRIMARY_DATABASE=DHBK_CDS
 CURRICULUM_METADATA_DATABASE=DATA_GVien1
+CURRICULUM_REQUIREMENTS_DATABASE=DATA_SV2
 ```
 
-Hai biến có các giá trị trên làm mặc định, dùng cùng cấu hình SQL/SSH và tài khoản
+Ba biến có các giá trị trên làm mặc định, dùng cùng cấu hình SQL/SSH và tài khoản
 `DB_PRIMARY_*`, `DB_SECONDARY_*` hiện có. Kết nối mở khi gọi module lần đầu;
 khởi động app và các API khác không cần chờ SQL. Các lần gọi đồng thời dùng chung pool.
 
@@ -97,14 +99,14 @@ khởi động app và các API khác không cần chờ SQL. Các lần gọi �
 | `primary` → `DHBK_CDS` | `DonVi`: `MaDV`, `TenDV`; mã khoa qua `LEFT(tmNganh.MaNganh,3)` |
 | `primary` → `DHBK_CDS` | `tmKhungCT`: `ID`, `MaKhung`, `MaHP`, `MaHPTT`, `Hocky`, `Kyhoc`, `STT`, `Tuchon`, `HTDA`, `TQDA`, `DATN`, `Note`, `LoaiKT`, `NhomKT` |
 | `primary` → `DHBK_CDS` | `tmHocPhan`: `MaHP`, `TenHP`, `KyHieu`, `SoTC` |
-| `primary` → `DHBK_CDS` | `tmHocphanDK`: `ID`, `MaKhung`, `MaHP`, `MaHPdk`, `LoaiDK`, `Hoac`, `Ghichu` |
+| `primary` → `DATA_SV2` | `tmHocphanDK`: `ID`, `MaKhung`, `MaHP`, `MaHPdk`, `LoaiDK`, `Hoac`, `Ghichu`; `tmHocPhan.TenHP` cho tên môn điều kiện |
 | `secondary` → `DATA_GVien1` | `tmNganhQG`: `MaNganhQG`, `TenNganhQG`, `CapDT` để lấy tên ngành quốc gia |
 | `secondary` → `DATA_GVien1` | `tmNganh`: `MaNganh`, `BatDau`, `KetThuc` để bổ sung ngày còn thiếu |
 | `secondary` → `DATA_GVien1` | `tmHocPhan`: `MaHP`, `TenHP`, `KyHieu`, `SoTC` để bổ sung metadata học phần còn thiếu |
 
-Danh mục và mọi truy vấn khung/điều kiện đều lọc `PubWeb=1 AND InUse=1`.
-Nguồn thứ hai chỉ bổ sung metadata còn thiếu và tên ngành quốc gia;
-tập mã CTĐT, dòng khung và điều kiện lấy từ nguồn chính. Truy vấn dùng SELECT và tham số SQL.
+Danh mục và truy vấn khung lọc `PubWeb=1 AND InUse=1`.
+Nguồn metadata chỉ bổ sung thông tin còn thiếu và tên ngành quốc gia.
+Điều kiện học phần lấy từ `DATA_SV2` sau khi xác nhận CTĐT được công bố trong nguồn chính. Truy vấn dùng SELECT và tham số SQL.
 Điều kiện lấy riêng để không nhân số dòng môn. API đọc SQL mỗi lần gọi;
 không đọc các file JSON đã xuất trong `docs/data`.
 

@@ -149,6 +149,7 @@ export const env = Object.freeze({
   curriculum: Object.freeze({
     primaryDatabase: process.env.CURRICULUM_PRIMARY_DATABASE || 'DHBK_CDS',
     metadataDatabase: process.env.CURRICULUM_METADATA_DATABASE || 'DATA_GVien1',
+    requirementsDatabase: process.env.CURRICULUM_REQUIREMENTS_DATABASE || 'DATA_SV2',
   }),
   publicApis: Object.freeze({
     sources: Object.freeze({

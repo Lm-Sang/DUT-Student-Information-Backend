@@ -154,6 +154,7 @@ function poolFixture(handler, calls) {
 test('SQL repository enforces public scope and supplements metadata without replacing curriculum rows', async () => {
   const primaryCalls = [];
   const secondaryCalls = [];
+  const requirementCalls = [];
   const connectionCalls = [];
   const primary = poolFixture(() => ({ recordsets: [
     [{ ...program, MajorName: undefined }],
@@ -162,8 +163,10 @@ test('SQL repository enforces public scope and supplements metadata without repl
       { ...course, ID: 2, KyHieu: null, SoTC: 0, TenHP: 'Primary course name' },
       { ...course, ID: 3, MaHP: '9999999', TenHP: null, SoTC: null },
     ],
-    [{ ID: 1, MaHP: '1025060', MaHPdk: '3190320', RequiredCourseName: null, LoaiDK: 0 }],
   ] }), primaryCalls);
+  const requirements = poolFixture(() => ({ recordset: [
+    { ID: 1, MaHP: '1025060', MaHPdk: '3190320', RequiredCourseName: null, LoaiDK: 0 },
+  ] }), requirementCalls);
   const secondary = poolFixture((statement, inputs) => {
     assert.ok(!statement.includes('1024045'), 'Program code must be bound as a parameter.');
     if (statement.includes('dbo.tmHocPhan')) {
@@ -182,10 +185,10 @@ test('SQL repository enforces public scope and supplements metadata without repl
     return { recordset: [{ MaNganh: '1024045', BatDau: '2026-08-25', KetThuc: '2031-01-01' }] };
   }, secondaryCalls);
   const repository = createCurriculumRepository({
-    database: { primaryDatabase: 'DHBK_CDS', metadataDatabase: 'DATA_GVien1' },
+    database: { primaryDatabase: 'DHBK_CDS', metadataDatabase: 'DATA_GVien1', requirementsDatabase: 'DATA_SV2' },
     connect: async (account, database) => {
       connectionCalls.push({ account, database });
-      return account === 'primary' ? primary : secondary;
+      return database === 'DATA_SV2' ? requirements : account === 'primary' ? primary : secondary;
     },
   });
   assert.equal(connectionCalls.length, 0, 'Importing/building the module must not connect to SQL.');
@@ -196,6 +199,7 @@ test('SQL repository enforces public scope and supplements metadata without repl
   assert.deepEqual(connectionCalls, [
     { account: 'primary', database: 'DHBK_CDS' },
     { account: 'secondary', database: 'DATA_GVien1' },
+    { account: 'primary', database: 'DATA_SV2' },
   ]);
   assert.equal(first.program.BatDau, '2026-08-25');
   assert.equal(first.program.MajorName, 'Công nghệ thông tin');
@@ -208,10 +212,16 @@ test('SQL repository enforces public scope and supplements metadata without repl
   assert.equal(first.requirements[0].RequiredCourseName, 'Giải tích');
   for (const call of primaryCalls) {
     assert.deepEqual(call.inputs, { programId: '1024045' });
-    assert.equal((call.statement.match(/n\.PubWeb = 1 AND n\.InUse = 1/g) ?? []).length, 3);
+    assert.equal((call.statement.match(/n\.PubWeb = 1 AND n\.InUse = 1/g) ?? []).length, 2);
     assert.match(call.statement, /LEFT JOIN dbo\.tmHocPhan/);
     assert.ok(!call.statement.includes('1024045'));
     assert.ok(!/DELETE|UPDATE|INSERT|\bEXEC\b/i.test(call.statement));
+  }
+  assert.equal(requirementCalls.length, 2);
+  for (const call of requirementCalls) {
+    assert.deepEqual(call.inputs, { programId: '1024045' });
+    assert.match(call.statement, /FROM dbo\.tmHocphanDK/);
+    assert.ok(!call.statement.includes('1024045'));
   }
   assert.equal(secondaryCalls.length, 6);
 });
@@ -219,11 +229,15 @@ test('SQL repository enforces public scope and supplements metadata without repl
 test('SQL list uses bound faculty and education filters; unpublished detail cannot leak orphan rows', async () => {
   const calls = [];
   const secondaryCalls = [];
+  const connections = [];
   const repository = createCurriculumRepository({
-    connect: async (account) => account === 'primary'
-      ? poolFixture((statement) => statement.includes('dbo.tmKhungCT')
-        ? { recordsets: [[], [course], []] } : { recordset: [] }, calls)
-      : poolFixture(() => { throw new Error('Unexpected supplemental query'); }, secondaryCalls),
+    connect: async (account, database) => {
+      connections.push({ account, database });
+      return account === 'primary'
+        ? poolFixture((statement) => statement.includes('dbo.tmKhungCT')
+          ? { recordsets: [[], [course]] } : { recordset: [] }, calls)
+        : poolFixture(() => { throw new Error('Unexpected supplemental query'); }, secondaryCalls);
+    },
   });
   assert.deepEqual(await repository.listPrograms({ facultyId: '101', educationLevelCode: 'CD02' }), []);
   assert.equal(await repository.getCurriculum('9999999'), null);
@@ -231,6 +245,7 @@ test('SQL list uses bound faculty and education filters; unpublished detail cann
   assert.match(calls[0].statement, /n\.CapDT = @educationLevelCode/);
   assert.match(calls[0].statement, /n\.PubWeb = 1 AND n\.InUse = 1/);
   assert.deepEqual(secondaryCalls, []);
+  assert.ok(!connections.some(({ database }) => database === 'DATA_SV2'));
 });
 
 test('a failed initial SQL connection can be retried', async () => {

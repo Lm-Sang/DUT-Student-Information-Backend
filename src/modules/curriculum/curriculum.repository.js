@@ -41,6 +41,7 @@ export function createCurriculumRepository({
   // Initialize lazily and once per module, including simultaneous first requests.
   // Startup and unrelated APIs do not require SQL or SSH to be available.
   let connectionPromise;
+  let requirementsPromise;
   function getConnections() {
     connectionPromise ??= (async () => {
       const primary = await connect('primary', database.primaryDatabase);
@@ -51,6 +52,15 @@ export function createCurriculumRepository({
       throw error;
     });
     return connectionPromise;
+  }
+
+  function getRequirementsConnection() {
+    requirementsPromise ??= connect('primary', database.requirementsDatabase || 'DATA_SV2')
+      .catch((error) => {
+        requirementsPromise = undefined;
+        throw error;
+      });
+    return requirementsPromise;
   }
 
   async function supplementPrograms(secondary, programs) {
@@ -94,8 +104,7 @@ export function createCurriculumRepository({
 
     async getCurriculum(programId) {
       const { primary, secondary } = await getConnections();
-      // Separate result sets prevent multiplying curriculum rows by the number
-      // of requirements. Every SELECT enforces the same public visibility rule.
+      // The primary source defines which programs and curriculum rows are public.
       const result = await primary.request().input('programId', sql.NVarChar(7), programId).query(`
         ${programSelect}
         WHERE n.MaNganh = @programId AND n.PubWeb = 1 AND n.InUse = 1;
@@ -108,17 +117,23 @@ export function createCurriculumRepository({
         LEFT JOIN dbo.tmHocPhan hp ON hp.MaHP = ct.MaHP
         WHERE ct.MaKhung = @programId AND n.PubWeb = 1 AND n.InUse = 1
         ORDER BY ct.Hocky, ct.STT, ct.ID;
-
-        SELECT dk.ID, dk.MaHP, dk.MaHPdk, dk.LoaiDK, dk.Hoac, dk.Ghichu,
-               hp.TenHP AS RequiredCourseName
-        FROM dbo.tmHocphanDK dk
-        JOIN dbo.tmNganh n ON n.MaNganh = dk.MaKhung
-        LEFT JOIN dbo.tmHocPhan hp ON hp.MaHP = dk.MaHPdk
-        WHERE dk.MaKhung = @programId AND n.PubWeb = 1 AND n.InUse = 1
-        ORDER BY dk.MaHP, dk.LoaiDK, dk.ID;
       `);
-      const [programs, courses, requirements] = result.recordsets;
+      const [programs, courses] = result.recordsets;
       if (programs.length === 0) return null;
+
+      // DATA_SV2 has the course relationships shown by the student portal.
+      // The primary program check above is the public visibility gate.
+      const requirementsPool = await getRequirementsConnection();
+      const requirementResult = await requirementsPool.request()
+        .input('programId', sql.NVarChar(7), programId).query(`
+          SELECT dk.ID, dk.MaHP, dk.MaHPdk, dk.LoaiDK, dk.Hoac, dk.Ghichu,
+                 hp.TenHP AS RequiredCourseName
+          FROM dbo.tmHocphanDK dk
+          LEFT JOIN dbo.tmHocPhan hp ON hp.MaHP = dk.MaHPdk
+          WHERE dk.MaKhung = @programId
+          ORDER BY dk.MaHP, dk.LoaiDK, dk.ID;
+        `);
+      const requirements = requirementResult.recordset;
 
       const codes = [
         ...courses.filter((row) => missing(row.TenHP) || missing(row.KyHieu) || row.SoTC == null)

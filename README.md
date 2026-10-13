@@ -125,3 +125,4 @@ Module public dung `HTTP client` thay cho repository de goi BE nguon.
 - [API danh sach va khung CTDT doc SQL](docs/CURRICULUM_API.md)
 - [Nguon khung chuong trinh dao tao chung tren sv.dut.udn.vn](docs/PUBLIC_CURRICULUM_SOURCE.md)
 - [Truy nguon SQL va JSON danh muc/khung CTDT theo khoa](docs/CURRICULUM_DATABASE_TRACE.md)
+- [API thong bao phan trang tu DATA_SV1](docs/ANNOUNCEMENTS_API.md)
