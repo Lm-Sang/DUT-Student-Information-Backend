@@ -1,4 +1,4 @@
-import { studentRouter } from './student.routes.js';
+import { studentRouter } from './routes/student.routes.js';
 
 export default {
   basePath: '/api/students',

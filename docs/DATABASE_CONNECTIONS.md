@@ -39,7 +39,7 @@ Ví dụ hai thao tác chỉ đọc, thực hiện đồng thời trên hai inst
 import {
   connectDatabase,
   queryLocalDatabase,
-} from '../../infrastructure/database/index.js';
+} from '../../../infrastructure/database/index.js';
 
 const [schoolPool, localResult] = await Promise.all([
   connectDatabase('primary', 'DHBK_CDS'),

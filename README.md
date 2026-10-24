@@ -8,6 +8,9 @@ Xem [cấu trúc feature và cách chia việc](docs/ARCHITECTURE.md) và
 [quy ước đóng góp](CONTRIBUTING.md). Mỗi feature có code và test riêng;
 `course-registration` và `timetable` được tách độc lập.
 
+Các tầng bên trong feature: `controllers`, `services`, `repositories`, `dto`,
+`mappers`, `routes`. Xem [trách nhiệm và mẫu thêm các lớp](docs/LAYERS.md).
+
 ## Chay du an
 
 ```bash
@@ -141,6 +144,9 @@ test lien feature va kiem tra kien truc nam trong `tests/`.
 Ben trong module, luong phu thuoc la:
 
 `route -> controller -> service -> repository`.
+
+Request DTO kiểm tra/chuẩn hóa input; mapper chuyển dữ liệu nguồn sang response
+DTO. Các file nằm trong thư mục cùng tên tầng bên trong từng feature.
 Course Registration/TKB dung adapter chung `shared/http` va HTTP client trong
 `infrastructure/http` de goi BE nguon. Danh sach route va validation schema
 van thuoc tung feature.

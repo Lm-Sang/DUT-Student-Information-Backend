@@ -1,5 +1,5 @@
 import { createReadApiModule } from '../../shared/http/create-read-api-module.js';
-import { timetableEndpoints } from './timetable.endpoints.js';
+import { timetableEndpoints } from './routes/timetable.endpoints.js';
 
 export function createTimetableModule(clientOptions) {
   return createReadApiModule({

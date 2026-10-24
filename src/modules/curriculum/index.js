@@ -1,7 +1,7 @@
-import { createCurriculumController } from './curriculum.controller.js';
-import { createCurriculumRepository } from './curriculum.repository.js';
-import { createCurriculumRouter } from './curriculum.routes.js';
-import { createCurriculumService } from './curriculum.service.js';
+import { createCurriculumController } from './controllers/curriculum.controller.js';
+import { createCurriculumRepository } from './repositories/curriculum.repository.js';
+import { createCurriculumRouter } from './routes/curriculum.routes.js';
+import { createCurriculumService } from './services/curriculum.service.js';
 
 export function createCurriculumModule({ repository = createCurriculumRepository() } = {}) {
   const service = createCurriculumService(repository);

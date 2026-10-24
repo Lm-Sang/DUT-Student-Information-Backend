@@ -1,10 +1,13 @@
 # Làm việc theo feature
 
 Đọc [kiến trúc và cách thêm feature](docs/ARCHITECTURE.md) trước khi sửa source.
+Quy ước từng tầng nằm trong [DTO, mapper, service và repository](docs/LAYERS.md).
 
 1. Chia nhiệm vụ theo nghiệp vụ, tạo nhánh như `feat/announcements-search` hoặc
    `fix/curriculum-validation`.
-2. Sửa code và test trong `src/modules/<feature>/`. API dùng giữa các feature
+2. Sửa code và test trong `src/modules/<feature>/`. Parse input trong `dto/`,
+   chuyển dữ liệu trong `mappers/`, nghiệp vụ trong `services/`, truy vấn trong
+   `repositories/`. API dùng giữa các feature
    phải export qua `index.js`; không import repository của feature khác.
 3. Khi thêm route, ghi rõ request/response, quyền truy cập và lỗi dự kiến trong
    tài liệu API. Khi thêm biến môi trường, cập nhật `.env.example`.

@@ -161,8 +161,8 @@ tối đa 80 ký tự, không chấp nhận `.` hoặc `..`.
 
 HTTP client dùng GET, yêu cầu JSON, không chuyển tiếp `Authorization` hoặc `Cookie` của người gọi
 và không tự theo redirect. Danh sách route cố định trong
-[`course-registration.endpoints.js`](../src/modules/course-registration/course-registration.endpoints.js)
-và [`timetable.endpoints.js`](../src/modules/timetable/timetable.endpoints.js);
+[`course-registration.endpoints.js`](../src/modules/course-registration/routes/course-registration.endpoints.js)
+và [`timetable.endpoints.js`](../src/modules/timetable/routes/timetable.endpoints.js);
 người gọi không thể chọn URL upstream.
 Response thành công có `Cache-Control: no-store`.
 

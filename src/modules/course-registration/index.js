@@ -1,5 +1,5 @@
 import { createReadApiModule } from '../../shared/http/create-read-api-module.js';
-import { courseRegistrationEndpoints } from './course-registration.endpoints.js';
+import { courseRegistrationEndpoints } from './routes/course-registration.endpoints.js';
 
 export function createCourseRegistrationModule(clientOptions) {
   return createReadApiModule({

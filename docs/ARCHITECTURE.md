@@ -1,8 +1,9 @@
 # Kiến trúc theo feature
 
 Mỗi nghiệp vụ có một thư mục trong `src/modules/`. Thành viên phụ trách feature
-sửa code, validation và test tại thư mục đó. `modules` chính là nơi chứa các
-feature; không cần thêm một tầng `features` bên trong.
+sửa code, DTO, mapper và test tại thư mục đó. `modules` chính là nơi chứa các
+feature; không cần thêm một tầng `features` bên trong. Xem
+[quy ước DTO, mapper, service và repository](LAYERS.md) để phân chia trách nhiệm.
 
 ## Cấu trúc
 
@@ -20,17 +21,19 @@ src/
 │   ├── index.js                   # Đăng ký module, thứ tự mount, override khi test
 │   ├── auth/
 │   │   ├── index.js               # Export dùng cho các feature khác
-│   │   ├── auth.controller.js
-│   │   ├── auth.routes.js
-│   │   ├── auth.service.js
-│   │   ├── auth.repository.js
-│   │   ├── auth.store.js          # State và session SQLite
-│   │   ├── auth.middleware.js     # Xác thực và kiểm tra permission
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── repositories/
+│   │   ├── dto/                  # Request/response contract và parser
+│   │   ├── mappers/              # Claims/identity → DTO
+│   │   ├── stores/               # State và session SQLite
+│   │   ├── middlewares/          # Xác thực và kiểm tra permission
 │   │   ├── student/               # Entry point/controller/routes cho student
 │   │   ├── admin/                 # Entry point/controller/routes cho admin
 │   │   └── __tests__/
-│   ├── announcements/            # Thông báo: controller/service/repository/routes
-│   ├── curriculum/               # Chương trình đào tạo, khung CTĐT từ SQL
+│   ├── announcements/            # Các tầng + DTO/mapper cho thông báo
+│   ├── curriculum/               # Các tầng + DTO/mapper cho khung CTĐT
 │   ├── course-registration/      # API công khai từ hệ thống đăng ký tín chỉ
 │   ├── timetable/                # API công khai từ hệ thống thời khóa biểu
 │   ├── health/
@@ -53,9 +56,10 @@ scripts/
 └── ...                           # Công cụ DB, export, smoke test thủ công
 ```
 
-Các feature có test đặt trong `__tests__/`; không tạo thư mục trống chỉ để đủ bộ.
-Giữ file cùng cấp trong feature nhỏ. Khi nghiệp vụ lớn hơn, chia tiếp theo
-nghiệp vụ con như `auth/student` và `auth/admin`.
+Các feature có test đặt trong `__tests__/`. Mỗi tầng có thư mục riêng, ví dụ
+`controllers`, `services`, `repositories`, `dto`, `mappers`, `routes`. Chỉ tạo tầng
+đang dùng; khi nghiệp vụ lớn hơn, chia tiếp theo nghiệp vụ con như `auth/student`
+và `auth/admin`.
 
 ## Trách nhiệm trong một feature
 
@@ -68,16 +72,18 @@ routes → controller → service → repository → infrastructure/database
 | File | Trách nhiệm |
 | --- | --- |
 | `index.js` | Ghép các thành phần và export `{ basePath, router }`; export contract dùng bên ngoài |
-| `<feature>.routes.js` | Khai báo URL, HTTP method, middleware xác thực/quyền |
-| `<feature>.controller.js` | Đọc request, gọi service, trả response chuẩn |
-| `<feature>.validation.js` | Kiểm tra input khi cần; quy tắc thuộc feature |
-| `<feature>.service.js` | Xử lý nghiệp vụ; nhận repository/client qua tham số |
-| `<feature>.repository.js` | Truy vấn SQL và bind tham số; không xử lý HTTP |
+| `routes/<feature>.routes.js` | Khai báo URL, HTTP method, middleware xác thực/quyền |
+| `controllers/<feature>.controller.js` | Đọc request DTO, gọi service, trả response chuẩn |
+| `dto/<feature>.request.dto.js` | Kiểm tra, chuẩn hóa và chọn field đầu vào |
+| `dto/<feature>.response.dto.js` | Contract JSDoc và factory tạo response |
+| `mappers/<feature>.mapper.js` | Chuyển bản ghi nguồn thành DTO, không I/O |
+| `services/<feature>.service.js` | Xử lý nghiệp vụ; nhận repository qua tham số |
+| `repositories/<feature>.repository.js` | Truy vấn SQL/HTTP và bind tham số; không xử lý response HTTP |
 | `__tests__/*.test.js` | Test nghiệp vụ, API và repository của feature |
 
 Không bắt buộc tạo đủ tất cả các file. Ví dụ `health` chỉ cần controller/routes.
 `course-registration` và `timetable` hiện là các API GET chuyển tiếp: mỗi feature
-sở hữu `index.js`, `<feature>.endpoints.js` và test. Cơ chế GET, validation theo
+sở hữu `index.js`, `routes/<feature>.endpoints.js` và test. Cơ chế GET, validation theo
 schema, gỡ envelope, response và xử lý lỗi dùng chung qua
 `shared/http/create-read-api-module.js`. Khi có nghiệp vụ riêng, thêm service/client
 trong chính feature tương ứng.
@@ -111,10 +117,10 @@ Ví dụ nhóm muốn làm API điểm học tập `grades`:
    đây, không kết nối SQL ngay khi import:
 
    ```js
-   import { createGradesController } from './grades.controller.js';
-   import { createGradesRepository } from './grades.repository.js';
-   import { createGradesRouter } from './grades.routes.js';
-   import { createGradesService } from './grades.service.js';
+   import { createGradesController } from './controllers/grades.controller.js';
+   import { createGradesRepository } from './repositories/grades.repository.js';
+   import { createGradesRouter } from './routes/grades.routes.js';
+   import { createGradesService } from './services/grades.service.js';
 
    export function createGradesModule({ repository = createGradesRepository() } = {}) {
      const service = createGradesService(repository);
@@ -184,14 +190,15 @@ vụ mới như điểm, học phí nên có module riêng thay vì gom hết th
 
 | Trước | Hiện tại |
 | --- | --- |
-| `src/modules/public/public.endpoints.js` | `modules/course-registration/course-registration.endpoints.js` và `modules/timetable/timetable.endpoints.js` (dưới `src/`) |
+| `src/modules/public/public.endpoints.js` | `modules/course-registration/routes/course-registration.endpoints.js` và `modules/timetable/routes/timetable.endpoints.js` (dưới `src/`) |
 | `src/modules/public/public.client.js` | `src/infrastructure/http/json-api.client.js` |
-| `src/modules/public/public.service.js`, `public.validation.js` | `src/shared/http/read-api.service.js`, `read-api.validation.js` |
-| `src/modules/public/public.controller.js`, `public.routes.js` | Ghép trong `src/shared/http/create-read-api-module.js` |
+| `src/modules/public/public.service.js`, `public.validation.js` | `src/shared/http/services/read-api.service.js`, `dto/read-api.request.dto.js` |
+| `src/modules/public/public.controller.js`, `public.routes.js` | `src/shared/http/controllers/`, `routes/`; ghép trong `create-read-api-module.js` |
 | `src/config/database.js` | `src/infrastructure/database/sql-server.js` |
-| `src/shared/middlewares/auth.middleware.js` | `src/modules/auth/auth.middleware.js`, export công khai qua `auth/index.js` |
+| `src/shared/middlewares/auth.middleware.js` | `src/modules/auth/middlewares/auth.middleware.js`, export công khai qua `auth/index.js` |
 | `src/modules/auth/student-auth.*` | `src/modules/auth/student/student-auth.*` |
 | `tests/<feature>-api.test.js` | `src/modules/<feature>/__tests__/`, phần giao nhiều feature ở `tests/integration/` |
+| `modules/<feature>/<feature>.controller.js`, `.service.js`, `.repository.js`, `.routes.js` | Các thư mục `controllers/`, `services/`, `repositories/`, `routes/` trong chính feature |
 
 URL, HTTP method, response và cờ bật auth admin được giữ nguyên. Test hoặc công cụ
 nội bộ từng truyền `createApp({ publicModule })` cần chuyển sang hai tham số

@@ -8,11 +8,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { env } from '../../../config/env.js';
 import { createApp } from '../../../app.js';
-import { createAuthController } from '../auth.controller.js';
-import { createAuthRouter } from '../auth.routes.js';
-import { createAuthService } from '../auth.service.js';
-import { createAuthStore } from '../auth.store.js';
-import { authenticate, requirePermissions } from '../auth.middleware.js';
+import { createAuthController } from '../controllers/auth.controller.js';
+import { createAuthRouter } from '../routes/auth.routes.js';
+import { createAuthService } from '../services/auth.service.js';
+import { createAuthStore } from '../stores/auth.store.js';
+import { authenticate, requirePermissions } from '../middlewares/auth.middleware.js';
 import { errorHandler } from '../../../shared/middlewares/error-handler.middleware.js';
 
 const config = {

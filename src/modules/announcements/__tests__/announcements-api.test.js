@@ -4,7 +4,7 @@ import { test } from 'node:test';
 
 import { createApp } from '../../../app.js';
 import { createAnnouncementsModule } from '../index.js';
-import { createAnnouncementsRepository } from '../announcements.repository.js';
+import { createAnnouncementsRepository } from '../repositories/announcements.repository.js';
 
 const announcement = {
   ID: 5461, MaThongBao: '2610SV00004 ', Tieude: 'Th%c3%b4ng+b%c3%a1o',

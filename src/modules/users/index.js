@@ -1,4 +1,4 @@
-import { userRouter } from './user.routes.js';
+import { userRouter } from './routes/user.routes.js';
 
 export default {
   basePath: '/api/users',
