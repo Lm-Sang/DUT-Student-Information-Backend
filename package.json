@@ -4,17 +4,22 @@
   "description": "",
   "main": "src/server.js",
   "type": "module",
-  "engines": { "node": ">=24.0.0" },
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "directories": {
     "doc": "docs"
   },
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "check": "node --check src/server.js",
-    "test": "node --test tests/public-api.test.js tests/curriculum-api.test.js tests/auth-api.test.js tests/announcements-api.test.js",
+    "check": "node scripts/check.js",
+    "test": "node scripts/test.js",
+    "test:feature": "node scripts/test.js --feature",
     "test:curriculum:live": "node scripts/smoke-curriculum-api.js",
-    "test:db": "node scripts/test-database.js"
+    "test:db": "node scripts/test-database.js",
+    "test:db:local": "node scripts/test-database-instances.js local",
+    "test:db:all": "node scripts/test-database-instances.js all"
   },
   "repository": {
     "type": "git",
@@ -38,5 +43,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
+  },
+  "optionalDependencies": {
+    "msnodesqlv8": "^6.0.0"
   }
 }

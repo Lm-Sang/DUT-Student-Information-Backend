@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 
 import { createApp } from '../src/app.js';
-import { disconnectDatabases } from '../src/config/database.js';
+import { disconnectDatabases } from '../src/infrastructure/database/sql-server.js';
 
 // Opt-in integration check against the configured SQL sources. SELECT only.
 // The local HTTP server is temporary and closes together with SQL/SSH resources.

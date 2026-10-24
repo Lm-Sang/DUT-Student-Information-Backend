@@ -1,5 +1,5 @@
 import { Router, json } from 'express';
-import { authenticate } from '../../shared/middlewares/auth.middleware.js';
+import { authenticate } from './auth.middleware.js';
 import { asyncHandler } from '../../shared/utils/async-handler.js';
 
 export function createAuthRouter(channel, controller, service) {

@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { test } from 'node:test';
 
-import { createApp } from '../src/app.js';
-import { createAnnouncementsModule } from '../src/modules/announcements/index.js';
-import { createAnnouncementsRepository } from '../src/modules/announcements/announcements.repository.js';
+import { createApp } from '../../../app.js';
+import { createAnnouncementsModule } from '../index.js';
+import { createAnnouncementsRepository } from '../announcements.repository.js';
 
 const announcement = {
   ID: 5461, MaThongBao: '2610SV00004 ', Tieude: 'Th%c3%b4ng+b%c3%a1o',

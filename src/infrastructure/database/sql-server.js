@@ -4,10 +4,10 @@ import { createServer } from 'node:net';
 import sql from 'mssql';
 import { Client as SshClient } from 'ssh2';
 
-import { env } from './env.js';
+import { env } from '../../config/env.js';
 
 const pools = new Map();
-let tunnel;
+let tunnelPromise;
 
 function required(value, name) {
   if (!value) throw new Error(`${name} is required.`);
@@ -91,8 +91,14 @@ async function getDatabaseEndpoint() {
   }
 
   required(env.database.host, 'DB_HOST');
-  tunnel ??= await createSshTunnel();
-  return tunnel;
+  if (!tunnelPromise) {
+    const pending = createSshTunnel();
+    tunnelPromise = pending;
+    pending.catch(() => {
+      if (tunnelPromise === pending) tunnelPromise = undefined;
+    });
+  }
+  return tunnelPromise;
 }
 
 export async function connectDatabase(accountName = 'primary', databaseName) {
@@ -105,6 +111,15 @@ export async function connectDatabase(accountName = 'primary', databaseName) {
   const poolKey = JSON.stringify([accountName, selectedDatabase]);
   if (pools.has(poolKey)) return pools.get(poolKey);
 
+  const pending = createPool(accountName, account, selectedDatabase);
+  pools.set(poolKey, pending);
+  pending.catch(() => {
+    if (pools.get(poolKey) === pending) pools.delete(poolKey);
+  });
+  return pending;
+}
+
+async function createPool(accountName, account, selectedDatabase) {
   const endpoint = await getDatabaseEndpoint();
   const config = {
     server: endpoint.host,
@@ -125,17 +140,22 @@ export async function connectDatabase(accountName = 'primary', databaseName) {
 
   if (selectedDatabase) config.database = selectedDatabase;
 
-  const pool = await new sql.ConnectionPool(config).connect();
-  pools.set(poolKey, pool);
-  return pool;
+  return new sql.ConnectionPool(config).connect();
 }
 
 export async function disconnectDatabases() {
-  await Promise.all([...pools.values()].map((pool) => pool.close()));
+  const pendingPools = [...pools.values()];
   pools.clear();
+  const results = await Promise.allSettled(pendingPools.map(async (pending) => {
+    const pool = await pending.catch(() => undefined);
+    if (pool) await pool.close();
+  }));
 
-  if (tunnel) {
-    await tunnel.close();
-    tunnel = undefined;
+  if (tunnelPromise) {
+    const tunnel = await tunnelPromise.catch(() => undefined);
+    tunnelPromise = undefined;
+    if (tunnel) await tunnel.close();
   }
+  const failures = results.filter((result) => result.status === 'rejected').map((result) => result.reason);
+  if (failures.length) throw new AggregateError(failures, 'Failed to close school database pools.');
 }

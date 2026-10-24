@@ -1,5 +1,5 @@
-import { AppError } from '../errors/app-error.js';
-import { authService } from '../../modules/auth/auth.service.js';
+import { AppError } from '../../shared/errors/app-error.js';
+import { authService } from './auth.service.js';
 
 export function authenticate(channel, service = authService) {
   return (req, _res, next) => {

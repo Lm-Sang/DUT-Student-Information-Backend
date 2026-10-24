@@ -6,14 +6,14 @@ import jwt from 'jsonwebtoken';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { env } from '../src/config/env.js';
-import { createApp } from '../src/app.js';
-import { createAuthController } from '../src/modules/auth/auth.controller.js';
-import { createAuthRouter } from '../src/modules/auth/auth.routes.js';
-import { createAuthService } from '../src/modules/auth/auth.service.js';
-import { createAuthStore } from '../src/modules/auth/auth.store.js';
-import { authenticate, requirePermissions } from '../src/shared/middlewares/auth.middleware.js';
-import { errorHandler } from '../src/shared/middlewares/error-handler.middleware.js';
+import { env } from '../../../config/env.js';
+import { createApp } from '../../../app.js';
+import { createAuthController } from '../auth.controller.js';
+import { createAuthRouter } from '../auth.routes.js';
+import { createAuthService } from '../auth.service.js';
+import { createAuthStore } from '../auth.store.js';
+import { authenticate, requirePermissions } from '../auth.middleware.js';
+import { errorHandler } from '../../../shared/middlewares/error-handler.middleware.js';
 
 const config = {
   ...env,

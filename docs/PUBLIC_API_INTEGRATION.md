@@ -1,6 +1,8 @@
 # API public Course Registration và TKB
 
-Module `src/modules/public` cung cấp **39 route GET**, không yêu cầu đăng nhập, dưới `/api/public`.
+Hai feature `src/modules/course-registration` và `src/modules/timetable` cung cấp
+**39 route GET**, không yêu cầu đăng nhập, dưới `/api/public`. Xem
+[kiến trúc feature](ARCHITECTURE.md) để biết cách chia việc và thêm endpoint.
 Dữ liệu được lấy qua HTTP từ hai BE đã chọn:
 
 | Nguồn | Base URL mặc định | Route trên backend này |
@@ -159,7 +161,9 @@ tối đa 80 ký tự, không chấp nhận `.` hoặc `..`.
 
 HTTP client dùng GET, yêu cầu JSON, không chuyển tiếp `Authorization` hoặc `Cookie` của người gọi
 và không tự theo redirect. Danh sách route cố định trong
-[`public.endpoints.js`](../src/modules/public/public.endpoints.js); người gọi không thể chọn URL upstream.
+[`course-registration.endpoints.js`](../src/modules/course-registration/course-registration.endpoints.js)
+và [`timetable.endpoints.js`](../src/modules/timetable/timetable.endpoints.js);
+người gọi không thể chọn URL upstream.
 Response thành công có `Cache-Control: no-store`.
 
 | HTTP trả về | Trường hợp |

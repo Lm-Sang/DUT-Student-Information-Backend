@@ -4,12 +4,19 @@ Backend Node.js/Express duoc to chuc theo **module (feature-first)**. Moi nghiep
 nam trong mot thu muc rieng, con cau hinh va thanh phan dung chung duoc tach khoi
 code nghiep vu.
 
+Xem [cấu trúc feature và cách chia việc](docs/ARCHITECTURE.md) và
+[quy ước đóng góp](CONTRIBUTING.md). Mỗi feature có code và test riêng;
+`course-registration` và `timetable` được tách độc lập.
+
 ## Chay du an
 
 ```bash
 npm install
 npm run dev
 ```
+
+Server tự kết nối đồng thời DB trường và DB local `sv_dut`, rồi ghi trạng thái
+`[DB:school]` / `[DB:local]`. Một DB gặp lỗi không chặn server và DB còn lại.
 
 Yeu cau Node.js >= 24 de dung SQLite tich hop cho kho state/phien SSO.
 
@@ -68,7 +75,7 @@ Database co hai pool rieng cho hai muc quyen:
 - `secondary`: `DB_SECONDARY_USER` / `DB_SECONDARY_PASSWORD`
 
 Khi truy van database khac, goi `connectDatabase('primary', 'DATA_SV2')` hoac
-`connectDatabase('secondary', 'DATA_GVien1')` tu `src/config/database.js`.
+`connectDatabase('secondary', 'DATA_GVien1')` tu `src/infrastructure/database/sql-server.js`.
 Pool duoc tach theo cap `(account, database)` va SQL Server quyet dinh quyen
 truy cap. Ten `primary`/`secondary` khong dong nghia voi student/admin.
 
@@ -78,6 +85,18 @@ khoan bang:
 ```bash
 npm run test:db
 ```
+
+Backend cũng có kết nối local độc lập tới `localhost:1433/sv_dut` bằng Windows
+Authentication, dùng đồng thời với instance trường. Cấu hình qua `LOCAL_DB_*`,
+không cần mật khẩu SQL. Feature dùng `queryLocalDatabase()` để truy vấn local;
+các repository hiện có tiếp tục dùng database trường.
+
+```bash
+npm run test:db:local
+npm run test:db:all
+```
+
+Xem [cấu hình và ví dụ dùng hai instance](docs/DATABASE_CONNECTIONS.md).
 
 Khong commit file `.env`; file nay da duoc khai bao trong `.gitignore`.
 
@@ -97,28 +116,47 @@ mac dinh (`ENABLE_ADMIN_AUTH=false`). Xem [khung SSO va note phan quyen](docs/SS
 
 ```text
 src/
-|-- config/        # Bien moi truong va ket noi database
+|-- config/        # Bien moi truong va CORS
+|-- infrastructure/ # SQL Server/SSH va HTTP client
 |-- modules/
-|   |-- auth/      # Student SSO + shared logic; admin/ is optional, disabled by default
+|   |-- index.js   # Dang ky cac feature, override khi test
+|   |-- auth/      # Logic SSO, middleware; student/ va admin/ tach rieng
 |   |-- students/  # API nghiep vu cua student
 |   |-- admin/     # API nghiep vu cua admin
 |   |-- users/     # User data dung chung
-|   |-- public/    # Public GET integrations: Course Registration/TKB
+|   |-- course-registration/ # Public GET tu Course Registration
+|   |-- timetable/ # Public GET tu TKB (URL van la /api/public/tkb)
 |   |-- curriculum/ # Public programs and full curricula from SQL
+|   |-- announcements/ # Thong bao tu SQL
 |   `-- health/
 |-- shared/        # Middleware, error va utility dung chung
 |-- app.js         # Khoi tao Express app
 `-- server.js      # Entry point lang nghe HTTP
 ```
 
-Moi module export `{ basePath, router }` qua `index.js` va duoc mount trong
-`src/app.js`. Ben trong module, luong phu thuoc la:
+Moi module export `{ basePath, router }` qua `index.js`, dang ky trong
+`src/modules/index.js` va duoc mount boi `src/app.js`.
+Test cua feature nam trong `src/modules/<feature>/__tests__/`;
+test lien feature va kiem tra kien truc nam trong `tests/`.
+Ben trong module, luong phu thuoc la:
 
 `route -> controller -> service -> repository`.
-Module public dung `HTTP client` thay cho repository de goi BE nguon.
+Course Registration/TKB dung adapter chung `shared/http` va HTTP client trong
+`infrastructure/http` de goi BE nguon. Danh sach route va validation schema
+van thuoc tung feature.
+
+```bash
+npm run test:feature -- curriculum
+npm run check
+npm test
+```
+
+Tren PowerShell, neu Execution Policy chan `npm.ps1`, dung `npm.cmd`.
 
 ## Tai lieu kien truc
 
+- [Kiến trúc feature, ranh giới import và cách thêm nghiệp vụ](docs/ARCHITECTURE.md)
+- [Quy ước làm việc nhóm](CONTRIBUTING.md)
 - [Khung SSO da trien khai va note bo sung cac cap quyen](docs/SSO_SCAFFOLD.md)
 - [Thiet ke SSO va tich hop Course Registration](docs/AUTH_AND_COURSE_REGISTRATION_INTEGRATION.md)
 - [API public da trien khai](docs/PUBLIC_API_INTEGRATION.md)

@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 
 import sql from 'mssql';
 
-import { connectDatabase, disconnectDatabases } from '../src/config/database.js';
+import { connectDatabase, disconnectDatabases } from '../src/infrastructure/database/sql-server.js';
 
 // Read-only export of the public catalogue and every curriculum row, including
 // replacement-course rows and requirements that are not displayed on the website.

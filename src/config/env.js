@@ -112,6 +112,17 @@ export const env = Object.freeze({
       defaultDatabase: process.env.DB_SECONDARY_DEFAULT_DATABASE ?? '',
     }),
   }),
+  // Independent SQL Server instance using the Windows identity of this process.
+  // Does not change the existing DB_*/SSH_* settings for school databases.
+  localDatabase: Object.freeze({
+    host: process.env.LOCAL_DB_HOST ?? 'localhost',
+    port: parsePort('LOCAL_DB_PORT', process.env.LOCAL_DB_PORT, 1433),
+    name: process.env.LOCAL_DB_NAME ?? 'sv_dut',
+    driver: process.env.LOCAL_DB_ODBC_DRIVER ?? 'ODBC Driver 17 for SQL Server',
+    encrypt: parseBoolean(process.env.LOCAL_DB_ENCRYPT, false),
+    trustServerCertificate: parseBoolean(process.env.LOCAL_DB_TRUST_SERVER_CERTIFICATE, true),
+    queryTimeoutMs: parseInteger('LOCAL_DB_QUERY_TIMEOUT_MS', process.env.LOCAL_DB_QUERY_TIMEOUT_MS, 30000, 1000, 300000),
+  }),
   ssh: Object.freeze({
     host: process.env.SSH_HOST ?? '',
     port: parsePort('SSH_PORT', process.env.SSH_PORT, 22),

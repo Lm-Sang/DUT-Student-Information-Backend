@@ -1,4 +1,4 @@
-import { AppError } from '../../shared/errors/app-error.js';
+import { AppError } from '../errors/app-error.js';
 
 const identifierPattern = /^[A-Za-z0-9._-]{1,80}$/;
 const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -48,7 +48,7 @@ function parseValue(name, value, rule) {
   return value;
 }
 
-export function validatePublicRequest(endpoint, params = {}, query = {}) {
+export function validateReadApiRequest(endpoint, params = {}, query = {}) {
   const queryRules = endpoint.query ?? {};
   for (const name of Object.keys(query)) {
     if (!Object.hasOwn(queryRules, name)) invalid(name, 'is not a supported query parameter');

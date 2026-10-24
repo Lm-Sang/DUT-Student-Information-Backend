@@ -1,6 +1,6 @@
 import sql from 'mssql';
 
-import { connectDatabase } from '../../config/database.js';
+import { connectDatabase } from '../../infrastructure/database/sql-server.js';
 import { env } from '../../config/env.js';
 
 const programSelect = `

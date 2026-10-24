@@ -1,5 +1,5 @@
-import { AppError } from '../../shared/errors/app-error.js';
-import { validatePublicRequest } from './public.validation.js';
+import { AppError } from '../errors/app-error.js';
+import { validateReadApiRequest } from './read-api.validation.js';
 
 function unwrapResponse(payload, source) {
   if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
@@ -16,10 +16,10 @@ function unwrapResponse(payload, source) {
   return payload;
 }
 
-export function createPublicService(client) {
+export function createReadApiService(client) {
   return Object.freeze({
     async get(endpoint, params, query) {
-      const validated = validatePublicRequest(endpoint, params, query);
+      const validated = validateReadApiRequest(endpoint, params, query);
       const path = endpoint.upstreamPath.replace(/:([A-Za-z][A-Za-z0-9]*)/g, (_match, name) => {
         return encodeURIComponent(validated.params[name]);
       });

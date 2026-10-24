@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { test } from 'node:test';
 
-import { createApp } from '../src/app.js';
-import { createCurriculumModule } from '../src/modules/curriculum/index.js';
-import { createCurriculumRepository } from '../src/modules/curriculum/curriculum.repository.js';
+import { createApp } from '../../../app.js';
+import { createCurriculumModule } from '../index.js';
+import { createCurriculumRepository } from '../curriculum.repository.js';
 
 const program = {
   MaNganh: '1024045 ', TenNganh: 'An toàn thông tin trên không gian số K2026 ',

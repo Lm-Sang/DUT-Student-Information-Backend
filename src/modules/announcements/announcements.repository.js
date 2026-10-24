@@ -1,6 +1,6 @@
 import sql from 'mssql';
 
-import { connectDatabase } from '../../config/database.js';
+import { connectDatabase } from '../../infrastructure/database/sql-server.js';
 
 const visible = '(Hide IS NULL OR Hide = 0) AND Ngaydang <= GETDATE()';
 

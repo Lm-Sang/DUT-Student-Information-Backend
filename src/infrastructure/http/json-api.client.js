@@ -40,7 +40,7 @@ async function readJson(response, maxResponseBytes, source) {
   }
 }
 
-export function createPublicApiClient({
+export function createJsonApiClient({
   sources = env.publicApis.sources,
   timeoutMs = env.publicApis.timeoutMs,
   maxResponseBytes = env.publicApis.maxResponseBytes,
