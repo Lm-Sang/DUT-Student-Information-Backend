@@ -1,0 +1,1027 @@
+{
+  "info": {
+    "name": "DUT - Certification API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "API qu?n l? danh m?c, quy ??nh theo kh?a, n?p ch?ng ch? b?ng URL k? R2 v? x?t duy?t. H??ng d?n docs/CERTIFICATIONS_API.md. Sinh vi?n d?ng DUT SSO Bearer token. Quy?n chuy?n vi?n/qu?n l? c?n adapter x?c th?c th?t ph?a backend; kh?ng c? t?i kho?n th? nghi?m trong module m?c ??nh. Kh?ng l?u token th?t trong collection."
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3003",
+      "type": "string"
+    },
+    {
+      "key": "languageCode",
+      "value": "LN001"
+    },
+    {
+      "key": "languageName",
+      "value": "Tiếng Anh",
+      "type": "string"
+    },
+    {
+      "key": "languageId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "languageRowVersion",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "typeCode",
+      "value": "TOEIC_FOUR",
+      "type": "string"
+    },
+    {
+      "key": "typeName",
+      "value": "TOEIC bốn kỹ năng",
+      "type": "string"
+    },
+    {
+      "key": "certificateTypeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "typeRowVersion",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "policyId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "policyRowVersion",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cohortFrom",
+      "value": "1900",
+      "type": "string"
+    },
+    {
+      "key": "cohortTo",
+      "value": "null",
+      "type": "string"
+    },
+    {
+      "key": "isRecognized",
+      "value": "true",
+      "type": "string"
+    },
+    {
+      "key": "policyReason",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "fullName",
+      "value": "Nguyễn Văn A",
+      "type": "string"
+    },
+    {
+      "key": "className",
+      "value": "24T1",
+      "type": "string"
+    },
+    {
+      "key": "issuedOn",
+      "value": "2026-01-01",
+      "type": "string"
+    },
+    {
+      "key": "fileName",
+      "value": "certificate.png",
+      "type": "string"
+    },
+    {
+      "key": "fileContentType",
+      "value": "image/png",
+      "type": "string"
+    },
+    {
+      "key": "fileBytes",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "filePurpose",
+      "value": "general",
+      "type": "string"
+    },
+    {
+      "key": "applicationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "applicationRowVersion",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "fileId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "downloadUrl",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "uploads",
+      "value": "[]",
+      "type": "string"
+    },
+    {
+      "key": "uploadIndex",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "studentAccessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reviewerAccessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "managementAccessToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Quản lý danh mục (quyền riêng)",
+      "item": [
+        {
+          "name": "Đọc toàn bộ danh mục, cấu hình và token cập nhật",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/certifications/management/catalog",
+            "header": [],
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const catalog = pm.response.json().data;",
+                  "  const language = catalog.languages.find(x => x.code === pm.variables.get('languageCode'));",
+                  "  const type = catalog.types.find(x => x.code === pm.variables.get('typeCode'));",
+                  "  if (language) { pm.collectionVariables.set('languageId', language.id); pm.collectionVariables.set('languageRowVersion', language.rowVersion); }",
+                  "  if (type) { pm.collectionVariables.set('certificateTypeId', type.id); pm.collectionVariables.set('typeRowVersion', type.rowVersion); pm.collectionVariables.set('typeName', type.displayName); }",
+                  "  const policy = catalog.policies.find(x => String(x.id) === String(pm.variables.get('policyId')));",
+                  "  if (policy) pm.collectionVariables.set('policyRowVersion', policy.rowVersion);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ngôn ngữ",
+          "item": [
+            {
+              "name": "Tạo ngôn ngữ",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/certifications/management/languages",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "description": "Chỉ tạo ngôn ngữ mới chưa có. LN001..LN004 đã nhập từ mã nguồn trường, không tạo lại hoặc đổi mã.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"{{languageCode}}\",\n  \"displayName\": \"{{languageName}}\",\n  \"isPublished\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{studentAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 201', function () { pm.expect(pm.response.code).to.eql(201); });",
+                      "if (pm.response.code === 201) {",
+                      "  const data = pm.response.json().data;",
+                      "  pm.collectionVariables.set('languageId', data.id);",
+                      "  pm.collectionVariables.set('languageRowVersion', data.rowVersion);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Cập nhật ngôn ngữ",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/certifications/management/languages/{{languageId}}",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "\"{{languageRowVersion}}\""
+                  }
+                ],
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"{{languageCode}}\",\n  \"displayName\": \"{{languageName}}\",\n  \"isPublished\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{studentAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                      "if (pm.response.code === 200) {",
+                      "  const data = pm.response.json().data;",
+                      "  pm.collectionVariables.set('languageId', data.id);",
+                      "  pm.collectionVariables.set('languageRowVersion', data.rowVersion);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Loại chứng chỉ và form kết quả",
+          "item": [
+            {
+              "name": "Tạo loại và cấu hình trường nhập",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/certifications/management/types",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "description": " Mã/tên/bậc isSchoolProvided=true giữ nguyên nguồn; chỉ sửa form. TOEIC_FOUR là bổ sung local gắn TOEIC gốc. Mã có thể chứa khoảng trắng và chữ hoa/thường như Aptis Esol, TOEFLiBT.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"languageId\": {{languageId}},\n  \"code\": \"{{typeCode}}\",\n  \"displayName\": \"{{typeName}}\",\n  \"isPublished\": true,\n  \"formSchema\": {\n    \"fields\": [\n      {\n        \"key\": \"listening\",\n        \"label\": \"Nghe\",\n        \"type\": \"number\",\n        \"required\": true,\n        \"min\": 5,\n        \"max\": 495,\n        \"step\": 5\n      },\n      {\n        \"key\": \"reading\",\n        \"label\": \"Đọc\",\n        \"type\": \"number\",\n        \"required\": true,\n        \"min\": 5,\n        \"max\": 495,\n        \"step\": 5\n      },\n      {\n        \"key\": \"speaking\",\n        \"label\": \"Nói\",\n        \"type\": \"number\",\n        \"required\": true,\n        \"min\": 0,\n        \"max\": 200,\n        \"step\": 10\n      },\n      {\n        \"key\": \"writing\",\n        \"label\": \"Viết\",\n        \"type\": \"number\",\n        \"required\": true,\n        \"min\": 0,\n        \"max\": 200,\n        \"step\": 10\n      }\n    ]\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{studentAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 201', function () { pm.expect(pm.response.code).to.eql(201); });",
+                      "if (pm.response.code === 201) {",
+                      "  const data = pm.response.json().data;",
+                      "  pm.collectionVariables.set('certificateTypeId', data.id);",
+                      "  pm.collectionVariables.set('typeRowVersion', data.rowVersion);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Cập nhật mã, tên hoặc cấu hình form",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/certifications/management/types/{{certificateTypeId}}",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "\"{{typeRowVersion}}\""
+                  }
+                ],
+                "description": " Mã/tên/bậc isSchoolProvided=true giữ nguyên nguồn; chỉ sửa form. TOEIC_FOUR là bổ sung local gắn TOEIC gốc. Mã có thể chứa khoảng trắng và chữ hoa/thường như Aptis Esol, TOEFLiBT.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"languageId\": {{languageId}},\n  \"code\": \"{{typeCode}}\",\n  \"displayName\": \"{{typeName}}\",\n  \"isPublished\": true,\n  \"formSchema\": {\n    \"fields\": [\n      {\n        \"key\": \"listening\",\n        \"label\": \"Nghe\",\n        \"type\": \"number\",\n        \"required\": true,\n        \"min\": 5,\n        \"max\": 495,\n        \"step\": 5\n      },\n      {\n        \"key\": \"reading\",\n        \"label\": \"Đọc\",\n        \"type\": \"number\",\n        \"required\": true,\n        \"min\": 5,\n        \"max\": 495,\n        \"step\": 5\n      },\n      {\n        \"key\": \"speaking\",\n        \"label\": \"Nói\",\n        \"type\": \"number\",\n        \"required\": true,\n        \"min\": 0,\n        \"max\": 200,\n        \"step\": 10\n      },\n      {\n        \"key\": \"writing\",\n        \"label\": \"Viết\",\n        \"type\": \"number\",\n        \"required\": true,\n        \"min\": 0,\n        \"max\": 200,\n        \"step\": 10\n      }\n    ]\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{studentAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                      "if (pm.response.code === 200) {",
+                      "  const data = pm.response.json().data;",
+                      "  pm.collectionVariables.set('certificateTypeId', data.id);",
+                      "  pm.collectionVariables.set('typeRowVersion', data.rowVersion);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Công nhận theo khóa tuyển sinh",
+          "item": [
+            {
+              "name": "Tạo quy định nhận theo khoảng khóa",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/certifications/management/policies",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "description": "Ví dụ Pháp: một khoảng 1900..2026=true, khoảng 2027..null=false. Không dùng isPublished để ngừng nhận các khóa sau. Chưa có quy định ngôn ngữ thì không nhận hồ sơ. Đặt certificateTypeId thay languageId nếu cần hạn chế riêng một loại.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"languageId\": {{languageId}},\n  \"cohortFrom\": {{cohortFrom}},\n  \"cohortTo\": {{cohortTo}},\n  \"isRecognized\": {{isRecognized}},\n  \"reason\": \"{{policyReason}}\",\n  \"documentReference\": \"Quy định của trường\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{studentAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 201', function () { pm.expect(pm.response.code).to.eql(201); });",
+                      "if (pm.response.code === 201) {",
+                      "  const data = pm.response.json().data;",
+                      "  pm.collectionVariables.set('policyId', data.id);",
+                      "  pm.collectionVariables.set('policyRowVersion', data.rowVersion);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Cập nhật quy định theo khóa",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/certifications/management/policies/{{policyId}}",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "\"{{policyRowVersion}}\""
+                  }
+                ],
+                "description": "Gửi đầy đủ các trường, lấy token mới từ quản lý danh mục. Thu hẹp khoảng cũ trước khi thêm khoảng mới; các khoảng cùng đối tượng không được chồng lấn.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"languageId\": {{languageId}},\n  \"cohortFrom\": {{cohortFrom}},\n  \"cohortTo\": {{cohortTo}},\n  \"isRecognized\": {{isRecognized}},\n  \"reason\": \"{{policyReason}}\",\n  \"documentReference\": \"Quy định của trường\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{studentAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                      "if (pm.response.code === 200) {",
+                      "  const data = pm.response.json().data;",
+                      "  pm.collectionVariables.set('policyId', data.id);",
+                      "  pm.collectionVariables.set('policyRowVersion', data.rowVersion);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Sinh viên",
+      "item": [
+        {
+          "name": "Danh mục theo khóa của sinh viên",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/certifications/catalog",
+            "header": [],
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json().data;",
+                  "  const types = data.languages.flatMap(language => language.types);",
+                  "  const type = types.find(x => x.code === pm.variables.get('typeCode'));",
+                  "  pm.collectionVariables.set('certificateTypeId', type ? type.id : '');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nộp hoặc bổ sung hồ sơ",
+          "item": [
+            {
+              "name": "01 - Gửi kết quả và xin URL upload",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/certifications/applications",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "description": "Ví dụ TOEIC bốn kỹ năng. IELTS dùng result={overall:4.5}; cấp độ dùng result={level:\"B1\"}, theo formSchema thực tế. MSSV/khóa lấy từ hồ sơ server. Để bổ sung hoặc xin URL mới thêm applicationId vào body. Chỉ bổ sung khi needs_changes.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"fullName\": \"{{fullName}}\",\n    \"className\": \"{{className}}\",\n    \"certificateTypeId\": {{certificateTypeId}},\n    \"issuedOn\": \"{{issuedOn}}\",\n    \"result\": {\n      \"listening\": 300,\n      \"reading\": 300,\n      \"speaking\": 130,\n      \"writing\": 140\n    }\n  },\n  \"files\": [\n    {\n      \"purpose\": \"{{filePurpose}}\",\n      \"fileName\": \"{{fileName}}\",\n      \"contentType\": \"{{fileContentType}}\",\n      \"sizeBytes\": {{fileBytes}}\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{studentAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 201', function () { pm.expect(pm.response.code).to.eql(201); });",
+                      "if (pm.response.code === 201) {",
+                      "  const data = pm.response.json().data;",
+                      "  pm.collectionVariables.set('applicationId', data.applicationId);",
+                      "  pm.collectionVariables.set('uploads', JSON.stringify(data.uploads));",
+                      "  pm.collectionVariables.set('uploadIndex', '0');",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 - PUT ảnh lên R2: chọn Body binary",
+              "request": {
+                "method": "PUT",
+                "url": "{{uploadUrl}}",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "{{uploadContentType}}"
+                  },
+                  {
+                    "key": "If-None-Match",
+                    "value": "{{uploadIfNoneMatch}}"
+                  }
+                ],
+                "body": {
+                  "mode": "file",
+                  "file": {
+                    "src": ""
+                  }
+                },
+                "description": "Chọn ảnh đã kiểm tra đúng metadata đã khai. Upload thẳng vào evidence; gửi đầy đủ headers đã ký, gồm If-None-Match: * để không ghi đè ảnh. HTTP 412 nghĩa là key đã tồn tại, cần xin URL mới nếu upload lại. Nếu nhiều ảnh đổi uploadIndex 0,1,... và chọn binary tương ứng. Không ghép baseUrl backend.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const uploads = JSON.parse(pm.variables.get('uploads') || '[]');",
+                      "const upload = uploads[Number(pm.variables.get('uploadIndex') || 0)];",
+                      "if (!upload) throw new Error('Chạy xin URL trước hoặc kiểm tra uploadIndex.');",
+                      "pm.variables.set('uploadUrl', upload.url);",
+                      "pm.variables.set('uploadContentType', upload.headers['Content-Type']);",
+                      "pm.variables.set('uploadIfNoneMatch', upload.headers['If-None-Match']);"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                      "if (pm.response.code === 200) {",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "03 - Kiểm tra ảnh và nộp",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/certifications/applications/{{applicationId}}/complete",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{studentAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                      "if (pm.response.code === 200) {",
+                      "  const app = pm.response.json().data;",
+                      "  pm.collectionVariables.set('applicationId', app.id);",
+                      "  pm.collectionVariables.set('applicationRowVersion', app.rowVersion);",
+                      "  const current = app.currentSubmission;",
+                      "  if (current && current.files.length) pm.collectionVariables.set('fileId', current.files[0].id);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Danh sách hồ sơ của mình",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/certifications/applications?page=1&pageSize=20",
+            "header": [],
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "if (pm.response.code === 200) {",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Chi tiết và lịch sử các lần nộp",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/certifications/applications/{{applicationId}}",
+            "header": [],
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const app = pm.response.json().data;",
+                  "  pm.collectionVariables.set('applicationId', app.id);",
+                  "  pm.collectionVariables.set('applicationRowVersion', app.rowVersion);",
+                  "  const current = app.currentSubmission;",
+                  "  if (current && current.files.length) pm.collectionVariables.set('fileId', current.files[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Xem minh chứng",
+          "item": [
+            {
+              "name": "Xin URL xem ảnh đã nhận",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/certifications/applications/{{applicationId}}/files/{{fileId}}/download",
+                "header": [],
+                "description": "",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{studentAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                      "if (pm.response.code === 200) {",
+                      "  pm.collectionVariables.set('downloadUrl', pm.response.json().data.url);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Mở ảnh bằng URL đã cấp",
+              "request": {
+                "method": "GET",
+                "url": "{{downloadUrl}}",
+                "header": [],
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                      "if (pm.response.code === 200) {",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Chuyên viên xét duyệt",
+      "item": [
+        {
+          "name": "Hàng đợi đã nộp",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/certifications/reviewer/applications?status=submitted&page=1&pageSize=20",
+            "header": [],
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "if (pm.response.code === 200) {",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Chi tiết hồ sơ",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/certifications/reviewer/applications/{{applicationId}}",
+            "header": [],
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const app = pm.response.json().data;",
+                  "  pm.collectionVariables.set('applicationId', app.id);",
+                  "  pm.collectionVariables.set('applicationRowVersion', app.rowVersion);",
+                  "  const current = app.currentSubmission;",
+                  "  if (current && current.files.length) pm.collectionVariables.set('fileId', current.files[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Xin URL xem ảnh đã nhận",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/certifications/reviewer/applications/{{applicationId}}/files/{{fileId}}/download",
+            "header": [],
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('downloadUrl', pm.response.json().data.url);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Xác nhận / yêu cầu bổ sung / từ chối",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/certifications/reviewer/applications/{{applicationId}}/review",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{applicationRowVersion}}\""
+              }
+            ],
+            "description": "needs_changes/rejected phải có reason. Chỉ needs_changes mở quyền bổ sung. Chuyên viên không sửa hộ dữ liệu; rejected và verified kết thúc hồ sơ.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"verified\",\n  \"verificationMethod\": \"document_comparison\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.expect(pm.response.code).to.eql(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const app = pm.response.json().data;",
+                  "  pm.collectionVariables.set('applicationId', app.id);",
+                  "  pm.collectionVariables.set('applicationRowVersion', app.rowVersion);",
+                  "  const current = app.currentSubmission;",
+                  "  if (current && current.files.length) pm.collectionVariables.set('fileId', current.files[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
