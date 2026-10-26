@@ -1,0 +1,14 @@
+{
+  "code": "DonSV03",
+  "version": "2026-10-25.3",
+  "slug": "xet-cong-nhan-tot-nghiep",
+  "title": "ĐƠN ĐĂNG KÝ XÉT TỐT NGHIỆP",
+  "kind": "GRADUATION",
+  "source": [
+    "công nhận tốt nghiệp.docx"
+  ],
+  "body": "Tôi nhận định: cuối {expectedTerm}, tôi có thể đủ điều kiện được xét tốt nghiệp theo Quy định đào tạo của Nhà trường. Tôi làm đơn này để đăng ký và kính đề nghị Nhà trường xét công nhận tốt nghiệp cho tôi, nếu cuối học kỳ này tôi có đủ điều kiện và hoàn thành đủ các yêu cầu khác của Nhà trường về việc: trả tài liệu, thanh toán học phí, lệ phí,….",
+  "receipt": "đơn đăng ký xét tốt nghiệp",
+  "receiptInstruction": "Đề nghị sinh viên theo dõi website “Hệ thống thông tin sinh viên” để biết tiến trình xử lý hồ sơ và thực hiện các công việc có liên quan.",
+  "engine": "PDFKIT_COMPILED_LAYOUT"
+}

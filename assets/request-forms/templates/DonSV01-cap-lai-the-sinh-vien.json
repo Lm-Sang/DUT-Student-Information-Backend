@@ -1,0 +1,26 @@
+{
+  "code": "DonSV01",
+  "version": "2026-10-25.3",
+  "slug": "cap-lai-the-sinh-vien",
+  "title": "ĐƠN ĐỀ NGHỊ CẤP LẠI THẺ SINH VIÊN LIÊN KẾT",
+  "kind": "CARD",
+  "source": [
+    "Cấp thẻ.docx",
+    "Cấp thẻ.pdf",
+    "cấp lại thẻ thay đổi thông tin.docx"
+  ],
+  "intro": "Tôi làm đơn này kính đề nghị Nhà trường và Ngân hàng cấp lại thẻ sinh viên liên kết cho tôi, vì:",
+  "lostReason": "Thẻ cũ của tôi bị mất/ bị hỏng.",
+  "changeReason": "Thay đổi thông tin trên thẻ: {changeDescription}",
+  "commitment": "Tôi sẽ nộp lệ phí cấp lại thẻ theo quy định của Ngân hàng và Nhà trường.",
+  "schoolConfirmation": [
+    "XÁC NHẬN CỦA NHÀ TRƯỜNG:",
+    "TL. HIỆU TRƯỞNG",
+    "KT. TRƯỞNG PHÒNG CÔNG TÁC SINH VIÊN",
+    "PHÓ TRƯỞNG PHÒNG"
+  ],
+  "schoolSigner": "LÂM THỊ HỒNG NHẬT",
+  "photo": true,
+  "receipt": null,
+  "engine": "PDFKIT_COMPILED_LAYOUT"
+}

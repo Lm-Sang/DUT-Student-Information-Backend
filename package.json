@@ -12,14 +12,22 @@
   },
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
+    "dev": "node --watch --watch-path=src --watch-path=assets src/server.js",
     "check": "node scripts/check.js",
     "test": "node scripts/test.js",
     "test:feature": "node scripts/test.js --feature",
     "test:curriculum:live": "node scripts/smoke-curriculum-api.js",
     "test:db": "node scripts/test-database.js",
     "test:db:local": "node scripts/test-database-instances.js local",
-    "test:db:all": "node scripts/test-database-instances.js all"
+    "test:db:all": "node scripts/test-database-instances.js all",
+    "db:demo:setup": "node scripts/setup-requests-demo.js",
+    "db:demo:sync": "node scripts/sync-requests-demo-catalogs.js",
+    "db:demo:seed": "node scripts/seed-requests-demo.js",
+    "test:requests:live": "node scripts/smoke-requests-demo.js",
+    "test:requests:pdf": "node scripts/smoke-request-pdfs.js",
+    "forms:blank": "node scripts/build-blank-request-forms.js",
+    "forms:layout:references": "node scripts/build-request-layout-reference.js",
+    "forms:layout:check": "node scripts/check-request-layout.js"
   },
   "repository": {
     "type": "git",
@@ -33,16 +41,21 @@
   },
   "homepage": "https://github.com/Lm-Sang/DUT-Student-Information-Backend#readme",
   "dependencies": {
+    "@xmldom/xmldom": "^0.9.12",
     "cors": "^2.8.6",
     "dotenv": "^18.0.5",
     "express": "^5.2.1",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "mssql": "^12.7.3",
+    "pdfkit": "^0.20.2",
+    "pizzip": "^3.3.0",
     "ssh2": "^1.17.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "@napi-rs/canvas": "^1.0.13",
+    "nodemon": "^3.1.14",
+    "pdfjs-dist": "^6.4.299"
   },
   "optionalDependencies": {
     "msnodesqlv8": "^6.0.0"

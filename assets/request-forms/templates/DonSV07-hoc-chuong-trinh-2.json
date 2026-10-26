@@ -1,0 +1,16 @@
+{
+  "code": "DonSV07",
+  "version": "2026-10-25.3",
+  "slug": "hoc-chuong-trinh-2",
+  "title": "ĐƠN ĐỀ NGHỊ XÉT HỌC CHƯƠNG TRÌNH 2",
+  "kind": "SECOND_PROGRAM",
+  "source": [
+    "hoc chương trình 2.docx"
+  ],
+  "intro": "Tôi làm đơn này kính đề nghị Nhà trường xét cho phép tôi học chương trình 2:",
+  "body": "Ngành: {programName}\nKể từ: {startTerm}",
+  "commitment": "Tôi cam đoan sẽ thực hiện đúng các quy định của Nhà trường.",
+  "receipt": "đơn đề nghị xét học chương trình 2",
+  "receiptInstruction": "Đề nghị sinh viên theo dõi website “Hệ thống thông tin sinh viên” để biết tiến trình xử lý hồ sơ và thực hiện các công việc có liên quan.",
+  "engine": "PDFKIT_COMPILED_LAYOUT"
+}

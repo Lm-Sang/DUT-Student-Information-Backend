@@ -8,7 +8,7 @@ const adminAuthModule = env.features.adminAuthEnabled
   : undefined;
 const app = createApp({ adminAuthModule });
 
-const server = app.listen(env.port, () => {
+const server = app.listen(env.port, env.features.requestsDemoEnabled ? '127.0.0.1' : undefined, () => {
   console.log(`${env.app.name} is running at ${env.app.url}`);
 });
 

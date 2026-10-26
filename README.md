@@ -11,6 +11,10 @@ Xem [cấu trúc feature và cách chia việc](docs/ARCHITECTURE.md) và
 Các tầng bên trong feature: `controllers`, `services`, `repositories`, `dto`,
 `mappers`, `routes`. Xem [trách nhiệm và mẫu thêm các lớp](docs/LAYERS.md).
 
+Luồng đơn sinh viên và FE local: [hướng dẫn demo](docs/REQUESTS_DEMO.md).
+Sáu loại đơn đề nghị đã có [bộ mẫu trống và xuất PDF](assets/request-forms/README.md),
+điền hồ sơ demo local, lưu snapshot và tải lại đúng file qua **In lại**.
+
 ## Chay du an
 
 ```bash
@@ -159,8 +163,15 @@ npm test
 
 Tren PowerShell, neu Execution Policy chan `npm.ps1`, dung `npm.cmd`.
 
+Xuất PDF đơn đề nghị giữ bố cục gốc hiện cần Windows, Microsoft Word và font
+Times New Roman trên máy chạy backend. Xem [bộ mẫu và cách kiểm tra căn lề](assets/request-forms/README.md).
+
 ## Tai lieu kien truc
 
+- [Quy trình mới nhất: hai tab xác nhận và đề nghị đơn giấy, tạo file và In lại](docs/REQUEST_WORKFLOWS.md)
+- [Bản thử đơn đề nghị và FE riêng: cách chạy, luồng chuyên viên, hủy hai vai trò](docs/REQUESTS_DEMO.md)
+- [Kế hoạch chi tiết đơn đề nghị, tracking, bảng local và giả phân quyền](docs/STUDENT_REQUESTS_IMPLEMENTATION_PLAN.md)
+- [Khảo sát DB đơn đề nghị, hỗ trợ LMS, cấp văn bản và người xử lý](docs/STUDENT_REQUESTS_DATABASE_AUDIT.md)
 - [Kiến trúc feature, ranh giới import và cách thêm nghiệp vụ](docs/ARCHITECTURE.md)
 - [Quy ước làm việc nhóm](CONTRIBUTING.md)
 - [Khung SSO da trien khai va note bo sung cac cap quyen](docs/SSO_SCAFFOLD.md)

@@ -79,6 +79,7 @@ export const env = Object.freeze({
   port: parsePort('PORT', process.env.PORT, 3003),
   features: Object.freeze({
     adminAuthEnabled: parseBoolean(process.env.ENABLE_ADMIN_AUTH, false),
+    requestsDemoEnabled: parseBoolean(process.env.ENABLE_REQUESTS_DEMO, false),
   }),
   auth: Object.freeze({
     databasePath: process.env.AUTH_DATABASE_PATH || '.data/auth.sqlite',

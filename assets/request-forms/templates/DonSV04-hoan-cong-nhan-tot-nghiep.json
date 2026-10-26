@@ -1,0 +1,14 @@
+{
+  "code": "DonSV04",
+  "version": "2026-10-25.3",
+  "slug": "hoan-cong-nhan-tot-nghiep",
+  "title": "ĐƠN ĐỀ NGHỊ HOÃN CÔNG NHẬN TỐT NGHIỆP",
+  "kind": "DEFERRAL",
+  "source": [
+    "hoãn công nhận tốt nghiệp.docx"
+  ],
+  "body": "Tôi làm đơn này kính đề nghị Nhà trường hoãn xét công nhận tốt nghiệp ở {targetTerm} cho tôi. Lý do: {reason}",
+  "receipt": "đơn đề nghị hoãn xét tốt nghiệp",
+  "receiptInstruction": "Đề nghị sinh viên theo dõi website “Hệ thống thông tin sinh viên” để biết tiến trình xử lý hồ sơ và thực hiện các công việc có liên quan.",
+  "engine": "PDFKIT_COMPILED_LAYOUT"
+}
