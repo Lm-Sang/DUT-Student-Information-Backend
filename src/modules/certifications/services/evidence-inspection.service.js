@@ -1,5 +1,5 @@
 import { AppError } from "../../../shared/errors/app-error.js";
-import {certificationImageQueue} from './image-inspection-queue.js';
+import {certificationImageQueue} from '../queues/image-inspection-queue.js';
 
 // Each task holds image bytes and decoded pixels; keep concurrency bounded.
 const concurrency = 2;

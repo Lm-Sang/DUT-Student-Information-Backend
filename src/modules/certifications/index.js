@@ -11,8 +11,8 @@ import { createItCertificationsRepository } from './repositories/it-certificatio
 import { createItCertificationsService } from './services/it-certifications.service.js';
 import { createItCertificationsController } from './controllers/it-certifications.controller.js';
 import { createItCertificationsRouter } from './routes/it-certifications.routes.js';
-import {certificationEvents} from './services/certification-events.js';
-import {certificationImageQueue} from './services/image-inspection-queue.js';
+import {certificationEvents} from './events/certification-events.js';
+import {certificationImageQueue} from './queues/image-inspection-queue.js';
 import {createCertificationEventsController} from './controllers/certification-events.controller.js';
 
 export function createCertificationsModule({

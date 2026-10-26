@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { AppError } from "../../../shared/errors/app-error.js";
-import { inspectEvidenceFiles } from "./inspect-evidence-files.js";
-import {notifyCertificateChanged} from './certification-events.js';
+import { inspectEvidenceFiles } from "./evidence-inspection.service.js";
+import { notifyCertificateChanged } from "../events/certification-events.js";
 import {
   validateResult,
   recognition,
@@ -73,14 +73,33 @@ export function createCertificationsService({
     return { type, language, policies: allowed.policies };
   }
   function policySnapshot(policy) {
-    return {id:policy.Id,revision:policy.Revision,cohortFrom:policy.CohortFrom,cohortTo:policy.CohortTo??null,
-      isRecognized:Boolean(policy.IsRecognized),reason:policy.Reason??null,documentReference:policy.DocumentReference??null};
+    return {
+      id: policy.Id,
+      revision: policy.Revision,
+      cohortFrom: policy.CohortFrom,
+      cohortTo: policy.CohortTo ?? null,
+      isRecognized: Boolean(policy.IsRecognized),
+      reason: policy.Reason ?? null,
+      documentReference: policy.DocumentReference ?? null,
+    };
   }
   function snapshot(details) {
     return {
-      type: {id:details.type.Id,code:details.type.Code,displayName:details.type.DisplayName,revision:details.type.Revision,
-        formSchema:resolveFormSchema(details.type.FormSchema,details.type.Levels)},
-      language: {id:details.language.Id,code:details.language.Code,displayName:details.language.DisplayName},
+      type: {
+        id: details.type.Id,
+        code: details.type.Code,
+        displayName: details.type.DisplayName,
+        revision: details.type.Revision,
+        formSchema: resolveFormSchema(
+          details.type.FormSchema,
+          details.type.Levels,
+        ),
+      },
+      language: {
+        id: details.language.Id,
+        code: details.language.Code,
+        displayName: details.language.DisplayName,
+      },
       policies: details.policies.map(policySnapshot),
     };
   }
@@ -260,7 +279,11 @@ export function createCertificationsService({
     async prepare(actor, input) {
       profile(actor);
       if (!Array.isArray(input.files) || input.files.length !== 1)
-        throw new AppError('Mỗi hồ sơ ngoại ngữ phải có đúng một file minh chứng.', 400, {field:'files'});
+        throw new AppError(
+          "Mỗi hồ sơ ngoại ngữ phải có đúng một file minh chứng.",
+          400,
+          { field: "files" },
+        );
       if (
         input.data.studentCode !== null &&
         input.data.studentCode !== undefined &&
@@ -290,8 +313,9 @@ export function createCertificationsService({
       let replacedFiles = [];
       if (input.applicationId) {
         const application = await load(actor, applicationId);
-        const expiry = application.ExpiresAt?.replace(/Z?$/, 'Z');
-        const expiredCheck = application.Status === 'checking' && new Date(expiry) <= clock();
+        const expiry = application.ExpiresAt?.replace(/Z?$/, "Z");
+        const expiredCheck =
+          application.Status === "checking" && new Date(expiry) <= clock();
         if (!canEdit(application.Status) && !expiredCheck)
           throw new AppError(
             "Hồ sơ chỉ được sửa khi chưa nộp hoặc có yêu cầu bổ sung.",
@@ -303,7 +327,9 @@ export function createCertificationsService({
         )
           throw new AppError("Hồ sơ sinh viên không khớp.", 403);
         expected = application.VersionToken;
-        replacedFiles = application.Files.filter(file => file.Bucket === storage.bucket);
+        replacedFiles = application.Files.filter(
+          (file) => file.Bucket === storage.bucket,
+        );
       }
       if (!storage.bucket) throw new AppError("Chưa cấu hình bucket R2.", 503);
       const expiresAt = new Date(
@@ -346,20 +372,26 @@ export function createCertificationsService({
       });
       // The replacement is committed before removing superseded evidence.
       // A storage cleanup failure must not hide a successful preparation.
-      await Promise.allSettled(replacedFiles.map(file => storage.remove(file.ObjectKey)));
-      notifyCertificateChanged(events,'language',prepared);
+      await Promise.allSettled(
+        replacedFiles.map((file) => storage.remove(file.ObjectKey)),
+      );
+      notifyCertificateChanged(events, "language", prepared);
       return { applicationId, expiresAt, uploads };
     },
     async complete(actor, applicationId) {
       profile(actor);
       const application = await load(actor, applicationId);
-      if (['submitted','verified','rejected'].includes(application.Status))
+      if (["submitted", "verified", "rejected"].includes(application.Status))
         return applicationDto(application);
-      if (application.Status !== 'uploading')
+      if (application.Status !== "uploading")
         throw new AppError("Hồ sơ không thể nộp thêm.", 409);
       const pending = application;
       if (pending.Files.length !== 1)
-        throw new AppError('Hồ sơ ngoại ngữ phải có đúng một file minh chứng.',409,{field:'files'});
+        throw new AppError(
+          "Hồ sơ ngoại ngữ phải có đúng một file minh chứng.",
+          409,
+          { field: "files" },
+        );
       validateResult(pending.Result, pending.CatalogSnapshot.type.formSchema);
       lookup(
         await repository.catalog(),
@@ -407,7 +439,7 @@ export function createCertificationsService({
         await repository.releaseSubmission(reference).catch(() => {});
         throw error;
       }
-      notifyCertificateChanged(events,'language',result);
+      notifyCertificateChanged(events, "language", result);
       return applicationDto(result);
     },
     async review(actor, applicationId, expected, input) {
@@ -418,18 +450,22 @@ export function createCertificationsService({
         application.VersionToken !== expected
       )
         throw new AppError("Hồ sơ đã thay đổi hoặc không còn chờ duyệt.", 409);
-      const result=await repository.review({ actor, applicationId, expected, ...input });
-      notifyCertificateChanged(events,'language',result);
+      const result = await repository.review({
+        actor,
+        applicationId,
+        expected,
+        ...input,
+      });
+      notifyCertificateChanged(events, "language", result);
       return applicationDto(result);
     },
     async download(actor, applicationId, fileId) {
       const application = await load(actor, applicationId);
-      const file = (application.SubmittedAt ? application.Files : [])
-        .find(
-          (f) =>
-            f.Id.toLowerCase() === fileId.toLowerCase() &&
-            f.Status === "completed",
-        );
+      const file = (application.SubmittedAt ? application.Files : []).find(
+        (f) =>
+          f.Id.toLowerCase() === fileId.toLowerCase() &&
+          f.Status === "completed",
+      );
       if (!file) throw new AppError("Không tìm thấy minh chứng đã nhận.", 404);
       return {
         url: await storage.download(file.ObjectKey, config.downloadTtlSeconds),
