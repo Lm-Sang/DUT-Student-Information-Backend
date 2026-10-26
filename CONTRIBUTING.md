@@ -3,6 +3,10 @@
 Đọc [kiến trúc và cách thêm feature](docs/ARCHITECTURE.md) trước khi sửa source.
 Quy ước từng tầng nằm trong [DTO, mapper, service và repository](docs/LAYERS.md).
 
+Dùng [file trao đổi feature](FEATURE_WORK.md) để điền yêu cầu function và test,
+chốt cách làm với Codex, rồi xóa từng mục theo dõi sau khi xác nhận hoàn tất.
+Giữ code và file test; khi hết việc và các kiểm tra đạt thì chốt done feature.
+
 1. Chia nhiệm vụ theo nghiệp vụ, tạo nhánh như `feat/announcements-search` hoặc
    `fix/curriculum-validation`.
 2. Sửa code và test trong `src/modules/<feature>/`. Parse input trong `dto/`,
@@ -11,7 +15,7 @@ Quy ước từng tầng nằm trong [DTO, mapper, service và repository](docs/
    phải export qua `index.js`; không import repository của feature khác.
 3. Khi thêm route, ghi rõ request/response, quyền truy cập và lỗi dự kiến trong
    tài liệu API. Khi thêm biến môi trường, cập nhật `.env.example`.
-4. Chạy `npm run test:feature -- <feature>`, `npm run check`, rồi `npm test`
+4. Chạy `node --test "src/modules/<feature>/**/*.test.js"`, rồi `npm test`
    trước khi mở pull request. PowerShell có thể dùng `npm.cmd`.
 5. Trong pull request, mô tả hành vi thay đổi, feature bị ảnh hưởng và kết quả
    kiểm tra. Nếu sửa `shared`, `infrastructure`, `config` hoặc contract dùng

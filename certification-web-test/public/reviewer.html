@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="vi">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer">
+  <title>Xét duyệt chứng chỉ · Chuyên viên DUT</title><link rel="stylesheet" href="/styles.css"><script type="module" src="/reviewer.js"></script></head>
+<body><main class="reviewer-main">
+  <header><div><p class="eyebrow">DUT · CHUYÊN VIÊN</p><h1>Xét duyệt chứng chỉ</h1><p>Đối chiếu thông tin kê khai và ảnh minh chứng của sinh viên.</p></div>
+    <div class="header-tools"><span class="badge">Bản thử nghiệm local</span><a id="student-link" class="button-link" href="http://localhost:5173">Trang sinh viên</a></div></header>
+  <nav class="certificate-tabs" aria-label="Nhóm chứng chỉ"><a id="language-tab" href="/?kind=language">Ngoại ngữ</a><a id="it-tab" href="/?kind=it">Tin học</a></nav>
+  <p id="reviewer-notice" role="status" aria-live="polite" hidden></p>
+  <section id="reviewer-login-card" class="card login-card"><h2>Đăng nhập chuyên viên</h2><p class="hint">Dùng tài khoản thử nghiệm được cấp cho môi trường local.</p>
+    <form id="reviewer-login-form"><label>Tài khoản<input id="reviewer-username" autocomplete="username" value="admin" maxlength="100" required></label>
+      <label>Mật khẩu<input id="reviewer-password" type="password" autocomplete="current-password" maxlength="100" required></label>
+      <button type="submit" id="reviewer-login" disabled>Đăng nhập</button></form></section>
+  <section id="reviewer-session" class="card" hidden><div class="row"><div><h2 id="reviewer-name"></h2><p class="hint">Bạn có thể xem hồ sơ và ghi kết quả xét duyệt.</p></div><button type="button" id="reviewer-logout" class="secondary">Đăng xuất</button></div></section>
+  <section id="queue-card" class="card" hidden><div class="row"><div><h2>Danh sách hồ sơ</h2><p class="hint">Hàng chờ chỉ nhận hồ sơ sinh viên đã nộp hoàn tất.</p></div>
+    <div class="actions"><label class="compact-label">Trạng thái<select id="queue-status"><option value="submitted">Chờ xét duyệt</option><option value="needs_changes">Cần bổ sung</option><option value="verified">Đã xác nhận</option><option value="rejected">Đã từ chối</option><option value="uploading">Chưa nộp</option></select></label>
+      <button type="button" id="queue-reload" class="secondary">Tải lại</button></div></div>
+    <div class="table-wrap"><table><thead><tr><th>Sinh viên</th><th id="cohort-column">Khóa</th><th>Chứng chỉ</th><th>Trạng thái</th><th></th></tr></thead><tbody id="queue-items"></tbody></table></div>
+    <p id="queue-empty" class="hint" hidden></p><div class="row pagination"><span id="queue-page"></span><div class="actions"><button type="button" id="queue-prev" class="secondary">Trang trước</button><button type="button" id="queue-next" class="secondary">Trang sau</button></div></div>
+  </section>
+  <section id="reviewer-detail" class="card" hidden><div class="row"><h2>Chi tiết hồ sơ</h2><button type="button" id="detail-reload" class="secondary">Tải lại hồ sơ</button></div>
+    <div id="reviewer-identity"></div><div id="reviewer-submissions"></div>
+    <form id="review-form" hidden><h3>Kết quả xét duyệt</h3><p class="hint">Thông tin sinh viên được giữ nguyên. Nếu có vấn đề, ghi rõ yêu cầu bổ sung.</p>
+      <fieldset id="review-fields"><div class="grid"><label>Quyết định<select id="review-decision" required><option value="">Chọn quyết định</option><option value="verified">Xác nhận chứng chỉ</option><option value="needs_changes">Yêu cầu bổ sung</option><option value="rejected">Từ chối hồ sơ</option></select></label>
+        <label>Cách xác minh<select id="review-method" required><option value="document_comparison">Đối chiếu minh chứng</option><option value="issuer_lookup">Tra cứu đơn vị cấp</option><option value="other">Phương pháp khác</option></select></label></div>
+        <label>Lý do / ghi chú<textarea id="review-reason" rows="3" maxlength="2000" placeholder="Bắt buộc khi yêu cầu bổ sung hoặc từ chối"></textarea></label>
+        <button type="submit" id="review-submit">Lưu kết quả xét duyệt</button></fieldset>
+    </form><p id="review-locked" class="hint" hidden></p>
+  </section>
+  <dialog id="image-dialog"><button type="button" id="close-image" class="secondary">Đóng ảnh</button><img id="large-evidence" alt="Minh chứng chứng chỉ"></dialog>
+  <footer id="reviewer-connection"></footer>
+</main></body></html>

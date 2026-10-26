@@ -8,6 +8,8 @@ export function errorHandler(error, _req, res, _next) {
   const isOperationalError = error instanceof AppError;
   const statusCode = isOperationalError ? error.statusCode : 500;
   const message = isOperationalError ? error.message : 'Internal server error';
+  const retryAfter=isOperationalError?error.details?.retryAfterSeconds:null;
+  if(Number.isInteger(retryAfter)&&retryAfter>0&&retryAfter<=3600)res.set('Retry-After',String(retryAfter));
 
   sendError(res, message, statusCode, isOperationalError ? error.details : undefined);
 }

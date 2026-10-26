@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { test } from 'node:test';
 
-import { javascriptFiles, projectRoot } from '../scripts/lib/files.js';
+import { javascriptFiles, projectRoot } from './support/files.js';
 
 test('features expose index.js to each other; shared infrastructure has no business dependencies', () => {
   const sourceRoot = join(projectRoot, 'src');

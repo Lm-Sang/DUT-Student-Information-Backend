@@ -53,13 +53,8 @@ Giữ cả dòng có `MaHPTT`; không loại thông tin học phần thay thế 
 số dòng khai báo khớp mảng dữ liệu, không thiếu tên/tín chỉ của học phần hoặc tên môn điều kiện
 sau khi bổ sung metadata từ database thứ hai.
 
-Chạy lại bằng script **chỉ đọc SQL**:
-
-```bash
-node scripts/export-public-curriculum.js 102
-```
-
-Script dùng `primary → DHBK_CDS` cho danh mục/khung/điều kiện;
+Công cụ export cũ đã được xóa cùng thư mục `scripts`. Lần export được ghi
+nhận ở đây dùng `primary → DHBK_CDS` cho danh mục/khung/điều kiện;
 `secondary → DATA_GVien1` bổ sung tên môn còn thiếu, tên ngành quốc gia và ngày đào tạo còn trống.
 Không thay tập mã chương trình hoặc tự thêm môn từ một khung khác. Có trường nguồn bổ sung trong JSON.
 SQL account là kết nối của backend tới DB; việc dữ liệu này được công bố trên web không biến SQL Server
@@ -89,7 +84,7 @@ Các database không đồng bộ hoàn toàn:
 
 ## Truy vấn để backend trả JSON
 
-[public-curriculum.sql](../scripts/queries/public-curriculum.sql) có bốn result set:
+Truy vấn export cũ có bốn result set:
 danh sách theo khoa, thông tin một CTĐT, toàn bộ dòng khung và toàn bộ điều kiện của CTĐT.
 Tên/tín chỉ học phần dùng LEFT JOIN để không làm mất môn nếu catalog chưa đồng bộ.
 Điều kiện lấy riêng để tránh nhân số dòng môn khi một môn có nhiều điều kiện.

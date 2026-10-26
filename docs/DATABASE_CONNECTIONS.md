@@ -4,7 +4,7 @@ Backend có thể dùng đồng thời hai instance trong cùng tiến trình No
 
 | Nguồn | Kết nối | Xác thực | Cách dùng |
 | --- | --- | --- | --- |
-| Trường | `DB_HOST:DB_PORT`, qua SSH hoặc direct | SQL login `primary`/`secondary` | `connectDatabase(account, databaseName)` |
+| Trường | `DB_HOST_SSH:DB_PORT`, qua SSH hoặc direct | SQL login `primary`/`secondary` | `connectDatabase(account, databaseName)` |
 | Local | `localhost:1433`, database `sv_dut` | Tài khoản Windows chạy Node.js | `queryLocalDatabase(sql, params)` hoặc `connectLocalDatabase()` |
 
 `primary` và `secondary` là hai SQL login trên instance trường, không phải hai
@@ -30,6 +30,10 @@ LOCAL_DB_QUERY_TIMEOUT_MS=30000
 
 Các giá trị trên cũng là mặc định. Không cần username/password SQL cho local.
 Cấu hình `DB_*` và `SSH_*` vẫn dành cho instance trường.
+`DB_HOST_SSH` là tên chuẩn cho SQL host của trường. Code cũng nhận cách viết
+hoa/thường đã dùng trong `.env`; `DB_HOST` chỉ là fallback cho cấu hình cũ.
+Không dùng chung DB_HOST/DB_PORT/DB_ENCRYPT cho cấu hình local: local phải dùng
+LOCAL_DB_HOST/LOCAL_DB_PORT/LOCAL_DB_ENCRYPT/LOCAL_DB_TRUST_SERVER_CERTIFICATE.
 
 ## Dùng trong repository của feature
 
@@ -78,12 +82,7 @@ của `mssql`, có thể làm hỏng request trên pool Tedious đang kết nố
 
 ## Kiểm tra
 
-```powershell
-npm.cmd run test:db:local  # Chỉ kiểm tra local, không cần SSH
-npm.cmd run test:db:all    # Trường và local chạy đồng thời trong cùng tiến trình
-npm.cmd run test:db       # Kiểm tra đầy đủ primary/secondary của trường như trước
-```
-
-Các lệnh chỉ đọc thông tin phiên bản, tài khoản, database và danh mục bảng. DB
-`sv_dut` hiện chưa có bảng người dùng. Kết nối thành công không tự tạo schema hay
-sao chép dữ liệu từ trường; feature dùng local cần có bảng/dữ liệu tương ứng.
+`npm test` kiểm tra tính độc lập của hai connector bằng fixture. Các công cụ
+test:db cũ đã được xóa cùng thư mục scripts. Kiểm tra kết nối thật bằng connector
+phía trên, chỉ SELECT metadata cần dùng rồi đóng kết nối. Thành công không tự
+sao chép dữ liệu từ trường; việc nhập catalog certification là thao tác riêng.

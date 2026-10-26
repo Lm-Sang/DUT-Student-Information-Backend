@@ -127,10 +127,7 @@ không tự thêm môn từ một CTĐT khác.
 
 ```powershell
 npm test
-npm run test:curriculum:live
-# Kiểm tra khoa khác, nếu cần:
-npm run test:curriculum:live -- 101
 ```
 
-`npm test` dùng fixture, không truy cập SQL. Lệnh `test:curriculum:live` chạy server HTTP tạm,
-đọc SQL và kiểm tra từng CTĐT của khoa; đóng server, SQL pool và SSH khi hoàn tất.
+`npm test` dùng fixture, không truy cập SQL. Công cụ kiểm thử SQL thật trước đây
+đã được xóa cùng thư mục `scripts`; các kết quả trên là bản ghi lần kiểm tra trước.

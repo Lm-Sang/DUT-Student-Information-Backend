@@ -1,12 +1,18 @@
 import { createApp } from './app.js';
 import { env } from './config/env.js';
 import { initializeDatabases, disconnectAllDatabases } from './infrastructure/database/index.js';
+import {closeCertificationConnections} from './modules/certifications/index.js';
 
 // Admin SSO is an optional module, loaded only when explicitly enabled.
 const adminAuthModule = env.features.adminAuthEnabled
   ? (await import('./modules/auth/admin/index.js')).adminAuthModule
   : undefined;
-const app = createApp({ adminAuthModule });
+// Local-only workspace adapter; this wiring is excluded from the feature commit.
+const localCertificationsModules = ['development', 'test'].includes(env.nodeEnv)
+  && process.env.CERTIFICATIONS_DEV_MODE === 'true'
+  ? (await import('../certification-web-test/backend-module.js')).createLocalCertificationsModules()
+  : {};
+const app = createApp({ adminAuthModule, ...localCertificationsModules });
 
 const server = app.listen(env.port, () => {
   console.log(`${env.app.name} is running at ${env.app.url}`);
@@ -29,6 +35,7 @@ let shuttingDown = false;
 async function shutdown(exitCode = 0) {
   if (shuttingDown) return;
   shuttingDown = true;
+  closeCertificationConnections();
   const timeout = setTimeout(() => process.exit(1), 10000);
   timeout.unref();
   try {

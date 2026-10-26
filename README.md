@@ -68,7 +68,8 @@ cua hai web khi deploy. CORS chi gioi han request tu trinh duyet; API admin van
 can middleware xac thuc JWT va kiem tra role truoc khi mo endpoint.
 
 Database ket noi SQL Server qua SSH tunnel: `SSH_HOST` la may nhay SSH,
-`DB_HOST` la IP SQL Server ma may SSH truy cap duoc. Hai IP co the khac nhau.
+`DB_HOST_SSH` la IP SQL Server ma may SSH truy cap duoc. Hai IP co the khac nhau.
+Bien host nay doc lap voi `LOCAL_DB_HOST`; cac bien local deu dung tien to `LOCAL_DB_`.
 Moi SQL login co default database rieng qua `DB_PRIMARY_DEFAULT_DATABASE` va
 `DB_SECONDARY_DEFAULT_DATABASE`; de trong neu muon dung default cua SQL login.
 
@@ -82,22 +83,10 @@ Khi truy van database khac, goi `connectDatabase('primary', 'DATA_SV2')` hoac
 Pool duoc tach theo cap `(account, database)` va SQL Server quyet dinh quyen
 truy cap. Ten `primary`/`secondary` khong dong nghia voi student/admin.
 
-Kiem tra SSH, dang nhap SQL, database nhin thay va danh sach bang cua ca hai tai
-khoan bang:
-
-```bash
-npm run test:db
-```
-
 Backend cũng có kết nối local độc lập tới `localhost:1433/sv_dut` bằng Windows
 Authentication, dùng đồng thời với instance trường. Cấu hình qua `LOCAL_DB_*`,
 không cần mật khẩu SQL. Feature dùng `queryLocalDatabase()` để truy vấn local;
 các repository hiện có tiếp tục dùng database trường.
-
-```bash
-npm run test:db:local
-npm run test:db:all
-```
 
 Xem [cấu hình và ví dụ dùng hai instance](docs/DATABASE_CONNECTIONS.md).
 
@@ -152,14 +141,17 @@ Course Registration/TKB dung adapter chung `shared/http` va HTTP client trong
 van thuoc tung feature.
 
 ```bash
-npm run test:feature -- curriculum
-npm run check
+node --test "src/modules/curriculum/**/*.test.js"
 npm test
 ```
 
 Tren PowerShell, neu Execution Policy chan `npm.ps1`, dung `npm.cmd`.
 
 ## Tai lieu kien truc
+
+FE test chứng chỉ: chạy `npm.cmd run certifications:fe`, mở sinh viên tại
+`http://localhost:5173`, chuyên viên tại `http://localhost:5174` (admin / 123 local).
+Xem [hướng dẫn đăng nhập, upload và xét duyệt](certification-web-test/README.md).
 
 - [Kiến trúc feature, ranh giới import và cách thêm nghiệp vụ](docs/ARCHITECTURE.md)
 - [Quy ước làm việc nhóm](CONTRIBUTING.md)
