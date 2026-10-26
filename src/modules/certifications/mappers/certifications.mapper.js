@@ -26,30 +26,22 @@ export function fileDto(file) {
       widthPixels:inspection.widthPixels,heightPixels:inspection.heightPixels,
       algorithm:inspection.algorithmName,algorithmVersion:inspection.algorithmVersion} : null };
 }
-export function submissionDto(row) {
-  return { id:id(row.Id),sequence:row.Sequence,fullName:row.FullName,className:row.ClassName,
+export function applicationDto(row) {
+  return { id:id(row.Id),studentCode:row.StudentCode,cohortYear:row.CohortYear,
+    rowVersion:row.VersionToken,fullName:row.FullName,className:row.ClassName,
     certificateTypeId:row.CertificateTypeId,result:row.Result,
     catalogSnapshot:row.CatalogSnapshot,issuedOn:row.IssuedOn?.slice(0,10),notes:row.Notes ?? null,
     status:row.Status === 'checking' ? 'uploading' : row.Status,processing:row.Status === 'checking',
-    expiresAt:utc(row.ExpiresAt),submittedAt:utc(row.SubmittedAt),createdAt:utc(row.CreatedAt),
+    expiresAt:utc(row.ExpiresAt),submittedAt:utc(row.SubmittedAt),createdAt:utc(row.CreatedAt),updatedAt:utc(row.UpdatedAt),
     files:(row.Files ?? []).map(fileDto),
-    review:row.Review ? {decision:row.Review.Decision,reason:row.Review.Reason ?? null,
-      verificationMethod:row.Review.VerificationMethod,reviewerName:row.Review.ReviewerName,reviewedAt:utc(row.Review.ReviewedAt)} : null };
-}
-export function applicationDto(row) {
-  const submissions = row.Submissions ?? [];
-  return { id:id(row.Id),studentCode:row.StudentCode,cohortYear:row.CohortYear,status:row.Status,rowVersion:row.VersionToken,
-    createdAt:utc(row.CreatedAt),updatedAt:utc(row.UpdatedAt),
-    currentSubmission:submissions.find(s => s.Id.toLowerCase() === row.CurrentSubmissionId?.toLowerCase())
-      ? submissionDto(submissions.find(s => s.Id.toLowerCase() === row.CurrentSubmissionId?.toLowerCase())) : null,
-    pendingSubmission:submissions.some(s => s.Status !== 'submitted') ? submissionDto(submissions.find(s => s.Status !== 'submitted')) : null,
-    submissions:submissions.filter(s => s.Status === 'submitted').map(submissionDto) };
+    review:row.ReviewedAt ? {decision:row.Status,reason:row.ReviewReason ?? null,
+      verificationMethod:row.VerificationMethod,reviewerName:row.ReviewerName,reviewedAt:utc(row.ReviewedAt)} : null };
 }
 export function listDto(result) {
   return {page:result.page,pageSize:result.pageSize,totalRecords:result.totalRecords,
     totalPages:Math.ceil(result.totalRecords/result.pageSize),
     items:(result.items ?? []).map(row => ({id:id(row.Id),studentCode:row.StudentCode,cohortYear:row.CohortYear,
-      status:row.Status,fullName:row.FullName ?? null,certificateTypeId:row.CertificateTypeId ?? null,
+      status:row.Status==='checking'?'uploading':row.Status,processing:row.Status==='checking',fullName:row.FullName ?? null,certificateTypeId:row.CertificateTypeId ?? null,
       certificateTypeName:row.CertificateTypeName ?? null,rowVersion:row.VersionToken,
       createdAt:utc(row.CreatedAt),updatedAt:utc(row.UpdatedAt)}))};
 }
