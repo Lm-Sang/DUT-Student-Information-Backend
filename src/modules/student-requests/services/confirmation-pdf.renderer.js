@@ -43,6 +43,8 @@ export function renderConfirmationPdf({ row, profile = {}, printedAt }) {
     line('Mã sinh viên', row.StudentNumber);
     line('Lớp', profile.className || '................................');
     line('Ngày sinh', profile.dateOfBirth || '................................');
+    line('CCCD/CMND',profile.identityNumber||'................................');
+    line('Số điện thoại',profile.phone||'................................');
     doc.moveDown(0.7).font('Bold').fontSize(12).text('NỘI DUNG ĐỀ NGHỊ'); doc.moveDown(0.3).fontSize(11);
     line('Loại văn bản', catalog.name || row.DocumentName);
     line('Mã văn bản', payload.documentCode);

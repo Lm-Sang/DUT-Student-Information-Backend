@@ -9,4 +9,6 @@ try {
   if (identity.db !== 'sv_dut') throw new Error('Migration target is not sv_dut.');
   await queryLocalDatabase(readFileSync(new URL('./queries/requests-fields-seed.sql', import.meta.url), 'utf8'));
   console.log('Created/verified Vietnamese typed columns and fictional actors in local sv_dut.', JSON.stringify(identity));
+  await import('./upgrade-request-workflow.js');
+  await import('./upgrade-request-rbac.js');
 } finally { await disconnectLocalDatabase(); }

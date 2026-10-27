@@ -1,7 +1,7 @@
 // [new SQL column, SQL type, previous prototype column]. No JSON/PDF storage.
 export const tables = [
  ['TaiKhoan','Actor',[
-  ['MaHS','nvarchar(40) NOT NULL PRIMARY KEY','Id'],['Hoten','nvarchar(150) NOT NULL','DisplayName'],['VaiTro',"varchar(20) NOT NULL CHECK(VaiTro IN ('STUDENT','STAFF'))",'Role'],['MaDV','varchar(20) NULL','Department'],['SoThe','nvarchar(30) NULL','StudentNumber'],['HieuLuc','bit NOT NULL DEFAULT 1','IsActive']]],
+  ['MaHS','nvarchar(40) NOT NULL PRIMARY KEY','Id'],['Hoten','nvarchar(150) NOT NULL','DisplayName'],['VaiTro',"varchar(20) NOT NULL CHECK(VaiTro IN ('STUDENT','STAFF','ADMIN'))",'Role'],['MaDV','varchar(20) NULL','Department'],['SoThe','nvarchar(30) NULL','StudentNumber'],['HieuLuc','bit NOT NULL DEFAULT 1','IsActive']]],
  ['tmKehoach','AcademicTerm',[
   ['IDCode','nvarchar(12) NOT NULL PRIMARY KEY','Code'],['TenKH','nvarchar(150) NOT NULL','Name'],['ThuTu','int NOT NULL','SortOrder'],['Hientai','bit NOT NULL DEFAULT 0','IsSelectable'],['NgayDongBo','datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME()','ObservedAt']]],
  ['tmNganhTQ','ProgramFamily',[

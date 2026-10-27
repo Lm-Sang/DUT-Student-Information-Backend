@@ -50,8 +50,8 @@ export function parsePayload(typeCode, value) {
     if (payload.reasonCode !== 'CHANGE_INFO') payload.changeDescription = '';
   }
   if (typeCode === 'DonSV06' && !['LH001', 'LH002'].includes(payload.reasonCode)) throw new AppError('Chọn lý do thôi học.', 400);
-  if (['DonSV04', 'DonSV05'].includes(typeCode) && !payload.reason) throw new AppError('Vui lòng nhập lý do đề nghị.', 400);
-  const termField = { DonSV03: 'expectedTerm', DonSV04: 'targetTerm', DonSV05: 'reviewTerm', DonSV07: 'startTerm' }[typeCode];
+  if (typeCode === 'DonSV05' && !payload.reason) throw new AppError('Vui lòng nhập lý do đề nghị.', 400);
+  const termField = { DonSV03: 'expectedTerm', DonSV05: 'reviewTerm', DonSV07: 'startTerm' }[typeCode];
   if (termField && !payload[termField]) throw new AppError('Vui lòng chọn học kỳ.', 400);
   if (typeCode === 'DonSV07' && !payload.programCode) throw new AppError('Vui lòng chọn chương trình 2.', 400);
   if (typeCode === 'CONFIRMATION') {
@@ -73,7 +73,7 @@ export function parseCreate(body) {
 
 export function parseCommand(body) {
   const input = object(body);
-  if (Object.keys(input).some(key => !['action', 'version', 'message', 'requiredFields', 'payload', 'idempotencyKey', 'pickupLocation', 'cancelReasonCode'].includes(key))) throw new AppError('Thao tác có field không được phép. Lịch hẹn được hệ thống tự tạo sau 2 ngày.', 400);
+  if (Object.keys(input).some(key => !['action', 'version', 'message', 'requiredFields', 'payload', 'idempotencyKey', 'pickupLocation', 'cancelReasonCode'].includes(key))) throw new AppError('Thao tác có field không được phép. Lịch nhận được tính sau ngày in 3 ngày.', 400);
   const action = text(input.action, 'thao tác', { required: true, max: 30 });
   if (!['receive', 'start', 'requestInfo', 'external', 'result', 'complete', 'cancel', 'supplement'].includes(action)) throw new AppError('Thao tác không hợp lệ.', 400);
   if (!Number.isInteger(input.version) || input.version < 1) throw new AppError('Phiên bản hồ sơ không hợp lệ.', 400);

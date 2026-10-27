@@ -19,9 +19,9 @@ export function cancellationFeedback(actor, command) {
   return { message, cancelReasonCode: preset.code, presetReason: preset.name, additionalMessage: command.message || '' };
 }
 
-export function confirmationAppointment(processedAt, location) {
-  const processed = new Date(processedAt);
-  if (!Number.isFinite(processed.getTime())) throw new Error('Invalid processing time');
-  return { processedAt: processed.toISOString(), pickupAt: new Date(processed.getTime() + 2 * 86400000).toISOString(),
-    pickupLocation: location || 'Khu Hành chính một cửa', appointmentPolicy: 'TWO_CALENDAR_DAYS' };
+export function confirmationAppointment(printedAt, location) {
+  const printed = new Date(printedAt);
+  if (!Number.isFinite(printed.getTime())) throw new Error('Invalid print time');
+  return { printedAt: printed.toISOString(), pickupAt: new Date(printed.getTime() + 3 * 86400000).toISOString(),
+    pickupLocation: location || 'Khu Hành chính một cửa', appointmentPolicy: 'THREE_CALENDAR_DAYS_FROM_PRINT' };
 }

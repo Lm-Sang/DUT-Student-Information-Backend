@@ -1,5 +1,9 @@
 # Kiểm tra cấu hình và bảo mật SSO — 09/10/2026
 
+## Cập nhật hợp đồng gateway — 26/10/2026
+
+Theo file Auth và yêu cầu hiện hành: login dùng `https://sso.dut.udn.vn/microsoft/login?callbackUrl={callbackUrl}&response_mode=query`, logout chỉ có `postLogoutRedirectUri`. Không gắn `state`, PKCE hay tham số khác vào URL SSO hoặc callbackUrl. Callback nhận duy nhất `accessToken`. Cookie HttpOnly chứa mã lượt đăng nhập TTL và server consume một lần; mã này không được gateway echo nên không tương đương cơ chế OAuth state được gateway ràng buộc. Kiểm tra chữ ký, hạn token, phiên và handoff cookie vẫn giữ nguyên. Các ghi chú về query state bên dưới là lịch sử, không còn mô tả hợp đồng hiện hành.
+
 ## Cập nhật sau khi xử lý
 
 Các kết quả bên dưới ghi nhận bản khung **trước khi sửa**. Bản hiện tại đã:

@@ -3,15 +3,15 @@ import { AppError } from '../../../shared/errors/app-error.js';
 import { canRead, isPaperRequest } from '../domain/request-rules.js';
 import { paperTemplates, renderPaperPdf } from './paper-pdf.renderer.js';
 
-export function createPaperFilesService(repository, { renderer = renderPaperPdf } = {}) {
+export function createPaperFilesService(repository, { renderer = renderPaperPdf, loadProfile=id=>repository.profile(id) } = {}) {
   return {
     async download(actor, id) {
       const row = await repository.get(id);
       if (!row || row.Status === 'CANCELLED' || !isPaperRequest(row.TypeCode)
-        || !canRead(actor, { studentId: row.StudentId, department: row.Department })) throw new AppError('Không có đơn được phép tải PDF.', 404);
+        || !canRead(actor, { studentId: row.StudentId, department: row.Department, typeCode: row.TypeCode, payload: row.Payload, assignedStaffId: row.AssignedStaffId })) throw new AppError('Không có đơn được phép tải PDF.', 404);
       const template = paperTemplates.find(t => t.code === row.TypeCode);
       if (!template) throw new AppError('Chưa cấu hình biểu mẫu.', 503);
-      const profile = await repository.profile(row.StudentId);
+      const profile = await loadProfile(row.StudentId);
       if (!profile?.name || profile.studentNumber !== row.StudentNumber) throw new AppError('Chưa có hồ sơ sinh viên phù hợp để điền biểu mẫu.', 422);
       const catalog = await repository.catalogs();
       const payload = row.Payload;
@@ -28,7 +28,7 @@ export function createPaperFilesService(repository, { renderer = renderPaperPdf 
       }
       const result = await renderer({ template, snapshot, photo });
       const latest = await repository.get(id);
-      if (!latest || latest.Status === 'CANCELLED' || !canRead(actor, { studentId: latest.StudentId, department: latest.Department })) throw new AppError('Đơn đã hủy hoặc không còn được phép tải.', 404);
+      if (!latest || latest.Status === 'CANCELLED' || !canRead(actor, { studentId: latest.StudentId, department: latest.Department, typeCode: latest.TypeCode, payload: latest.Payload, assignedStaffId: latest.AssignedStaffId })) throw new AppError('Đơn đã hủy hoặc không còn được phép tải.', 404);
       if (latest.Version !== row.Version) throw new AppError('Đơn vừa thay đổi. Vui lòng tải lại.', 409);
       return { bytes: result.bytes, filename: `${row.TypeCode}-${id}.pdf`, sha256: createHash('sha256').update(result.bytes).digest('hex') };
     },

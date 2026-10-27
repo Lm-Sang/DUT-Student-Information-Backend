@@ -1,3 +1,4 @@
+import {legacyFunctions} from '../domain/rbac.js';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { actionsFor, canRead, transition, visibleTerms, paperRequestCodes, requestTypes } from '../domain/request-rules.js';
@@ -5,8 +6,8 @@ import { parseCommand, parseCreate, parsePayload } from '../dto/requests.dto.js'
 import { assertLocalDemoTarget } from '../../../infrastructure/database/local-write-guard.js';
 
 const student = { id: 'sv-a', role: 'STUDENT' };
-const staff = { id: 'cv-a', role: 'STAFF', department: 'CTSV' };
-const request = { typeCode: 'CONFIRMATION', studentId: 'sv-a', department: 'CTSV', status: 'SUBMITTED', assignedStaffId: null };
+const staff = { id: 'cv-a', role: 'STAFF', department: 'CTSV', permissions:[...legacyFunctions],workPermissions: ['DonSV01','DonSV03','DonSV04','DonSV05','DonSV06','DonSV07','CONFIRMATION:01'] };
+const request = { typeCode: 'CONFIRMATION', payload:{documentCode:'01'}, studentId: 'sv-a', department: 'CTSV', status: 'SUBMITTED', assignedStaffId: null };
 
 test('six paper petitions require reception before specialist processing and expose ready templates', () => {
   assert.equal(requestTypes.filter(type => type.group === 'PETITION').length, 6);
@@ -20,8 +21,8 @@ test('six paper petitions require reception before specialist processing and exp
       assert.throws(() => transition(staff, paper, { action, message: 'test', requiredFields: ['reasonCode'] }), error => error.statusCode === 403);
     }
     for (const status of ['RECEIVED', 'NEEDS_INFO', 'EXTERNAL_PROCESSING', 'READY']) {
-      assert.deepEqual(actionsFor(staff, { ...paper, status, printedAt:'server-time' }), ['complete', 'cancel']);
-      assert.equal(transition(staff, { ...paper, status, printedAt:'server-time' }, { action: 'complete' }).status, 'COMPLETED');
+      assert.deepEqual(actionsFor(staff, { ...paper, status, assignedStaffId:staff.id, printedAt:null }), ['complete', 'cancel']);
+      assert.equal(transition(staff, { ...paper, status, assignedStaffId:staff.id, printedAt:null }, { action: 'complete' }).status, 'COMPLETED');
     }
     assert.equal(requestTypes.find(type => type.code === typeCode).formTemplateStatus, 'READY');
   }
@@ -41,12 +42,13 @@ test('semester dropdown keeps the current selection and includes exactly one fol
   assert.throws(() => visibleTerms(terms, '9999'), error => error.statusCode === 503);
 });
 
-test('only owner students and specialists of the responsible department can read', () => {
+test('read scope follows explicit work grants; admins can inspect all requests', () => {
   assert.equal(canRead(student, request), true);
   assert.equal(canRead({ ...student, id: 'sv-b' }, request), false);
   assert.equal(canRead(staff, request), true);
-  assert.equal(canRead({ ...staff, department: 'DT' }, request), false);
-  assert.equal(canRead({ ...staff, role: 'ADMIN' }, request), false);
+  assert.equal(canRead({...staff,permissions:[...legacyFunctions],workPermissions:[]},request),false);
+  assert.equal(canRead({ ...staff, department: 'DT' }, request), true);
+  assert.equal(canRead({ ...staff, role: 'ADMIN' }, request), true);
 });
 
 test('student cancellation needs no reason; specialist cancellation requires public feedback', () => {

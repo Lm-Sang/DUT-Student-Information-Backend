@@ -20,6 +20,9 @@
     "test:db": "node scripts/test-database.js",
     "test:db:local": "node scripts/test-database-instances.js local",
     "test:db:all": "node scripts/test-database-instances.js all",
+    "db:demo:rbac": "node scripts/upgrade-request-rbac.js",
+    "db:demo:upgrade": "node scripts/upgrade-request-workflow.js",
+    "test:requests:upgrade": "node scripts/smoke-workflow-upgrade.js",
     "db:demo:setup": "node scripts/setup-requests-demo.js",
     "db:demo:sync": "node scripts/sync-requests-demo-catalogs.js",
     "db:demo:seed": "node scripts/seed-requests-demo.js",
@@ -27,7 +30,8 @@
     "test:requests:pdf": "node scripts/smoke-request-pdfs.js",
     "forms:blank": "node scripts/build-blank-request-forms.js",
     "forms:layout:references": "node scripts/build-request-layout-reference.js",
-    "forms:layout:check": "node scripts/check-request-layout.js"
+    "forms:layout:check": "node scripts/check-request-layout.js",
+    "test:requests:rbac": "node scripts/smoke-rbac.js"
   },
   "repository": {
     "type": "git",

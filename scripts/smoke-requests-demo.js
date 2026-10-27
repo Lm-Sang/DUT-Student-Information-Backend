@@ -67,8 +67,8 @@ try {
   assert.equal(third.request.formFile.generation, 'ON_DOWNLOAD');
   await action(cv, third.request, 'complete', {}, 403);
   let receivedThird = await action(cv, third.request, 'receive');
-  await action(cv,receivedThird,'complete',{},403);
-  receivedThird=await printRequest(cv,receivedThird);
+  assert.equal(receivedThird.printedAt,null);assert.equal(receivedThird.formFile.canPrint,false);assert(receivedThird.actions.includes('complete'));
+  await call('/requests/'+receivedThird.id+'/print',cv,{version:receivedThird.version,idempotencyKey:randomUUID()},403);
   await action(cv, receivedThird, 'requestInfo', { message: 'Không dùng luồng bổ sung web cho đơn giấy.', requiredFields: ['changeDescription'] }, 403);
   await action(cv, receivedThird, 'result', { message: 'Không dùng trả kết quả web cho đơn giấy.' }, 403);
   let r = await action(cv, receivedThird, 'complete', { message: 'Đã xử lý hồ sơ giấy thực tế (mẫu).' });
@@ -88,7 +88,7 @@ try {
   assert.deepEqual(raceStatuses, [200, 409]); checks++;
   let raceDetail = await call(`/requests/${raceRequest.request.id}`, sv);
   assert.equal(raceDetail.events.filter(event => event.type === 'RECEIVE').length, 1);
-  raceDetail=await printRequest(raceDetail.assignedStaffId === 'staff-ctsv' ? cv : cvOther,raceDetail);
+  assert.equal(raceDetail.printedAt,null);
   await action(raceDetail.assignedStaffId === 'staff-ctsv' ? cv : cvOther, raceDetail, 'complete');
 
   for (const [type, value] of [
@@ -121,11 +121,11 @@ try {
   await action(dt, document, 'result', {}, 403);
   const printResponse=await fetch(base+'/requests/'+document.id+'/print',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+dt},body:JSON.stringify({version:document.version,idempotencyKey:randomUUID()})});
   assert.equal(printResponse.status,200);assert.equal(printResponse.headers.get('content-type'),'application/pdf');await printResponse.arrayBuffer();checks++;
-  document=await call('/requests/'+document.id,sv);assert(document.printedAt);assert.equal(document.status,'RECEIVED');assert.equal(document.pickupAt,null);
+  document=await call('/requests/'+document.id,sv);assert(document.printedAt);assert.equal(document.status,'RECEIVED');assert.equal(new Date(document.pickupAt)-new Date(document.printedAt),3*86400000);
   const processCommand = { action: 'result', version: document.version, idempotencyKey: randomUUID() };
   document = await call(`/requests/${document.id}/actions`, dt, processCommand);
   assert(document.processedAt); assert(document.pickupAt); assert(document.printedAt);
-  assert.equal(new Date(document.pickupAt) - new Date(document.processedAt), 2 * 86400000);
+  assert.equal(new Date(document.pickupAt) - new Date(document.printedAt), 3 * 86400000);
   assert.equal(document.appointment.status, 'SCHEDULED'); assert.equal(document.deliveredAt, null);
   const retried = await call(`/requests/${document.id}/actions`, dt, processCommand);
   assert.equal(retried.pickupAt, document.pickupAt); assert.equal(retried.version, document.version);

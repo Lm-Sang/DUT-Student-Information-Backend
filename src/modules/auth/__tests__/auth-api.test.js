@@ -53,7 +53,7 @@ async function fixture(t, channel = 'student', authService = service) {
 async function beginLogin(base, path) {
   const login = await fetch(`${base}${path}/microsoft/login`, { redirect: 'manual' });
   const url = new URL(login.headers.get('location'));
-  return { login, url, state: new URL(url.searchParams.get('callbackUrl')).searchParams.get('state'),
+  return { login, url, state: login.headers.get('set-cookie').split(';')[0].split('=')[1],
     cookie: login.headers.get('set-cookie').split(';')[0] };
 }
 
@@ -78,8 +78,11 @@ test('student browser login, callback and me; pending identity has no business p
   assert.equal(login.status, 302);
   assert.equal(url.origin, new URL(config.microsoftSso.baseUrl).origin);
   assert.equal(url.searchParams.get('response_mode'), 'query');
+  assert.deepEqual([...url.searchParams.keys()].sort(), ['callbackUrl','response_mode']);
+  assert.equal(url.searchParams.get('callbackUrl'), config.microsoftSso.studentCallbackUrl);
+  assert.equal(new URL(url.searchParams.get('callbackUrl')).search, '');
   assert.match(login.headers.get('set-cookie'), /HttpOnly/);
-  const query = new URLSearchParams({ state, accessToken: ssoToken() });
+  const query = new URLSearchParams({ accessToken: ssoToken() });
   const callback = await fetch(`${base}${path}/microsoft/callback?${query}`, { headers: { cookie }, redirect: 'manual' });
   assert.equal(callback.status, 303);
   assert.equal(callback.headers.get('cache-control'), 'no-store');
@@ -105,13 +108,15 @@ test('student browser login, callback and me; pending identity has no business p
   assert.equal(codeReplay.status, 401);
 });
 
-test('callback rejects missing/mismatched state and missing access token', async (t) => {
+test('callback accepts accessToken only and requires a live browser login attempt', async (t) => {
   const { base, path } = await fixture(t);
-  const { state, cookie } = await beginLogin(base, path);
-  for (const query of [new URLSearchParams({ accessToken: ssoToken() }), new URLSearchParams({ state: 'b'.repeat(64), accessToken: ssoToken() })]) {
-    assert.equal((await fetch(`${base}${path}/microsoft/callback?${query}`, { headers: { cookie } })).status, 401);
+  const { cookie } = await beginLogin(base, path);
+  const query = new URLSearchParams({ accessToken: ssoToken() });
+  for (const invalidCookie of ['', 'dut_sso_student_state=invalid', 'dut_sso_student_state='+'b'.repeat(64)]) {
+    assert.equal((await fetch(`${base}${path}/microsoft/callback?${query}`, { headers: { cookie: invalidCookie }, redirect:'manual' })).status, 401);
   }
-  assert.equal((await fetch(`${base}${path}/microsoft/callback?state=${state}`, { headers: { cookie } })).status, 400);
+  assert.equal((await fetch(`${base}${path}/microsoft/callback?state=extra&${query}`, { headers: { cookie }, redirect:'manual' })).status, 400);
+  assert.equal((await fetch(`${base}${path}/microsoft/callback`, { headers: { cookie }, redirect:'manual' })).status, 400);
 });
 
 test('SSO verification rejects tampering, expiry, missing expiry/identity, issuer, audience and algorithm', async () => {
@@ -172,21 +177,21 @@ test('authenticated POST logout revokes only that session immediately', async (t
   assert.equal((await fetch(`${base}${path}/me`, { headers: { authorization: `Bearer ${second.token}` } })).status, 200);
 });
 
-test('state expiry, fabricated state and concurrent replay fail on server', async (t) => {
+test('cookie login attempt expiry, fabrication and concurrent replay fail on server', async (t) => {
   let clock = Date.now();
   const store = createAuthStore({ now: () => clock });
   const local = createAuthService({ config, store, now: () => clock });
   const { base, path } = await fixture(t, 'student', local);
   const first = await beginLogin(base, path);
   clock += config.auth.stateTtlMs + 1;
-  const expired = await fetch(`${base}${path}/microsoft/callback?${new URLSearchParams({ state: first.state, accessToken: ssoToken() })}`,
+  const expired = await fetch(`${base}${path}/microsoft/callback?${new URLSearchParams({ accessToken: ssoToken() })}`,
     { headers: { cookie: first.cookie }, redirect: 'manual' });
   assert.equal(expired.status, 401);
   const fabricated = 'a'.repeat(64);
-  assert.equal((await fetch(`${base}${path}/microsoft/callback?${new URLSearchParams({ state: fabricated, accessToken: ssoToken() })}`,
+  assert.equal((await fetch(`${base}${path}/microsoft/callback?${new URLSearchParams({ accessToken: ssoToken() })}`,
     { headers: { cookie: `dut_sso_student_state=${fabricated}` }, redirect: 'manual' })).status, 401);
   const next = await beginLogin(base, path);
-  const requests = await Promise.all([1, 2].map(() => fetch(`${base}${path}/microsoft/callback?${new URLSearchParams({ state: next.state, accessToken: ssoToken() })}`,
+  const requests = await Promise.all([1, 2].map(() => fetch(`${base}${path}/microsoft/callback?${new URLSearchParams({ accessToken: ssoToken() })}`,
     { headers: { cookie: next.cookie }, redirect: 'manual' })));
   assert.deepEqual(requests.map((r) => r.status).sort(), [303, 401]);
 });
@@ -236,7 +241,7 @@ test('blank frontend callback returns only a short-lived code, no guessed redire
   const local = createAuthService({ config: localConfig, store: createAuthStore() });
   const { base, path } = await fixture(t, 'student', local);
   const { state, cookie } = await beginLogin(base, path);
-  const callback = await fetch(`${base}${path}/microsoft/callback?${new URLSearchParams({ state, accessToken: ssoToken() })}`,
+  const callback = await fetch(`${base}${path}/microsoft/callback?${new URLSearchParams({ accessToken: ssoToken() })}`,
     { headers: { cookie }, redirect: 'manual' });
   assert.equal(callback.status, 200);
   assert.equal(callback.headers.get('location'), null);
@@ -276,17 +281,18 @@ test('production refuses missing SSO issuer/audience, weak keys and HTTP callbac
   }
 });
 
-test('mock gateway exercises redirects, callback state preservation, redemption and logout URL', async (t) => {
-  let dropState = false;
+test('mock gateway requires the exact reference URL and returns accessToken without echoed state', async (t) => {
   const gateway = express();
   gateway.get('/microsoft/login', (req, res) => {
     assert.equal(req.query.response_mode, 'query');
     const callback = new URL(req.query.callbackUrl);
-    if (dropState) callback.searchParams.delete('state');
+    assert.deepEqual(Object.keys(req.query).sort(), ['callbackUrl','response_mode']);
+    assert.equal(callback.search, '');
     callback.searchParams.set('accessToken', ssoToken());
     res.redirect(callback.href);
   });
   gateway.get('/microsoft/logout', (req, res) => {
+    assert.deepEqual(Object.keys(req.query), ['postLogoutRedirectUri']);
     assert.equal(req.query.postLogoutRedirectUri, config.app.studentFrontendUrl);
     res.redirect(req.query.postLogoutRedirectUri);
   });
@@ -311,9 +317,8 @@ test('mock gateway exercises redirects, callback state preservation, redemption 
   const gatewayLogout = await fetch(logoutData.url, { redirect: 'manual' });
   assert.equal(gatewayLogout.headers.get('location'), config.app.studentFrontendUrl);
   assert.throws(() => local.verifyToken(data.token, 'student'), (error) => error.statusCode === 401);
-  dropState = true;
   const second = await beginLogin(base, path);
   const dropped = await fetch(second.url, { redirect: 'manual' });
   const rejected = await fetch(dropped.headers.get('location'), { redirect: 'manual', headers: { cookie: second.cookie } });
-  assert.equal(rejected.status, 401);
+  assert.equal(rejected.status, 303);
 });

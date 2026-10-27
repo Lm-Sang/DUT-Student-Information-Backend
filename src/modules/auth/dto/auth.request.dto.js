@@ -1,15 +1,15 @@
-import { timingSafeEqual } from 'node:crypto';
 import { AppError } from '../../../shared/errors/app-error.js';
 
 /** @returns {{ state: string, accessToken: unknown }} */
 export function parseAuthCallbackQuery(query, expectedState) {
-  const state = query.state;
-  if (typeof state !== 'string' || !/^[a-f0-9]{64}$/.test(state)
-    || !expectedState || !/^[a-f0-9]{64}$/.test(expectedState)
-    || !timingSafeEqual(Buffer.from(state), Buffer.from(expectedState))) {
-    throw new AppError('Invalid SSO state; start a new login', 401);
+  // The gateway returns accessToken only. The one-use login attempt stays in an HttpOnly cookie.
+  if (typeof expectedState !== 'string' || !/^[a-f0-9]{64}$/.test(expectedState)) {
+    throw new AppError('Missing login attempt; start a new login', 401);
   }
-  return { state, accessToken: query.accessToken };
+  if (!query || Object.keys(query).some(key => key !== 'accessToken')) {
+    throw new AppError('SSO callback accepts accessToken only', 400);
+  }
+  return { state: expectedState, accessToken: parseSsoAccessToken(query.accessToken) };
 }
 
 /** @returns {{ code: string }} */

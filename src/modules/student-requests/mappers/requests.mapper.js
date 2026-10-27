@@ -1,7 +1,9 @@
 import { actionsFor, statuses, typeOf, isPaperRequest, canPrintConfirmation, canPrintRequest } from '../domain/request-rules.js';
 
 export function actorDto(row) {
-  return { id: row.Id, name: row.DisplayName, role: row.Role, department: row.Department, studentNumber: row.StudentNumber };
+  return { id: row.Id, name: row.DisplayName, role: row.Role, department: row.Department, studentNumber: row.StudentNumber,
+    workPermissions: row.WorkPermissions ?? [], permissions: row.Permissions ?? [], roles: row.Roles ?? [], username: row.Username ?? null, permissionVersion: row.PermissionVersion ?? 1,
+    identitySource: row.IdentitySource ?? 'DEMO' };
 }
 
 export function requestDto(row, actor) {
@@ -28,11 +30,13 @@ export function requestDto(row, actor) {
     completedAt: row.CompletedAt, lastFeedback: row.LastFeedback, resultSummary: row.ResultSummary,
     cancelledByRole: row.CancelledByRole, cancelReason: row.CancelReason, cancelledAt: row.CancelledAt,
     catalogSnapshot: row.CatalogSnapshot ?? null,
-    printedAt: row.PrintedAt ?? null, pickupAt: row.PickupAt ?? null, pickupLocation: row.PickupLocation ?? null,
+    printedAt: row.PrintedAt ?? null, lastPrintedAt: row.LastPrintedAt ?? row.PrintedAt ?? null,
+    pickupAt: row.PickupAt ?? null, pickupLocation: row.PickupLocation ?? null,
     processedAt: row.ProcessedAt ?? null, deliveredAt: row.DeliveredAt ?? null,
     appointment: row.TypeCode === 'CONFIRMATION' && row.PickupAt ? {
       status: row.Status === 'CANCELLED' ? 'CANCELLED' : row.DeliveredAt ? 'DELIVERED' : 'SCHEDULED',
-      createdAt: row.ProcessedAt ?? row.PrintedAt ?? null, pickupAt: row.PickupAt, location: row.PickupLocation,
+      createdAt: row.PrintedAt ?? row.ProcessedAt ?? null, pickupAt: row.PickupAt, location: row.PickupLocation,
+      policy: row.AppointmentPolicy ?? 'LEGACY',
     } : null,
     version: row.Version, isSimulation: true };
   return { ...request, typeName: request.typeCode === 'CONFIRMATION' ? request.catalogSnapshot?.name || typeOf(request.typeCode).name : typeOf(request.typeCode).name,

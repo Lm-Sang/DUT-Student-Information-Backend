@@ -58,13 +58,12 @@ export function createAuthService({ config = env, repository = authRepository, s
     frontendCallback(channel);
   }
 
-  function loginUrl(channel, state) {
+  function loginUrl(channel) {
     requireConfig(channel);
     audience(channel);
     const sso = config.microsoftSso;
     const callback = new URL(channel === 'student' ? sso.studentCallbackUrl : sso.adminCallbackUrl);
-    // Carry state in callbackUrl using the reference gateway's query contract.
-    callback.searchParams.set('state', state);
+    // The school's reference accepts a plain callback URL; do not append state or other parameters.
     const url = new URL(sso.loginPath, sso.baseUrl);
     url.searchParams.set('callbackUrl', callback.href);
     url.searchParams.set('response_mode', 'query');
@@ -131,7 +130,7 @@ export function createAuthService({ config = env, repository = authRepository, s
 
   function startLogin(channel) {
     const state = randomBytes(32).toString('hex');
-    const url = loginUrl(channel, state);
+    const url = loginUrl(channel);
     store.put(key('state', channel, state), { channel }, now() + stateTtlMs);
     return { state, url, maxAge: stateTtlMs };
   }

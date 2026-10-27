@@ -71,7 +71,7 @@ test('24 semester rows remain readable, complete and repeat the table header acr
     const all = pages.flat().map(i => i.str).join(' ');
     for (let i = 0; i < 24; i++) assert(all.includes(String(i + 101)), `missing semester row ${i + 1}`);
     for (const page of pages) {
-      const rows = page.filter(i => /^1(?:0\d|1\d|2[0-4])$/.test(i.str));
+      const rows = page.filter(i => /^1(?:0\d|1\d|2[0-4])\.00$/.test(i.str));
       if (!rows.length) continue;
       assert(page.some(i => i.str.includes('Học kỳ/ năm học')));
       assert(rows.every(i => i.height >= 10 && i.transform[5] > 44), 'table rows stay legible and above footer');

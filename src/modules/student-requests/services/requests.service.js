@@ -6,14 +6,14 @@ import { canRead, requestTypes, statuses, transition, typeOf, visibleTerms, isPa
 import { actorDto, eventDto, requestDto } from '../mappers/requests.mapper.js';
 import { createPaperFilesService } from './paper-files.service.js';
 import { createConfirmationFilesService } from './confirmation-files.service.js';
-import { cancellationReasons, cancellationFeedback, confirmationAppointment } from '../domain/staff-workflow.js';
+import { cancellationReasons, cancellationFeedback } from '../domain/staff-workflow.js';
 
 function hash(value) { return createHash('sha256').update(JSON.stringify(value)).digest('hex'); }
 
-export function createRequestsService(repository, { paperFiles = createPaperFilesService(repository), confirmationFiles = createConfirmationFilesService(repository), now = () => new Date() } = {}) {
+export function createRequestsService(repository, { paperFiles = createPaperFilesService(repository), confirmationFiles = createConfirmationFilesService(repository), now = () => new Date(), loadProfile=id=>repository.profile(id) } = {}) {
   async function get(actor, id) {
     const row = await repository.get(id);
-    if (!row || !canRead(actor, { studentId: row.StudentId, department: row.Department })) throw new AppError('Không tìm thấy hồ sơ trong phạm vi được phép.', 404);
+    if (!row || !canRead(actor, { studentId: row.StudentId, department: row.Department, typeCode: row.TypeCode, payload: row.Payload, assignedStaffId: row.AssignedStaffId })) throw new AppError('Không tìm thấy hồ sơ trong phạm vi được phép.', 404);
     return requestDto(row, actor);
   }
   async function catalogs() {
@@ -46,9 +46,10 @@ export function createRequestsService(repository, { paperFiles = createPaperFile
   }
   return {
     actors: async () => (await repository.actors()).map(actorDto),
-    async actor(id) { const row = await repository.actor(id); if (!row) throw new AppError('Nhân vật thử nghiệm không hợp lệ.', 401); return actorDto(row); },
+    async actor(id) { const row = await repository.actor(id); if (!row || row.IdentitySource !== 'DEMO') throw new AppError('Nhân vật thử nghiệm không hợp lệ.', 401); return actorDto(row); },
+    async sessionActor(id) { const row = await repository.actor(id); if (!row) throw new AppError('Phiên không còn hiệu lực.', 401); return actorDto(row); },
     catalogs,
-    profile: async actor => actor.role === 'STUDENT' ? repository.profile(actor.id) : null,
+    profile: async actor => actor.role === 'STUDENT' ? loadProfile(actor.id) : null,
     download: (actor, id) => paperFiles.download(actor, id),
     printConfirmation: (actor, id, input) => confirmationFiles.print(actor, id, input),
     list: async actor => (await repository.list(actor)).map(row => ({ ...requestDto(row, actor),
@@ -64,6 +65,7 @@ export function createRequestsService(repository, { paperFiles = createPaperFile
       const digest = hash({ operation: 'create', typeCode: input.typeCode, payload: input.payload });
       const previous = await repository.receipt(actor.id, input.idempotencyKey, digest);
       if (previous) return get(actor, previous);
+      if(actor.identitySource==='SSO'&&input.typeCode!=='LMS_SUPPORT')await loadProfile(actor.id);
       const type = typeOf(input.typeCode);
       const data = await validateCatalog(input.typeCode, input.payload);
       const catalogSnapshot = input.typeCode === 'CONFIRMATION' ? documentSnapshot(data.selectedDocument, input.payload)
@@ -96,12 +98,12 @@ export function createRequestsService(repository, { paperFiles = createPaperFile
         if (request.typeCode === 'CONFIRMATION') catalogSnapshot = documentSnapshot(request.catalogSnapshot, payload);
       } else if (input.payload !== undefined) throw new AppError('Thao tác này không được sửa nội dung đơn.', 400);
       const resultDetails = {};
-      if (input.printedAt || input.pickupAt) throw new AppError('Lịch trả được tự tạo sau 2 ngày; không nhận ngày in hoặc ngày hẹn từ client.', 400);
+      if (input.printedAt || input.pickupAt) throw new AppError('Lịch trả được tự tạo sau ngày in 3 ngày; không nhận ngày hẹn từ client.', 400);
       if (input.pickupLocation) {
         if (request.typeCode !== 'CONFIRMATION' || input.action !== 'result') throw new AppError('Thông tin in và lịch nhận chỉ dùng khi trả kết quả văn bản.', 400);
       }
       if (request.typeCode === 'CONFIRMATION' && input.action === 'result') {
-        Object.assign(resultDetails, confirmationAppointment(now(), input.pickupLocation));
+        Object.assign(resultDetails, { processedAt: now().toISOString() });
       }
       await repository.update({ id, actorId: actor.id, role: actor.role, version: input.version,
         key: input.idempotencyKey, hash: digest, action: input.action, ...change, payload,

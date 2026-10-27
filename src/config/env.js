@@ -142,7 +142,7 @@ export const env = Object.freeze({
   }),
   microsoftSso: Object.freeze({
     baseUrl:
-      process.env.MICROSOFT_SSO_BASE_URL ?? 'https://sso.dev.dut.navia.io.vn',
+      process.env.MICROSOFT_SSO_BASE_URL ?? 'https://sso.dut.udn.vn',
     loginPath: process.env.MICROSOFT_SSO_LOGIN_PATH ?? '/microsoft/login',
     logoutPath: process.env.MICROSOFT_SSO_LOGOUT_PATH ?? '/microsoft/logout',
     mePath: process.env.MICROSOFT_SSO_ME_PATH ?? '/api/microsoft/me',

@@ -1,3 +1,4 @@
+import {legacyFunctions} from '../domain/rbac.js';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { normalizeDocuments, documentSnapshot, documentPeriod, schoolYears } from '../domain/document-rules.js';
@@ -50,7 +51,7 @@ test('LMS accepts an empty request and derives the reset type and owner details 
 });
 
 test('LMS only receives and replies with a password, finishing immediately with no supplement step', () => {
-  const student = { id: 'sv', role: 'STUDENT' }, staff = { id: 'it', role: 'STAFF', department: 'IT' };
+  const student = { id: 'sv', role: 'STUDENT' }, staff = { id: 'it', role: 'STAFF', department: 'IT', permissions:[...legacyFunctions],workPermissions:['LMS_SUPPORT'] };
   const request = { typeCode: 'LMS_SUPPORT', studentId: 'sv', department: 'IT', status: 'SUBMITTED' };
   assert.deepEqual(actionsFor(staff, request), ['receive','cancel']);
   for (const status of ['RECEIVED','PROCESSING','NEEDS_INFO','EXTERNAL_PROCESSING']) {

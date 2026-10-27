@@ -4,15 +4,15 @@ import { cancellationFeedback, confirmationAppointment } from '../domain/staff-w
 import { parseCommand } from '../dto/requests.dto.js';
 import { requestDto } from '../mappers/requests.mapper.js';
 
-test('appointments retain the processing time and add two calendar days across weekends and year boundaries', () => {
+test('appointments retain the first printing time and add three calendar days across weekends and year boundaries', () => {
   for (const [processed, pickup] of [
-    ['2026-10-30T10:30:00+07:00', '2026-11-01T03:30:00.000Z'],
-    ['2026-12-31T18:45:00+07:00', '2027-01-02T11:45:00.000Z'],
-    ['2028-02-28T18:45:00+07:00', '2028-03-01T11:45:00.000Z'],
+    ['2026-10-30T10:30:00+07:00', '2026-11-02T03:30:00.000Z'],
+    ['2026-12-31T18:45:00+07:00', '2027-01-03T11:45:00.000Z'],
+    ['2028-02-28T18:45:00+07:00', '2028-03-02T11:45:00.000Z'],
   ]) {
     const appointment = confirmationAppointment(processed);
     assert.equal(appointment.pickupAt, pickup);
-    assert.equal(new Date(appointment.pickupAt) - new Date(appointment.processedAt), 172800000);
+    assert.equal(new Date(appointment.pickupAt) - new Date(appointment.printedAt), 259200000);
     assert.equal(appointment.pickupLocation, 'Khu Hành chính một cửa');
   }
 });

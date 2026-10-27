@@ -13,6 +13,20 @@ export function formDate(value) {
     written: 'Đà Nẵng, ngày ' + p.day + ' tháng ' + p.month + ' năm ' + p.year };
 }
 const inlineTerm = value => String(value || '').replace(/^Học kỳ (.*?) năm học (\d{4})-(\d{4})$/, 'học kỳ $1 / năm học $2 - $3');
+// The history column uses the school's compact label, not the catalog's prose.
+// Keep unusual/summer labels unless their year range is explicit in the label.
+export function historyTerm(value) {
+  const text = String(value ?? '').trim();
+  const match = text.match(/^(?:(?:Học\s*kỳ|Kỳ)\s*)?(.+?)\s*(?:năm\s*học\s*|\/\s*)(\d{4})\s*[-–—]\s*(\d{4})$/iu);
+  return match ? `${match[1].trim()} /${match[2]} - ${match[3]}` : text;
+}
+const historyNumber = (value, digits) => value == null || value === '' ? '' :
+  Number.isFinite(Number(value)) ? Number(value).toFixed(digits) : String(value);
+export const scholarshipReasonPrefix='Số tín chỉ tôi học trong học kỳ này không đủ ngưỡng quy định để xét học bổng, do';
+export function scholarshipReason(reason){
+  const text=String(reason||'').trim();
+  return text.toLocaleLowerCase('vi').startsWith(scholarshipReasonPrefix.toLocaleLowerCase('vi'))?text:scholarshipReasonPrefix+' '+(text||'............');
+}
 
 export function paperWordValues({ template, snapshot = {}, blank = false }) {
   const profile = blank ? {} : snapshot.profile || {}, values = snapshot.values || {};
@@ -27,12 +41,22 @@ export function paperWordValues({ template, snapshot = {}, blank = false }) {
     programName: blank ? empty : values.programName || empty, reason: blank ? empty : values.reason || empty,
     changeDescription: blank ? empty : values.changeDescription || empty,
     withdrawalReason: blank ? empty : (values.withdrawalReason || empty) + '.', reasonDetail: blank ? '' : values.reasonDetail || '' });
-  for (const key of ['requiredCredits', 'earnedCredits', 'cumulativeGpa', 'conductAverage']) data['academic_' + key] = blank ? '' : profile.academic?.[key] ?? '';
-  for (const key of ['credits', 'repeatedCredits', 'scholarshipAverage', 'gpa', 'cumulativeGpa', 'hasLowGrade', 'conductScore']) data['scholarship_' + key] = blank ? '' : snapshot.scholarship?.[key] ?? '';
+  if(template.code==='DonSV05')data.reason=scholarshipReason(blank?'':values.reason);
+  // The supplied deferral form has a fixed paragraph, including "học kỳ này".
+  // Student notes and old target-term selections are workflow data only.
+  if(template.code==='DonSV04'){
+    data.reason='Tôi có nhu cầu học cải thiện một số học phần để tăng điểm trung bình chung tích lũy toàn khóa học.';
+    data.targetTerm='học kỳ này';
+  }
+  for (const key of ['requiredCredits', 'earnedCredits', 'cumulativeGpa', 'conductAverage']) data['academic_' + key] = blank ? '' : profile.academic?.[key] ?? 'Chưa có';
+  for (const key of ['credits', 'repeatedCredits', 'scholarshipAverage', 'gpa', 'cumulativeGpa', 'hasLowGrade', 'conductScore']) data['scholarship_' + key] = blank ? '' : snapshot.scholarship?.[key] ?? 'Chưa có';
   const history = blank ? [] : profile.semesterResults || [];
   for (let i = 0; i < Math.max(7, history.length); i++) {
     data['history_' + i + '_index'] = i + 1;
-    for (const key of ['termName', 'credits', 'gpa', 'cumulativeGpa', 'conductScore']) data['history_' + i + '_' + key] = history[i]?.[key] ?? '';
+    data['history_' + i + '_termName'] = historyTerm(history[i]?.termName);
+    for (const key of ['credits', 'gpa', 'cumulativeGpa', 'conductScore']) {
+      data['history_' + i + '_' + key] = historyNumber(history[i]?.[key], key === 'conductScore' ? 1 : 2);
+    }
   }
   return data;
 }

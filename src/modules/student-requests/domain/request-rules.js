@@ -1,4 +1,6 @@
+import {hasPermission,actionPermission} from './rbac.js';
 import { AppError } from '../../../shared/errors/app-error.js';
+import { canWork } from './work-permissions.js';
 
 export const paperRequestCodes = ['DonSV01', 'DonSV03', 'DonSV04', 'DonSV05', 'DonSV07', 'DonSV06'];
 export const isPaperRequest = code => paperRequestCodes.includes(code);
@@ -6,7 +8,7 @@ export const isPaperRequest = code => paperRequestCodes.includes(code);
 export const requestTypes = [
   { code: 'DonSV01', name: 'Cấp lại thẻ sinh viên', department: 'CTSV', icon: 'card', description: 'Mất, hỏng thẻ hoặc cần thay đổi thông tin.' },
   { code: 'DonSV03', name: 'Xét công nhận tốt nghiệp', department: 'DT', icon: 'graduation', description: 'Đăng ký học kỳ dự kiến tốt nghiệp.' },
-  { code: 'DonSV04', name: 'Hoãn công nhận tốt nghiệp', department: 'DT', icon: 'calendar', description: 'Gửi lý do đề nghị hoãn xét tốt nghiệp.' },
+  { code: 'DonSV04', name: 'Hoãn công nhận tốt nghiệp', department: 'DT', icon: 'calendar', description: 'Đơn theo mẫu cố định để học cải thiện; tự động điền hồ sơ sinh viên.' },
   { code: 'DonSV05', name: 'Xét học bổng khuyến học', department: 'CTSV', icon: 'award', description: 'Đề nghị xét học bổng theo học kỳ, kèm lý do.' },
   { code: 'DonSV07', name: 'Đăng ký chương trình 2', department: 'DT', icon: 'books', description: 'Chọn chương trình đào tạo và kỳ bắt đầu.' },
   { code: 'DonSV06', name: 'Giải quyết thủ tục thôi học', department: 'DT', icon: 'file', description: 'Đề nghị thôi học theo nguyện vọng hoặc chuyển trường.' },
@@ -39,8 +41,8 @@ export function visibleTerms(terms, currentCode) {
 }
 
 export function canRead(actor, request) {
-  return actor.role === 'STUDENT' ? request.studentId === actor.id
-    : actor.role === 'STAFF' && request.department === actor.department;
+  return actor.role === 'ADMIN' || (actor.role === 'STUDENT' ? request.studentId === actor.id
+    : actor.role === 'STAFF' && hasPermission(actor,'requests.view') && (request.assignedStaffId === actor.id || canWork(actor, request)));
 }
 
 export function canPrintConfirmation(actor, row) {
@@ -48,12 +50,13 @@ export function canPrintConfirmation(actor, row) {
 }
 
 export function canPrintRequest(actor, row) {
-  return actor.role === 'STAFF' && (row.TypeCode === 'CONFIRMATION' || isPaperRequest(row.TypeCode)) && actor.department === row.Department
+  return row.TypeCode === 'CONFIRMATION' && hasPermission(actor,'requests.print') && hasPermission(actor,'requests.view') && canWork(actor, row)
     && row.AssignedStaffId === actor.id && ['RECEIVED','PROCESSING','NEEDS_INFO','EXTERNAL_PROCESSING','READY','COMPLETED'].includes(row.Status);
 }
 
-export function actionsFor(actor, request) {
+function scopedActions(actor, request) {
   if (!canRead(actor, request) || ['COMPLETED', 'CANCELLED'].includes(request.status)) return [];
+  if (actor.role === 'ADMIN' || actor.role === 'STAFF' && !canWork(actor, request)) return [];
   if (request.typeCode === 'LMS_SUPPORT') {
     if (actor.role === 'STUDENT') return ['cancel'];
     if (request.assignedStaffId && request.assignedStaffId !== actor.id) return [];
@@ -64,7 +67,7 @@ export function actionsFor(actor, request) {
   if (isPaperRequest(request.typeCode)) {
     if (actor.role === 'STUDENT') return ['cancel'];
     if (request.assignedStaffId && request.assignedStaffId !== actor.id) return [];
-    return request.status === 'SUBMITTED' ? ['receive', 'cancel'] : [...(request.printedAt ? ['complete'] : []), 'cancel'];
+    return request.status === 'SUBMITTED' ? ['receive', 'cancel'] : ['complete', 'cancel'];
   }
   if (request.typeCode === 'CONFIRMATION') {
     if (request.status === 'READY') return []; // Historical processed requests stay closed without rewriting their history.
@@ -88,6 +91,8 @@ export function actionsFor(actor, request) {
   ));
 }
 
+export function actionsFor(actor,request){return scopedActions(actor,request).filter(action=>actor.role!=='STAFF'||hasPermission(actor,actionPermission(action)));}
+
 export function transition(actor, request, command) {
   if (!actionsFor(actor, request).includes(command.action)) throw new AppError('Không được thực hiện thao tác này ở trạng thái hiện tại hoặc đơn đang do chuyên viên khác phụ trách.', 403);
   const required = command.action === 'cancel' && actor.role === 'STAFF' || ['requestInfo', 'external'].includes(command.action)
@@ -102,7 +107,7 @@ export function transition(actor, request, command) {
     complete: 'Chuyên viên xác nhận đã hoàn tất và trả kết quả.', supplement: 'Sinh viên đã gửi thông tin bổ sung.' };
   if (isPaperRequest(request.typeCode)) defaults.complete = 'Chuyên viên đánh dấu đã xử lý hồ sơ thực tế.';
   if (request.typeCode === 'CONFIRMATION') {
-    defaults.result = 'Chuyên viên xác nhận đã xử lý. Hệ thống đã tạo lịch hẹn trả sau 2 ngày.';
+    defaults.result = 'Chuyên viên xác nhận đã xử lý. Lịch nhận giấy được tính từ lần in đầu tiên.';
     defaults.complete = 'Chuyên viên xác nhận đã trả văn bản cho sinh viên.';
   }
   return { status: ['LMS_SUPPORT','CONFIRMATION'].includes(request.typeCode) && command.action === 'result' ? 'COMPLETED' : next, eventType, message: command.action === 'cancel' && actor.role === 'STUDENT'

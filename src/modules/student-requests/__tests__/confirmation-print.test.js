@@ -1,3 +1,4 @@
+import {legacyFunctions} from '../domain/rbac.js';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
@@ -6,7 +7,7 @@ import { renderConfirmationPdf } from '../services/confirmation-pdf.renderer.js'
 import { canPrintConfirmation, actionsFor } from '../domain/request-rules.js';
 import { parsePrintCommand } from '../dto/requests.dto.js';
 
-const actor={id:'cv',role:'STAFF',department:'CTSV'};
+const actor={id:'cv',role:'STAFF',department:'CTSV',permissions:[...legacyFunctions],workPermissions:['DonSV01','DonSV03','DonSV04','DonSV05','DonSV06','DonSV07','CONFIRMATION:01']};
 const row={Id:'test',Number:123,TypeCode:'CONFIRMATION',Department:'CTSV',AssignedStaffId:'cv',AssignedStaffName:'Chuyên viên thử',Status:'RECEIVED',Version:2,
   StudentId:'sv',StudentName:'Nguyễn Minh Anh',StudentNumber:'DEMO0001',CreatedAt:'2026-10-25T06:00:00Z',
   Payload:{documentCode:'01',quantity:1,feeMode:'PAID',additionalInfo:'Đề nghị xác nhận để thử quy trình.'},CatalogSnapshot:{name:'Xác nhận sinh viên',unitFee:0,totalFee:0}};
@@ -14,9 +15,9 @@ const input={version:2,idempotencyKey:'print-test'};
 
 test('only assigned specialists print accepted confirmations; completing processing requires a print export first',()=>{
   assert(canPrintConfirmation(actor,row));
-  for(const patch of [{Status:'SUBMITTED'},{Status:'CANCELLED'},{AssignedStaffId:'other'},{Department:'DT'},{TypeCode:'DonSV01'}])assert(!canPrintConfirmation(actor,{...row,...patch}));
+  for(const patch of [{Status:'SUBMITTED'},{Status:'CANCELLED'},{AssignedStaffId:'other'},{Payload:{documentCode:'99'}},{TypeCode:'DonSV01'}])assert(!canPrintConfirmation(actor,{...row,...patch}));
   assert(!canPrintConfirmation({id:'sv',role:'STUDENT'},row));
-  const request={typeCode:'CONFIRMATION',studentId:'sv',department:'CTSV',assignedStaffId:'cv',status:'RECEIVED'};
+  const request={typeCode:'CONFIRMATION',payload:{documentCode:'01'},studentId:'sv',department:'CTSV',assignedStaffId:'cv',status:'RECEIVED'};
   assert(!actionsFor(actor,request).includes('result'));
   assert(actionsFor(actor,{...request,printedAt:'server-time'}).includes('result'));
   for(const patch of [{printedAt:'client-time'},{processedAt:'client-time'},{pickupAt:'client-time'},{payload:{}}])assert.throws(()=>parsePrintCommand({...input,...patch}));
@@ -43,14 +44,13 @@ test('failed render, stale request and cancellation during rendering never recor
   await assert.rejects(()=>cancelled.print(actor,'test',input),e=>e.statusCode===403);assert.equal(writes,0);
 });
 
-test('staff print for a paper petition uses its real existing form and records the export without a placeholder',async()=>{
-  let writes=0,downloads=0;
-  const paper={...row,TypeCode:'DonSV01',Payload:{reasonCode:'LOST_OR_DAMAGED'}};
-  const repo={get:async()=>paper,profile:async()=>null,receipt:async()=>null,recordPrint:async()=>{writes++;}};
-  const service=createConfirmationFilesService(repo,{renderer:async()=>{throw new Error('Paper petitions must use their own form');},
-    paperFiles:{download:async(who,id)=>{assert.equal(who.id,'cv');assert.equal(id,'test');downloads++;return{bytes:Buffer.from('%PDF-real-paper-form'),filename:'DonSV01-test.pdf'};}}});
-  const file=await service.print(actor,'test',input);
-  assert.equal(file.filename,'DonSV01-test.pdf');assert.equal(writes,1);assert.equal(downloads,1);
+test('specialists cannot print paper petitions, including requests printed under the old workflow',async()=>{
+ for(const code of ['DonSV01','DonSV03','DonSV04','DonSV05','DonSV06','DonSV07'])for(const printedAt of [null,'2026-10-25T06:30:00Z']){
+  let writes=0,renders=0;
+  const repo={get:async()=>({...row,TypeCode:code,PrintedAt:printedAt}),recordPrint:async()=>{writes++;}};
+  const service=createConfirmationFilesService(repo,{renderer:async()=>{renders++;return{bytes:Buffer.from('%PDF-test')};}});
+  await assert.rejects(()=>service.print(actor,'test',input),e=>e.statusCode===403);assert.equal(writes,0);assert.equal(renders,0);
+ }
 });
 
 test('placeholder PDF has Vietnamese data, blank signature areas and bounded text on every page',async()=>{
