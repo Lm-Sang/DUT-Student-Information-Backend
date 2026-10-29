@@ -10,20 +10,27 @@ export function createAuthController(channel, service, {
   frontendOrigin = channel === 'student' ? env.app.studentFrontendUrl : env.app.adminFrontendUrl,
 } = {}) {
   const cookieName = `dut_sso_${channel}_state`;
-  const cookieOptions = {
-    httpOnly: true, secure: secureCookies, sameSite: 'lax',
-    path: `/api/${channel}/auth/microsoft`,
-  };
+  const cookieOptions = { httpOnly: true, secure: secureCookies, sameSite: 'lax', path: `/api/${channel}/auth/microsoft` };
   const handoffCookieName = `dut_sso_${channel}_handoff`;
   const handoffCookieOptions = { ...cookieOptions, path: `/api/${channel}/auth` };
+  const refreshCookieName = `dut_web_${channel}_refresh`;
+  const refreshCookieOptions = { ...handoffCookieOptions };
+
   function readCookie(req, name) {
-    const matches = (req.headers.cookie ?? '').split(';').map((part) => part.trim())
-      .filter((part) => part.startsWith(`${name}=`));
+    const matches = (req.headers.cookie ?? '').split(';').map(part => part.trim()).filter(part => part.startsWith(`${name}=`));
     return matches.length === 1 ? matches[0].slice(name.length + 1) : undefined;
   }
+
   function requireFrontendOrigin(req) {
     if (req.headers.origin !== frontendOrigin) throw new AppError('Invalid frontend origin', 403);
+    if (req.headers['sec-fetch-site'] === 'cross-site') throw new AppError('Cross-site authentication requests are not allowed', 403);
   }
+
+  function sendSession(res, result) {
+    res.cookie(refreshCookieName, result.refreshToken, { ...refreshCookieOptions, maxAge: result.maxAge });
+    return sendSuccess(res, result.data);
+  }
+
   return Object.freeze({
     login(_req, res) {
       const { state, url, maxAge } = service.startLogin(channel);
@@ -35,11 +42,10 @@ export function createAuthController(channel, service, {
       res.clearCookie(cookieName, cookieOptions);
       const { state, accessToken } = parseAuthCallbackQuery(req.query, expected);
       service.consumeState(channel, state);
-      const result = await service.exchangeToken(channel, accessToken);
-      const handoff = service.createHandoff(channel, result);
+      const pending = await service.exchangeToken(channel, accessToken);
+      const handoff = service.createHandoff(channel, pending);
       res.cookie(handoffCookieName, handoff.binding, { ...handoffCookieOptions, maxAge: handoff.maxAge });
       if (handoff.url) return res.redirect(303, handoff.url);
-      // No assumed frontend route while the frontend team builds its callback.
       return sendSuccess(res, createAuthHandoffDto(handoff, channel));
     },
     session(req, res) {
@@ -47,19 +53,43 @@ export function createAuthController(channel, service, {
       const { code } = parseAuthSessionBody(req.body);
       const result = service.redeemHandoff(channel, code, readCookie(req, handoffCookieName));
       res.clearCookie(handoffCookieName, handoffCookieOptions);
-      return sendSuccess(res, result);
+      return sendSession(res, result);
+    },
+    async passwordLogin(req, res) {
+      requireFrontendOrigin(req);
+      return sendSession(res, await service.loginWithPassword(channel, req.body));
+    },
+    async refresh(req, res) {
+      requireFrontendOrigin(req);
+      if (req.body && (typeof req.body !== 'object' || Array.isArray(req.body) || Object.keys(req.body).length)) {
+        throw new AppError('Refresh tokens must be sent using the HttpOnly cookie', 400);
+      }
+      try { return sendSession(res, await service.refreshSession(channel, readCookie(req, refreshCookieName))); }
+      catch (error) {
+        if (error.statusCode === 401) res.clearCookie(refreshCookieName, refreshCookieOptions);
+        throw error;
+      }
     },
     me(req, res) {
-      return sendSuccess(res, createAuthMeDto(channel, toAuthUserDto(req.user)));
+      return sendSuccess(res, createAuthMeDto(channel, toAuthUserDto(req.user), req.user));
     },
-    logout(req, res) {
-      // Bearer authentication protects this state-changing POST. If a browser
-      // supplies Origin, enforce its configured frontend origin as well.
-      if (req.headers.origin) requireFrontendOrigin(req);
-      service.revokeSession(channel, req.user);
-      res.clearCookie(cookieName, cookieOptions);
-      res.clearCookie(handoffCookieName, handoffCookieOptions);
-      return sendSuccess(res, createAuthLogoutDto(service.logoutUrl(channel)));
+    async logout(req, res) {
+      const refreshToken = readCookie(req, refreshCookieName);
+      if (refreshToken || req.headers.origin) requireFrontendOrigin(req);
+      try {
+        if (refreshToken) service.logoutSession(channel, refreshToken);
+        else {
+          const match = /^Bearer ([^\s]+)$/i.exec(req.headers.authorization ?? '');
+          if (!match) throw new AppError('Authentication required', 401);
+          service.revokeSession(channel, await service.verifyToken(match[1], channel));
+        }
+      } finally {
+        res.clearCookie(cookieName, cookieOptions);
+        res.clearCookie(handoffCookieName, handoffCookieOptions);
+        res.clearCookie(refreshCookieName, refreshCookieOptions);
+      }
+      // Local logout must not terminate the user's sessions in other DUT apps.
+      return sendSuccess(res, createAuthLogoutDto(null));
     },
   });
 }

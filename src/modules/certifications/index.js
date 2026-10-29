@@ -4,7 +4,7 @@ import { createDocumentImageInspector } from '../../infrastructure/images/docume
 import { createCertificationsRepository } from './repositories/certifications.repository.js';
 import { createCertificationsService } from './services/certifications.service.js';
 import { createCertificationMiddleware } from './middlewares/certifications.middleware.js';
-import { createDutStudentContext } from './middlewares/dut-student-context.js';
+import { createDutStudentContext } from '../students/index.js';
 import { createCertificationsController } from './controllers/certifications.controller.js';
 import { createCertificationsRouter } from './routes/certifications.routes.js';
 import { createItCertificationsRepository } from './repositories/it-certifications.repository.js';
@@ -14,6 +14,11 @@ import { createItCertificationsRouter } from './routes/it-certifications.routes.
 import {certificationEvents} from './events/certification-events.js';
 import {certificationImageQueue} from './queues/image-inspection-queue.js';
 import {createCertificationEventsController} from './controllers/certification-events.controller.js';
+import {createLocalPermissionContext} from '../auth/index.js';
+
+const reviewerContext = createLocalPermissionContext('certifications:review');
+const catalogContext = createLocalPermissionContext('certifications:catalog:manage');
+const localReviewerAuthentication = { actor: (req, role) => (role === 'catalog' ? catalogContext : reviewerContext)(req) };
 
 export function createCertificationsModule({
   config = certificationConfig,
@@ -22,7 +27,7 @@ export function createCertificationsModule({
   inspectImage = createDocumentImageInspector(config),
   contextProvider,
   studentContextProvider = createDutStudentContext(),
-  reviewerAuthentication,
+  reviewerAuthentication = localReviewerAuthentication,
   clock,
   events=certificationEvents,
   inspectionQueue=certificationImageQueue,
@@ -47,7 +52,7 @@ export default createCertificationsModule();
 export function createItCertificationsModule({
   config=certificationConfig,repository=createItCertificationsRepository(),
   storage=createR2Storage({config:config.r2}),inspectImage=createDocumentImageInspector(config),
-  contextProvider,studentContextProvider=createDutStudentContext(),reviewerAuthentication,clock,
+  contextProvider,studentContextProvider=createDutStudentContext(),reviewerAuthentication=localReviewerAuthentication,clock,
   events=certificationEvents,inspectionQueue=certificationImageQueue,
 }={}){
   const service=createItCertificationsService({repository,storage,inspectImage,config,clock,events,inspectionQueue});

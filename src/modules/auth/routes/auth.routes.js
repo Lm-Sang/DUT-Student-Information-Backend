@@ -9,11 +9,25 @@ export function createAuthRouter(channel, controller, service) {
     res.set('Referrer-Policy', 'no-referrer');
     next();
   });
+  router.use((req, _res, next) => {
+    try {
+      if (req.method !== 'OPTIONS') {
+        service.rateLimit('ip', req.ip ?? req.socket.remoteAddress ?? 'unknown', 60, 60000);
+        if (req.path === '/login' && req.method === 'POST') {
+          service.rateLimit('password-ip', req.ip ?? req.socket.remoteAddress ?? 'unknown', 15, 900000);
+        }
+      }
+      if (req.body && Buffer.byteLength(JSON.stringify(req.body)) > 2048) throw Object.assign(new Error(), { type: 'entity.too.large' });
+      next();
+    } catch (error) { next(error); }
+  });
   router.get('/microsoft/login', controller.login);
   router.get('/microsoft/callback', asyncHandler(controller.callback));
+  router.post('/login', json({ limit: '2kb' }), asyncHandler(controller.passwordLogin));
   router.post('/session', json({ limit: '2kb' }), controller.session);
+  router.post('/refresh', json({ limit: '2kb' }), asyncHandler(controller.refresh));
   router.get('/me', authenticate(channel, service), controller.me);
-  router.post('/logout', authenticate(channel, service), controller.logout);
-  router.post('/microsoft/logout', authenticate(channel, service), controller.logout);
+  router.post('/logout', asyncHandler(controller.logout));
+  router.post('/microsoft/logout', asyncHandler(controller.logout));
   return router;
 }

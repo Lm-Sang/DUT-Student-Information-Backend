@@ -1,4 +1,5 @@
 import defaultAdminModule from './admin/index.js';
+import defaultAcademicLeaveModule from './academic-leave/index.js';
 import defaultAnnouncementsModule from './announcements/index.js';
 import defaultCertificationsModule, { itCertificationsModule as defaultItCertificationsModule } from './certifications/index.js';
 import { studentAuthModule as defaultStudentAuthModule } from './auth/index.js';
@@ -24,6 +25,7 @@ export function createModules({
   announcementsModule = defaultAnnouncementsModule,
   certificationsModule = defaultCertificationsModule,
   itCertificationsModule = defaultItCertificationsModule,
+  academicLeaveModule = defaultAcademicLeaveModule,
   adminAuthModule,
 } = {}) {
   return [
@@ -38,6 +40,7 @@ export function createModules({
     announcementsModule,
     certificationsModule,
     itCertificationsModule,
+    academicLeaveModule,
     adminAuthModule,
   ].filter(Boolean);
 }

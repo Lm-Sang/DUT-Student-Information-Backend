@@ -27,16 +27,19 @@
  * @param {{ token: string, expiresAt: string, channel: string, user: AuthUserDto }} data
  * @returns {AuthSessionDto}
  */
-export function createAuthSessionDto({ token, expiresAt, channel, user }) {
-  return { token, tokenType: 'Bearer', expiresAt, channel, user };
+export function createAuthSessionDto({ token, expiresAt, channel, user, authMethod, ssoAvailable, ssoExpiresAt, refreshExpiresAt }) {
+  return { accessToken: token, token, tokenType: 'Bearer', expiresAt, channel, user,
+    authMethod, ssoAvailable, ssoExpiresAt, refreshExpiresAt };
 }
 
 /**
  * @param {string} channel
  * @param {AuthUserDto} user
  */
-export function createAuthMeDto(channel, user) {
-  return { channel, user };
+export function createAuthMeDto(channel, user, claims, now = Date.now()) {
+  return { channel, user, authMethod: claims.authMethod,
+    ssoAvailable: claims.authMethod === 'sso' && claims.ssoExpiresAt > now,
+    ssoExpiresAt: claims.ssoExpiresAt ? new Date(claims.ssoExpiresAt).toISOString() : null };
 }
 
 /**

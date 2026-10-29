@@ -1,12 +1,36 @@
 import { AppError } from '../../../shared/errors/app-error.js';
 import { authService } from '../services/auth.service.js';
 
+export function createSsoTokenResolver(service = authService) {
+  return async req => {
+    const match = /^Bearer ([^\s]+)$/i.exec(req.headers.authorization ?? '');
+    if (!match || match[1].length > 8192) throw new AppError('Application Bearer token required', 401);
+    const token = await service.getSsoAccessToken(match[1], 'student');
+    // Server-only request context; never include this in a response or logs.
+    req.ssoAccessToken = token;
+    return token;
+  };
+}
+
+export const resolveSsoAccessToken = createSsoTokenResolver();
+
+export function createLocalPermissionContext(permission, service = authService) {
+  return async req => {
+    const match = /^Bearer ([^\s]+)$/i.exec(req.headers.authorization ?? '');
+    if (!match) throw new AppError('Local account Bearer authentication required', 401);
+    const claims = await service.verifyToken(match[1], 'admin');
+    if (claims.authMethod !== 'password' || !claims.permissions.includes(permission)) throw new AppError('Permission denied', 403);
+    return { role: 'reviewer', source: 'auth', reference: `local-user:${claims.localUserId}`,
+      name: claims.identity.displayName, permissions: [...claims.permissions] };
+  };
+}
+
 export function authenticate(channel, service = authService) {
-  return (req, _res, next) => {
+  return async (req, _res, next) => {
     try {
       const match = /^Bearer ([^\s]+)$/i.exec(req.headers.authorization ?? '');
-      if (!match) throw new AppError('Bearer authentication required', 401);
-      req.user = service.verifyToken(match[1], channel);
+      if (!match || match[1].length > 8192) throw new AppError('Bearer authentication required', 401);
+      req.user = await service.verifyToken(match[1], channel);
       next();
     } catch (error) {
       next(error);

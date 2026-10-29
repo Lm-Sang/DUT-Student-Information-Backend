@@ -2,6 +2,8 @@ import { createApp } from './app.js';
 import { env } from './config/env.js';
 import { initializeDatabases, disconnectAllDatabases } from './infrastructure/database/index.js';
 import {closeCertificationConnections} from './modules/certifications/index.js';
+import {pdfRenderer} from './infrastructure/pdf/chromium-pdf.js';
+import {closeAuthStore} from './modules/auth/index.js';
 
 // Admin SSO is an optional module, loaded only when explicitly enabled.
 const adminAuthModule = env.features.adminAuthEnabled
@@ -40,6 +42,8 @@ async function shutdown(exitCode = 0) {
   timeout.unref();
   try {
     if (server.listening) await new Promise((resolve) => server.close(resolve));
+    closeAuthStore();
+    await pdfRenderer.close();
     await databaseStartup;
     await disconnectAllDatabases();
     clearTimeout(timeout);
