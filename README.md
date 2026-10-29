@@ -1,5 +1,8 @@
 # DUT Student Information Backend
 
+Đăng nhập SSO DUT và tài khoản local, access/refresh token, cấu hình bảo mật và
+hợp đồng frontend: [Authentication](docs/AUTHENTICATION.md).
+
 Backend Node.js/Express duoc to chuc theo **module (feature-first)**. Moi nghiep vu
 nam trong mot thu muc rieng, con cau hinh va thanh phan dung chung duoc tach khoi
 code nghiep vu.

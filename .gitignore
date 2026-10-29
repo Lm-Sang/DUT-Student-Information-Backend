@@ -5,3 +5,8 @@ coverage/
 .data/
 *.log
 d_dut/
+
+certification-web-test/
+docs/   
+tests/
+scripts/

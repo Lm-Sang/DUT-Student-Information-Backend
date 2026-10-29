@@ -41,7 +41,8 @@ src/
 │   ├── course-registration/      # API công khai từ hệ thống đăng ký tín chỉ
 │   ├── timetable/                # API công khai từ hệ thống thời khóa biểu
 │   ├── health/
-│   ├── students/                 # Khung rỗng, chưa có endpoint nghiệp vụ
+│   ├── academic-leave/           # Lập đơn ngừng học/gia hạn, duyệt và nhận giấy
+│   ├── students/                 # Ngữ cảnh DUT, tra CCCD và dữ liệu điền đơn
 │   ├── users/                    # Khung rỗng, chưa có endpoint nghiệp vụ
 │   └── admin/                    # Khung rỗng, khác với auth/admin
 └── shared/
@@ -187,8 +188,13 @@ Test API mặc định dùng SQL giả và upstream HTTP local.
 Mỗi người làm nhánh theo feature. Thống nhất request/response trước khi code;
 khi sửa contract dùng chung, phối hợp với người phụ trách các feature bị ảnh
 hưởng và chạy toàn bộ test. Chỉ sửa registry khi thêm/bỏ module, không sửa mỗi
-lần thêm route. Các khung `students`, `users`, `admin` chưa có chức năng; nghiệp
+lần thêm route. Các khung `users`, `admin` chưa có chức năng; nghiệp
 vụ mới như điểm, học phí nên có module riêng thay vì gom hết theo vai trò người dùng.
+
+Module `students` hiện cung cấp ngữ cảnh sinh viên đã xác thực, tra CCCD và bộ dữ
+liệu dùng điền đơn. `certifications` và `academic-leave` dùng qua public entry
+point `students/index.js`; luồng hồ sơ ngừng học, FK gia hạn, snapshot bản in và
+hạn nộp giấy nằm trong `academic-leave`. Xem [API đơn ngừng học](ACADEMIC_LEAVE_API.md).
 
 ## Đường dẫn thay đổi khi refactor
 

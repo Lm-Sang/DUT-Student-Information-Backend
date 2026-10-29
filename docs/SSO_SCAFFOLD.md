@@ -1,5 +1,9 @@
 # Khung đăng nhập SSO
 
+> Khung bên dưới là tài liệu lịch sử. Hệ thống hiện hỗ trợ SSO và tài khoản local,
+> access/refresh token riêng, lưu SSO token mã hóa phía server. Xem hợp đồng hiện tại
+> tại [AUTHENTICATION.md](AUTHENTICATION.md).
+
 > Đã xử lý state một lần và thu hồi JWT khi logout. Login thật vẫn chờ khóa/cấu
 > hình SSO. URL callback frontend để trống theo yêu cầu; đội frontend ghép sau.
 > Xem [kiểm tra bảo mật và cập nhật](SSO_SECURITY_REVIEW.md).
