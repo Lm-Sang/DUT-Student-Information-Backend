@@ -54,7 +54,7 @@ export function rowVersion(value) {
   if (!match) invalid("If-Match không hợp lệ.", "If-Match");
   return (match[1] ?? match[2]).toUpperCase();
 }
-function date(value) {
+function date(value, field = 'issuedOn') {
   if (
     typeof value !== "string" ||
     !/^\d{4}-\d{2}-\d{2}$/.test(value) ||
@@ -62,7 +62,7 @@ function date(value) {
     !Number.isFinite(Date.parse(value)) ||
     new Date(value).toISOString().slice(0, 10) !== value
   )
-    invalid("Ngày cấp không hợp lệ.", "issuedOn");
+    invalid("Ngày không hợp lệ.", field);
   return value;
 }
 function published(input) {
@@ -151,6 +151,7 @@ export function parsePreparation(body, config) {
       "studentCode",
       "className",
       "certificateTypeId",
+      "issuingOrganizationId",
       "result",
       "issuedOn",
       "notes",
@@ -180,10 +181,11 @@ export function parsePreparation(body, config) {
         ? null
         : uuid(input.applicationId, "applicationId"),
     data: {
-      fullName: text(data.fullName, "fullName", 150, true),
+      fullName: text(data.fullName, "fullName", 150),
       studentCode,
-      className: text(data.className, "className", 50, true),
+      className: text(data.className, "className", 50),
       certificateTypeId: integer(data.certificateTypeId, "certificateTypeId"),
+      issuingOrganizationId: integer(data.issuingOrganizationId, 'issuingOrganizationId'),
       result: data.result,
       issuedOn: date(data.issuedOn),
       notes: text(data.notes, "notes", 2000),
@@ -202,6 +204,21 @@ export function parsePreparation(body, config) {
       };
     }),
   };
+}
+export function parseIssuer(body) {
+  const input = object(body, ['code', 'displayName', 'isActive', 'sourceUrl', 'verifiedOn', 'certificateTypeIds']);
+  const code = text(input.code, 'code', 50, true);
+  if (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(code)) invalid('Mã cơ sở cấp không hợp lệ.', 'code');
+  if (typeof input.isActive !== 'boolean') invalid('isActive phải là boolean.', 'isActive');
+  const sourceUrl = text(input.sourceUrl, 'sourceUrl', 1000, true);
+  try { const url = new URL(sourceUrl); if (url.protocol !== 'https:' || url.username || url.password) throw new Error(); }
+  catch { invalid('Nguồn tham khảo phải là URL HTTPS.', 'sourceUrl'); }
+  if (!Array.isArray(input.certificateTypeIds) || input.certificateTypeIds.length > 100
+    || new Set(input.certificateTypeIds).size !== input.certificateTypeIds.length)
+    invalid('Danh sách loại chứng chỉ liên kết không hợp lệ.', 'certificateTypeIds');
+  const verifiedOn = date(input.verifiedOn, 'verifiedOn');
+  return { code, displayName: text(input.displayName, 'displayName', 250, true), isActive: input.isActive,
+    sourceUrl, verifiedOn, certificateTypeIds: input.certificateTypeIds.map(id => integer(id, 'certificateTypeIds')) };
 }
 export function parseReview(body) {
   const input = object(body, ["decision", "reason", "verificationMethod"]);

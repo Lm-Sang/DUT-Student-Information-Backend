@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { AppError } from "../../../shared/errors/app-error.js";
 import { inspectEvidenceFiles } from "./evidence-inspection.service.js";
 import { notifyCertificateChanged } from "../events/certification-events.js";
+import { studentService } from '../../students/index.js';
+import { requireStudentInformation, supplementStudentInformation } from './student-information.js';
 import {
   validateResult,
   recognition,
@@ -14,6 +16,7 @@ import {
   typeDto,
   policyDto,
   listDto,
+  issuerDto,
 } from "../mappers/certifications.mapper.js";
 
 export function createCertificationsService({
@@ -24,6 +27,7 @@ export function createCertificationsService({
   clock = () => new Date(),
   events,
   inspectionQueue,
+  studentProfile = actor => studentService.getCertificationProfile(actor),
 }) {
   function role(actor, expected) {
     if (actor?.role !== expected)
@@ -83,6 +87,14 @@ export function createCertificationsService({
       documentReference: policy.DocumentReference ?? null,
     };
   }
+  function issuingOrganization(catalog, typeId, issuerId) {
+    const issuer = catalog.types.find(type => type.Id === typeId)?.IssuingOrganizations
+      ?.find(row => row.Id === issuerId && row.IsActive);
+    if (!issuer) throw new AppError('Chọn cơ sở cấp đang hoạt động và thuộc đúng loại chứng chỉ.', 422,
+      { code: 'CERT_ISSUER_NOT_ALLOWED', field: 'issuingOrganizationId' });
+    return issuer;
+  }
+  const present = dto => supplementStudentInformation(dto, studentProfile);
   function snapshot(details) {
     return {
       type: {
@@ -107,6 +119,7 @@ export function createCertificationsService({
     async catalog(actor) {
       profile(actor);
       const catalog = await repository.catalog();
+      const student = await studentProfile(actor);
       return {
         cohortYear: actor.cohortYear,
         maxFiles: 1,
@@ -117,10 +130,8 @@ export function createCertificationsService({
           blurThreshold: config.blurThreshold,
         },
         student: {
-          studentCode: actor.studentCode,
+          ...student,
           cohortYear: actor.cohortYear,
-          fullName: actor.name ?? "",
-          className: actor.className ?? "",
           source: actor.source,
         },
         languages: catalog.languages
@@ -152,11 +163,17 @@ export function createCertificationsService({
         languages: catalog.languages.map(languageDto),
         types: catalog.types.map(typeDto),
         policies: catalog.policies.map(policyDto),
+        issuers: (catalog.issuers ?? []).map(issuerDto),
       };
     },
     async saveCatalog(actor, kind, data, id = null, expected = null) {
       manager(actor);
       const catalog = await repository.catalog();
+      if (kind === 'issuers') {
+        if (data.certificateTypeIds.some(typeId => !catalog.types.some(type => type.Id === typeId)))
+          throw new AppError('Loại chứng chỉ liên kết không tồn tại.', 400, { field: 'certificateTypeIds' });
+        return issuerDto(await repository.saveIssuer({ data, id, expected }));
+      }
       const existing = id ? catalog[kind].find((row) => row.Id === id) : null;
       if (existing?.IsSchoolProvided) {
         if (
@@ -271,10 +288,12 @@ export function createCertificationsService({
       ](row);
     },
     async list(actor, query) {
-      return listDto(await repository.list({ ...query, actor }));
+      const result = listDto(await repository.list({ ...query, actor }));
+      result.items = await Promise.all(result.items.map(present));
+      return result;
     },
     async get(actor, applicationId) {
-      return applicationDto(await load(actor, applicationId));
+      return present(applicationDto(await load(actor, applicationId)));
     },
     async prepare(actor, input) {
       profile(actor);
@@ -301,8 +320,11 @@ export function createCertificationsService({
         input.data.certificateTypeId,
         actor.cohortYear,
       );
+      const issuer = issuingOrganization(catalog, details.type.Id, input.data.issuingOrganizationId);
+      const student = requireStudentInformation(await studentProfile(actor));
       const data = {
         ...input.data,
+        ...student,
         result: validateResult(
           input.data.result,
           resolveFormSchema(details.type.FormSchema, details.type.Levels),
@@ -361,7 +383,7 @@ export function createCertificationsService({
         expected,
         existing: Boolean(input.applicationId),
         data,
-        snapshot: snapshot(details),
+        snapshot: { ...snapshot(details), issuingOrganization: issuerDto(issuer) },
         policyVersions: catalog.policies.map((p) => ({
           id: p.Id,
           revision: p.Revision,
@@ -393,13 +415,17 @@ export function createCertificationsService({
           { field: "files" },
         );
       validateResult(pending.Result, pending.CatalogSnapshot.type.formSchema);
+      const currentCatalog = await repository.catalog();
       lookup(
-        await repository.catalog(),
+        currentCatalog,
         pending.CertificateTypeId,
         application.CohortYear,
       );
+      issuingOrganization(currentCatalog, pending.CertificateTypeId, pending.IssuingOrganizationId);
+      const student = requireStudentInformation(await studentProfile(actor));
       const reference = {
         actor,
+        student,
         applicationId,
         expected: application.VersionToken,
         claimToken: randomUUID(),
@@ -420,6 +446,7 @@ export function createCertificationsService({
           pending.CertificateTypeId,
           application.CohortYear,
         );
+        issuingOrganization(catalog, pending.CertificateTypeId, pending.IssuingOrganizationId);
         const acceptedSnapshot = {
           ...pending.CatalogSnapshot,
           policies: details.policies.map(policySnapshot),

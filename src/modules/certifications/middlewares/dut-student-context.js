@@ -1,7 +1,10 @@
 import { AppError } from "../../../shared/errors/app-error.js";
+import jwt from 'jsonwebtoken';
+import { env } from '../../../config/env.js';
+import { citizenId } from '../../students/index.js';
 
 // The profile service validates the token. Never trust JWT payloads decoded in the browser.
-export function createDutStudentContext({ fetchImpl = fetch } = {}) {
+export function createDutStudentContext({ fetchImpl = fetch, ssoConfig = env.microsoftSso } = {}) {
   return async function studentContext(req) {
     const token = /^Bearer ([^\s]+)$/i.exec(
       req.headers.authorization ?? "",
@@ -42,11 +45,22 @@ export function createDutStudentContext({ fetchImpl = fetch } = {}) {
     const profile = body?.data;
     const studentCode = String(profile?.studentCardNumber ?? "");
     if (
-      !/^\d{9}$/.test(studentCode) ||
-      typeof profile?.fullName !== "string" ||
-      !profile.fullName.trim()
+      !/^\d{9}$/.test(studentCode)
     )
       throw new AppError("Tài khoản chưa có hồ sơ sinh viên DUT hợp lệ.", 403);
+    // Read token fields only after cryptographic verification. If this gateway's
+    // signing config is unavailable, use the profile service's verified data.
+    let claims = {};
+    try {
+      const verified = jwt.verify(token, ssoConfig.jwtSecret, { algorithms:['HS256'],
+        ...(ssoConfig.jwtIssuer ? {issuer:ssoConfig.jwtIssuer} : {}),
+        ...(ssoConfig.jwtAudience ? {audience:ssoConfig.jwtAudience} : {}) });
+      if (verified && typeof verified === 'object' && Number.isFinite(verified.exp)) claims = verified;
+    } catch { /* The authenticated profile remains the authority for this token. */ }
+    const tokenStudentCode = claims.studentCardNumber ?? claims.studentCode;
+    if (tokenStudentCode != null && String(tokenStudentCode) !== studentCode)
+      throw new AppError('MSSV trong token không khớp hồ sơ DUT.',403);
+    const firstText = (...values) => values.find(value => typeof value === 'string' && value.trim())?.trim() ?? null;
     // DUT's nine-digit student code embeds the admission year at positions 4–5,
     // No cohort boundary is fixed in code.
     const cohortYear = 2000 + Number(studentCode.slice(3, 5));
@@ -55,11 +69,12 @@ export function createDutStudentContext({ fetchImpl = fetch } = {}) {
       source: "auth",
       reference: "dut-student:" + studentCode,
       permissions: [],
-      name: profile.fullName.trim(),
+      name: firstText(claims.fullName, claims.name, profile.fullName),
       studentCode,
       cohortYear,
-      className:
-        typeof profile.class?.name === "string" ? profile.class.name : "",
+      className: firstText(claims.className, claims.class?.name, profile.class?.name, profile.className),
+      cccd: citizenId(claims.cccd) || citizenId(claims.citizenId) || citizenId(claims.identityCardNumber)
+        || citizenId(profile.cccd) || citizenId(profile.citizenId) || citizenId(profile.identityCardNumber),
     };
   };
 }
