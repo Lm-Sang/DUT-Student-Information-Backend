@@ -1,7 +1,7 @@
 import { asyncHandler } from '../../../shared/utils/async-handler.js';
 import { sendSuccess } from '../../../shared/utils/response.js';
 import { AppError } from '../../../shared/errors/app-error.js';
-import { uuid,integer,rowVersion,parsePreparation,parseReview,parseLanguage,parseType,parsePolicy,parseList,empty,object } from '../dto/certifications.request.dto.js';
+import { uuid,integer,rowVersion,parsePreparation,parseReview,parseLanguage,parseType,parsePolicy,parseIssuer,parseList,empty,object } from '../dto/certifications.request.dto.js';
 
 export function createCertificationsController(service,config) {
   function handler(action,status = 200) {
@@ -34,7 +34,7 @@ export function createCertificationsController(service,config) {
       return service.download(req.certificationActor,p.applicationId,p.fileId);
     }),
   };
-  for (const [kind,parser] of Object.entries({languages:parseLanguage,types:parseType,policies:parsePolicy})) {
+  for (const [kind,parser] of Object.entries({languages:parseLanguage,types:parseType,policies:parsePolicy,issuers:parseIssuer})) {
     controller['create_'+kind] = handler(req => {
       object(req.query,[]);
       return service.saveCatalog(req.certificationActor,kind,parser(req.body));

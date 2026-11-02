@@ -13,12 +13,14 @@ export function itApplicationDto(row) {
   const submissions=row.Submissions??[],current=submissions.find(s=>id(s.Id)===id(row.CurrentSubmissionId));
   const pending=submissions.find(s=>s.Status!=='submitted');
   return{id:id(row.Id),studentCode:row.StudentCode,status:row.Status,rowVersion:row.VersionToken,
+    fullName:row.StudentSnapshot?.fullName ?? null,className:row.StudentSnapshot?.className ?? null,cccd:row.StudentSnapshot?.cccd ?? null,
     createdAt:utc(row.CreatedAt),updatedAt:utc(row.UpdatedAt),currentSubmission:current?itSubmissionDto(current):null,
     pendingSubmission:pending?itSubmissionDto(pending):null,submissions:submissions.filter(s=>s.Status==='submitted').map(itSubmissionDto)};
 }
 export function itListDto(result) {
   return{page:result.page,pageSize:result.pageSize,totalRecords:result.totalRecords,totalPages:Math.ceil(result.totalRecords/result.pageSize),
     items:(result.items??[]).map(row=>({id:id(row.Id),studentCode:row.StudentCode,status:row.Status,rowVersion:row.VersionToken,
+      fullName:row.StudentSnapshot?.fullName ?? null,className:row.StudentSnapshot?.className ?? null,cccd:row.StudentSnapshot?.cccd ?? null,
       data:row.Certificate,certificateTypeName:row.CertificateTypeName??null,
       createdAt:utc(row.CreatedAt),updatedAt:utc(row.UpdatedAt)}))};
 }

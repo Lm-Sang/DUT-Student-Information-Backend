@@ -25,6 +25,12 @@ const lockPolicyVersions = `DECLARE @policyCount int;
    ON r.Id=TRY_CONVERT(int,JSON_VALUE(p.value,'$.id'))
    WHERE r.Id IS NULL OR r.Revision<>TRY_CONVERT(int,JSON_VALUE(p.value,'$.revision')))
    THROW 51409,'CERT_CONFLICT',1;
+ IF NOT EXISTS(SELECT 1 FROM certification.CertificateTypeIssuers r WITH(UPDLOCK,HOLDLOCK)
+   JOIN certification.IssuingOrganizations o WITH(UPDLOCK,HOLDLOCK) ON o.Id=r.IssuingOrganizationId
+   WHERE r.CertificateTypeId=TRY_CONVERT(int,JSON_VALUE(@input,'$.snapshot.type.id'))
+     AND o.Id=TRY_CONVERT(int,JSON_VALUE(@input,'$.snapshot.issuingOrganization.id'))
+     AND o.Revision=TRY_CONVERT(int,JSON_VALUE(@input,'$.snapshot.issuingOrganization.revision'))
+     AND r.IsActive=1 AND o.IsActive=1) THROW 51409,'CERT_ISSUER_CHANGED',1;
  IF NOT EXISTS(SELECT 1 FROM certification.CertificateTypes t WITH(UPDLOCK,HOLDLOCK)
    JOIN certification.Languages l WITH(UPDLOCK,HOLDLOCK) ON l.Id=t.LanguageId
    WHERE t.Id=TRY_CONVERT(int,JSON_VALUE(@input,'$.snapshot.type.id')) AND t.IsPublished=1 AND l.IsPublished=1
@@ -32,6 +38,7 @@ const lockPolicyVersions = `DECLARE @policyCount int;
    THROW 51409,'CERT_CONFLICT',1;`;
 const certificateFields = `CertificateTypeId=TRY_CONVERT(int,JSON_VALUE(@input,'$.data.certificateTypeId')),
  FullName=JSON_VALUE(@input,'$.data.fullName'),ClassName=JSON_VALUE(@input,'$.data.className'),
+ Cccd=JSON_VALUE(@input,'$.data.cccd'),IssuingOrganizationId=TRY_CONVERT(int,JSON_VALUE(@input,'$.data.issuingOrganizationId')),
  ResultJson=JSON_QUERY(@input,'$.data.result'),CatalogSnapshotJson=JSON_QUERY(@input,'$.snapshot'),
  IssuedOn=TRY_CONVERT(date,JSON_VALUE(@input,'$.data.issuedOn'),23),Notes=JSON_VALUE(@input,'$.data.notes'),
  Status='uploading',ClaimToken=NULL,SubmittedAt=NULL,ReviewerReference=NULL,ReviewerName=NULL,ReviewerSource=NULL,
@@ -49,6 +56,9 @@ export function createCertificationsRepository({query=queryLocalDatabase,
     } catch(error) {
       if(error instanceof AppError)throw error;
       const message=error.message??'';
+      if (/invalid (column|object) name.*(Cccd|IssuingOrganization|CertificateTypeIssuers)/i.test(message))
+        throw new AppError('Cần cập nhật thông tin sinh viên và danh mục cơ sở cấp chứng chỉ.',503,
+          {code:'CERT_SCHEMA_MIGRATION_REQUIRED',migration:'certifications-student-information-issuers.sql'});
       if(/invalid object name.*StudentCertificates|invalid column name.*CertificateId/i.test(message))
         throw new AppError('Cần cập nhật DB chứng chỉ sang cấu trúc gọn.',503,
           {code:'CERT_SCHEMA_MIGRATION_REQUIRED',migration:'certifications-compact.sql'});
@@ -68,9 +78,17 @@ export function createCertificationsRepository({query=queryLocalDatabase,
   }
   const levelsSql = `JSON_QUERY(COALESCE((SELECT l.Id,l.Code,l.DisplayName,l.Weight
    FROM certification.CertificateLevels l WHERE l.CertificateTypeId=t.Id ORDER BY l.SortOrder,l.Id FOR JSON PATH),'[]')) AS Levels`;
+  const issuerSql = `SELECT o.*,CONVERT(varchar(16),CONVERT(binary(8),o.RowVersion),2) AS VersionToken,
+    JSON_QUERY(COALESCE((SELECT '['+STRING_AGG(CONVERT(varchar(12),r.CertificateTypeId),',')+']'
+      FROM certification.CertificateTypeIssuers r WHERE r.IssuingOrganizationId=o.Id AND r.IsActive=1),'[]')) AS CertificateTypeIds
+    FROM certification.IssuingOrganizations o`;
+  const typeIssuersSql = `JSON_QUERY(COALESCE((SELECT o.*,CONVERT(varchar(16),CONVERT(binary(8),o.RowVersion),2) AS VersionToken
+    FROM certification.IssuingOrganizations o JOIN certification.CertificateTypeIssuers r ON r.IssuingOrganizationId=o.Id
+    WHERE r.CertificateTypeId=t.Id AND r.IsActive=1 ORDER BY o.DisplayName,o.Id FOR JSON PATH),'[]')) AS IssuingOrganizations`;
   const catalogSql = `SELECT
    JSON_QUERY(COALESCE((SELECT *,CONVERT(varchar(16),CONVERT(varbinary(8),RowVersion),2) AS VersionToken FROM certification.Languages ORDER BY Id FOR JSON PATH),'[]')) AS languages,
-   JSON_QUERY(COALESCE((SELECT t.*,JSON_QUERY(t.FormSchemaJson) AS FormSchema,${levelsSql},CONVERT(varchar(16),CONVERT(varbinary(8),t.RowVersion),2) AS VersionToken FROM certification.CertificateTypes t ORDER BY t.Id FOR JSON PATH),'[]')) AS types,
+   JSON_QUERY(COALESCE((SELECT t.*,JSON_QUERY(t.FormSchemaJson) AS FormSchema,${levelsSql},${typeIssuersSql},CONVERT(varchar(16),CONVERT(varbinary(8),t.RowVersion),2) AS VersionToken FROM certification.CertificateTypes t ORDER BY t.Id FOR JSON PATH),'[]')) AS types,
+   JSON_QUERY(COALESCE((${issuerSql} ORDER BY o.Id FOR JSON PATH),'[]')) AS issuers,
    JSON_QUERY(COALESCE((SELECT *,CONVERT(varchar(16),CONVERT(varbinary(8),RowVersion),2) AS VersionToken FROM certification.RecognitionPolicies ORDER BY Id FOR JSON PATH),'[]')) AS policies
    FOR JSON PATH,WITHOUT_ARRAY_WRAPPER`;
   const tables = {
@@ -105,6 +123,34 @@ export function createCertificationsRepository({query=queryLocalDatabase,
     catalog() {
       return run("SELECT (" + catalogSql + ") AS Json;");
     },
+    saveIssuer(input) {
+      return mutate(input, `DECLARE @id int=TRY_CONVERT(int,JSON_VALUE(@input,'$.id'));
+        IF @id IS NULL BEGIN
+          INSERT certification.IssuingOrganizations(Code,DisplayName,IsActive,SourceUrl,VerifiedOn)
+          VALUES(JSON_VALUE(@input,'$.data.code'),JSON_VALUE(@input,'$.data.displayName'),
+            TRY_CONVERT(bit,JSON_VALUE(@input,'$.data.isActive')),JSON_VALUE(@input,'$.data.sourceUrl'),
+            TRY_CONVERT(date,JSON_VALUE(@input,'$.data.verifiedOn'),23));
+          SET @id=CONVERT(int,SCOPE_IDENTITY());
+        END ELSE BEGIN
+          IF NOT EXISTS(SELECT 1 FROM certification.IssuingOrganizations WITH(UPDLOCK,HOLDLOCK) WHERE Id=@id)
+            THROW 51404,'CERT_NOT_FOUND',1;
+          UPDATE certification.IssuingOrganizations SET Code=JSON_VALUE(@input,'$.data.code'),
+            DisplayName=JSON_VALUE(@input,'$.data.displayName'),IsActive=TRY_CONVERT(bit,JSON_VALUE(@input,'$.data.isActive')),
+            SourceUrl=JSON_VALUE(@input,'$.data.sourceUrl'),VerifiedOn=TRY_CONVERT(date,JSON_VALUE(@input,'$.data.verifiedOn'),23),
+            Revision=Revision+1,UpdatedAt=@now
+          WHERE Id=@id AND CONVERT(varchar(16),CONVERT(binary(8),RowVersion),2)=JSON_VALUE(@input,'$.expected');
+          IF @@ROWCOUNT=0 THROW 51409,'CERT_CONFLICT',1;
+        END;
+        UPDATE certification.CertificateTypeIssuers SET IsActive=0 WHERE IssuingOrganizationId=@id;
+        UPDATE r SET IsActive=1 FROM certification.CertificateTypeIssuers r
+          JOIN OPENJSON(@input,'$.data.certificateTypeIds') j ON r.CertificateTypeId=TRY_CONVERT(int,j.value)
+          WHERE r.IssuingOrganizationId=@id;
+        INSERT certification.CertificateTypeIssuers(CertificateTypeId,IssuingOrganizationId)
+          SELECT TRY_CONVERT(int,j.value),@id FROM OPENJSON(@input,'$.data.certificateTypeIds') j
+          WHERE NOT EXISTS(SELECT 1 FROM certification.CertificateTypeIssuers r
+            WHERE r.CertificateTypeId=TRY_CONVERT(int,j.value) AND r.IssuingOrganizationId=@id);`,
+        `${issuerSql} WHERE o.Id=@id FOR JSON PATH,WITHOUT_ARRAY_WRAPPER`);
+    },
     saveCatalog(kind, input) {
       const table = tables[kind];
       if (!table) throw new TypeError("Unknown catalog kind");
@@ -121,7 +167,7 @@ export function createCertificationsRepository({query=queryLocalDatabase,
         input,
         statement,
         `SELECT t.*,CONVERT(varchar(16),CONVERT(varbinary(8),t.RowVersion),2) AS VersionToken
-       ${kind === "types" ? ",JSON_QUERY(t.FormSchemaJson) AS FormSchema," + levelsSql : ""}
+       ${kind === "types" ? ",JSON_QUERY(t.FormSchemaJson) AS FormSchema," + levelsSql + ',' + typeIssuersSql : ""}
        FROM certification.${table.name} t WHERE t.Id=@id FOR JSON PATH,WITHOUT_ARRAY_WRAPPER`,
       );
     },
@@ -135,7 +181,8 @@ export function createCertificationsRepository({query=queryLocalDatabase,
           CASE WHEN c.Status='checking' THEN 'uploading' ELSE c.Status END=JSON_VALUE(@input,'$.status'))`;
       return run(`DECLARE @page int=TRY_CONVERT(int,JSON_VALUE(@input,'$.page')),@pageSize int=TRY_CONVERT(int,JSON_VALUE(@input,'$.pageSize'));
         SELECT(SELECT @page AS page,@pageSize AS pageSize,(SELECT COUNT(*) FROM certification.StudentCertificates c WHERE ${filter}) AS totalRecords,
-        JSON_QUERY(COALESCE((SELECT c.Id,c.StudentCode,c.CohortYear,c.Status,c.FullName,c.CertificateTypeId,c.CreatedAt,c.UpdatedAt,
+        JSON_QUERY(COALESCE((SELECT c.Id,c.StudentCode,c.CohortYear,c.Status,c.FullName,c.ClassName,c.Cccd,c.CertificateTypeId,c.CreatedAt,c.UpdatedAt,
+          c.IssuingOrganizationId,JSON_VALUE(c.CatalogSnapshotJson,'$.issuingOrganization.displayName') AS IssuingOrganizationName,
           JSON_VALUE(c.CatalogSnapshotJson,'$.type.displayName') AS CertificateTypeName,
           CONVERT(varchar(16),CONVERT(binary(8),c.RowVersion),2) AS VersionToken
           FROM certification.StudentCertificates c WHERE ${filter} ORDER BY c.CreatedAt DESC,c.Id
@@ -152,10 +199,11 @@ export function createCertificationsRepository({query=queryLocalDatabase,
         ${input.existing ? `DELETE certification.EvidenceFiles WHERE CertificateId=@certificate;
           UPDATE certification.StudentCertificates SET ${certificateFields} WHERE Id=@certificate;`
         : `INSERT certification.StudentCertificates(Id,ActorReference,ActorSource,StudentCode,CohortYear,
-          CertificateTypeId,FullName,ClassName,ResultJson,CatalogSnapshotJson,IssuedOn,Notes,ExpiresAt,CreatedAt,UpdatedAt)
+          CertificateTypeId,FullName,ClassName,Cccd,IssuingOrganizationId,ResultJson,CatalogSnapshotJson,IssuedOn,Notes,ExpiresAt,CreatedAt,UpdatedAt)
           VALUES(@certificate,JSON_VALUE(@input,'$.actor.reference'),JSON_VALUE(@input,'$.actor.source'),
             JSON_VALUE(@input,'$.actor.studentCode'),TRY_CONVERT(smallint,JSON_VALUE(@input,'$.actor.cohortYear')),
             TRY_CONVERT(int,JSON_VALUE(@input,'$.data.certificateTypeId')),JSON_VALUE(@input,'$.data.fullName'),JSON_VALUE(@input,'$.data.className'),
+            JSON_VALUE(@input,'$.data.cccd'),TRY_CONVERT(int,JSON_VALUE(@input,'$.data.issuingOrganizationId')),
             JSON_QUERY(@input,'$.data.result'),JSON_QUERY(@input,'$.snapshot'),TRY_CONVERT(date,JSON_VALUE(@input,'$.data.issuedOn'),23),
             JSON_VALUE(@input,'$.data.notes'),TRY_CONVERT(datetime2(3),JSON_VALUE(@input,'$.expiresAt'),127),@now,@now);`}
         INSERT certification.EvidenceFiles(Id,CertificateId,Purpose,OriginalFileName,DeclaredContentType,DeclaredSizeBytes,Bucket,ObjectKey,CreatedAt)
@@ -184,6 +232,7 @@ export function createCertificationsRepository({query=queryLocalDatabase,
           WHERE f.CertificateId=@certificate AND f.Status='pending';
         IF @@ROWCOUNT<>(SELECT COUNT(*) FROM OPENJSON(@input,'$.files')) THROW 51409,'CERT_CONFLICT',1;
         UPDATE certification.StudentCertificates SET Status='submitted',ClaimToken=NULL,SubmittedAt=@now,UpdatedAt=@now,
+          FullName=JSON_VALUE(@input,'$.student.fullName'),ClassName=JSON_VALUE(@input,'$.student.className'),Cccd=JSON_VALUE(@input,'$.student.cccd'),
           CatalogSnapshotJson=JSON_QUERY(@input,'$.snapshot') WHERE Id=@certificate;`);
     },
     releaseSubmission(input) {

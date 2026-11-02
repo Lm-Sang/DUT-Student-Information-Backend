@@ -28,7 +28,7 @@ export function createCertificationsRouter(
   );
   reviewer.post("/applications/:applicationId/review", controller.review);
   management.get("/catalog", controller.managementCatalog);
-  for (const kind of ["languages", "types", "policies"]) {
+  for (const kind of ["languages", "types", "policies", "issuers"]) {
     management.post("/" + kind, controller["create_" + kind]);
     management.patch("/" + kind + "/:catalogId", controller["update_" + kind]);
   }

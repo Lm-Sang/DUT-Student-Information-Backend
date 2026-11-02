@@ -10,9 +10,13 @@ export const typeDto = row => ({
   id:row.Id,languageId:row.LanguageId ?? null,code:row.Code,displayName:row.DisplayName,isPublished:Boolean(row.IsPublished),
   formSchema:resolveFormSchema(row.FormSchema,row.Levels),revision:row.Revision,rowVersion:row.VersionToken,
   isSchoolProvided:Boolean(row.IsSchoolProvided),baseCertificateTypeId:row.BaseCertificateTypeId ?? null,
+  issuingOrganizations:(row.IssuingOrganizations ?? []).filter(issuer => issuer.IsActive).map(issuerDto),
   levels:(row.Levels ?? []).map(level => ({id:level.Id,code:level.Code ?? null,
     displayName:level.DisplayName ?? null,weight:level.Weight ?? null})),
 });
+export const issuerDto = row => ({id:row.Id,code:row.Code,displayName:row.DisplayName,isActive:Boolean(row.IsActive),
+  sourceUrl:row.SourceUrl ?? null,verifiedOn:row.VerifiedOn?.slice(0,10) ?? null,revision:row.Revision,rowVersion:row.VersionToken,
+  certificateTypeIds:row.CertificateTypeIds ?? []});
 export const policyDto = row => ({
   id:row.Id,languageId:row.LanguageId ?? null,certificateTypeId:row.CertificateTypeId ?? null,
   cohortFrom:row.CohortFrom,cohortTo:row.CohortTo ?? null,isRecognized:Boolean(row.IsRecognized),
@@ -29,6 +33,8 @@ export function fileDto(file) {
 export function applicationDto(row) {
   return { id:id(row.Id),studentCode:row.StudentCode,cohortYear:row.CohortYear,
     rowVersion:row.VersionToken,fullName:row.FullName,className:row.ClassName,
+    cccd:row.Cccd ?? null,issuingOrganizationId:row.IssuingOrganizationId ?? null,
+    issuingOrganization:row.CatalogSnapshot?.issuingOrganization ?? null,
     certificateTypeId:row.CertificateTypeId,result:row.Result,
     catalogSnapshot:row.CatalogSnapshot,issuedOn:row.IssuedOn?.slice(0,10),notes:row.Notes ?? null,
     status:row.Status === 'checking' ? 'uploading' : row.Status,processing:row.Status === 'checking',
@@ -43,5 +49,7 @@ export function listDto(result) {
     items:(result.items ?? []).map(row => ({id:id(row.Id),studentCode:row.StudentCode,cohortYear:row.CohortYear,
       status:row.Status==='checking'?'uploading':row.Status,processing:row.Status==='checking',fullName:row.FullName ?? null,certificateTypeId:row.CertificateTypeId ?? null,
       certificateTypeName:row.CertificateTypeName ?? null,rowVersion:row.VersionToken,
+      className:row.ClassName ?? null,cccd:row.Cccd ?? null,
+      issuingOrganizationId:row.IssuingOrganizationId ?? null,issuingOrganizationName:row.IssuingOrganizationName ?? null,
       createdAt:utc(row.CreatedAt),updatedAt:utc(row.UpdatedAt)}))};
 }

@@ -8,6 +8,8 @@ import {
 import { canEdit } from "../domain/certifications.rules.js";
 import { inspectEvidenceFiles } from "./evidence-inspection.service.js";
 import { notifyCertificateChanged } from "../events/certification-events.js";
+import { studentService } from '../../students/index.js';
+import { requireStudentInformation, supplementStudentInformation } from './student-information.js';
 
 export function createItCertificationsService({
   repository,
@@ -17,6 +19,7 @@ export function createItCertificationsService({
   clock = () => new Date(),
   events,
   inspectionQueue,
+  studentProfile = actor => studentService.getCertificationProfile(actor),
 }) {
   function profile(actor) {
     if (actor?.role !== "student" || !/^\d{9}$/.test(actor.studentCode ?? ""))
@@ -38,6 +41,7 @@ export function createItCertificationsService({
       throw new AppError("Không được truy cập hồ sơ này.", 403);
     return application;
   }
+  const present = dto => supplementStudentInformation(dto, studentProfile);
   return Object.freeze({
     async form(actor) {
       profile(actor);
@@ -76,11 +80,7 @@ export function createItCertificationsService({
           },
           { key: "NgayCC", label: "Ngày cấp", type: "date", required: false },
         ],
-        student: {
-          studentCode: actor.studentCode,
-          fullName: actor.name ?? "",
-          className: actor.className ?? "",
-        },
+        student: await studentProfile(actor),
         maxFiles: config.maxFiles,
         maxFileBytes: config.maxFileBytes,
         imageValidation: {
@@ -95,6 +95,10 @@ export function createItCertificationsService({
         throw new AppError("Không có quyền truy cập.", 403);
       if (actor.role === "student") profile(actor);
       const result = await repository.records({ ...query, actor });
+      if (actor.role === 'reviewer') result.items = await Promise.all(result.items.map(row =>
+        /^\d{9}$/.test(row.MaHS ?? '') ? present({ ...row, studentCode:row.MaHS,
+          fullName:row.StudentSnapshot?.fullName ?? null,className:row.StudentSnapshot?.className ?? null,cccd:row.StudentSnapshot?.cccd ?? null })
+          : { ...row, studentCode:row.MaHS ?? null,fullName:null,className:null,cccd:null }));
       return {
         ...result,
         page: query.page,
@@ -103,10 +107,12 @@ export function createItCertificationsService({
       };
     },
     async list(actor, query) {
-      return itListDto(await repository.list({ ...query, actor }));
+      const result = itListDto(await repository.list({ ...query, actor }));
+      result.items = await Promise.all(result.items.map(present));
+      return result;
     },
     async get(actor, applicationId) {
-      return itApplicationDto(await load(actor, applicationId));
+      return present(itApplicationDto(await load(actor, applicationId)));
     },
     async prepare(actor, input) {
       profile(actor);
@@ -119,6 +125,7 @@ export function createItCertificationsService({
           400,
           { field: "MaCC" },
         );
+      const student = requireStudentInformation(await studentProfile(actor));
       const applicationId = input.applicationId ?? randomUUID();
       let submissionId = randomUUID(),
         expected = null;
@@ -167,6 +174,7 @@ export function createItCertificationsService({
       }
       const prepared = await repository.prepareSubmission({
         actor,
+        student,
         applicationId,
         submissionId,
         expected,
@@ -189,8 +197,10 @@ export function createItCertificationsService({
         throw new AppError("Hồ sơ không thể nộp thêm.", 409);
       const { ID, ...data } = pending.Certificate;
       validateItData(data);
+      const student = requireStudentInformation(await studentProfile(actor));
       const reference = {
         actor,
+        student,
         applicationId,
         submissionId: pending.Id,
         expected: application.VersionToken,

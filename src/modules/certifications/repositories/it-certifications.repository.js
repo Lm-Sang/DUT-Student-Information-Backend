@@ -5,7 +5,7 @@ import { AppError } from '../../../shared/errors/app-error.js';
 const fileTable = 'certification.tmCNTTChungChi_File';
 const certificateTable = 'certification.tmCNTTChungChi_SV';
 const summarySql = `SELECT g.ApplicationId AS Id,f.ActorReference,f.ActorSource,
- c.MaHS AS StudentCode,f.CertificateId,
+ c.MaHS AS StudentCode,f.CertificateId,f.StudentSnapshotJson,
  CASE WHEN done.Id IS NULL THEN 'uploading' ELSE COALESCE(JSON_VALUE(done.ReviewJson,'$.Decision'),'submitted') END AS Status,
  done.SubmissionId AS CurrentSubmissionId,g.CreatedAt,g.UpdatedAt,
  CONVERT(varchar(16),CONVERT(binary(8),g.VersionNumber),2) AS VersionToken
@@ -15,6 +15,7 @@ const summarySql = `SELECT g.ApplicationId AS Id,f.ActorReference,f.ActorSource,
  LEFT JOIN ${certificateTable} c ON c.ID=f.CertificateId
  OUTER APPLY(SELECT TOP(1) * FROM ${fileTable} WHERE ApplicationId=g.ApplicationId AND Status='completed' ORDER BY Sequence DESC,Id) done`;
 const applicationSql = `SELECT f.*,JSON_QUERY(f.InspectionJson) AS Inspection,JSON_QUERY(f.ReviewJson) AS Review,
+ JSON_QUERY(f.StudentSnapshotJson) AS StudentSnapshot,
  (SELECT t.TenCC FROM ${certificateTable} c JOIN certification.tmCNTTChungChi t ON t.MaCC=c.MaCC WHERE c.ID=f.CertificateId) AS CertificateTypeName,
  JSON_QUERY((SELECT c.* FROM ${certificateTable} c WHERE c.ID=f.CertificateId
    FOR JSON PATH,INCLUDE_NULL_VALUES,WITHOUT_ARRAY_WRAPPER)) AS Certificate,
@@ -54,7 +55,8 @@ function applicationFromFiles(files) {
   }
   const current = submissions.find(item => item.Status === 'submitted');
   return { Id:files[0].ApplicationId, ActorReference:files[0].ActorReference, ActorSource:files[0].ActorSource,
-    StudentCode:files[0].Certificate.MaHS, Status:current?.Review?.Decision ?? (current ? 'submitted' : 'uploading'),
+    StudentCode:files[0].Certificate.MaHS, StudentSnapshot:files[0].StudentSnapshot ?? null,
+    Status:current?.Review?.Decision ?? (current ? 'submitted' : 'uploading'),
     CurrentSubmissionId:current?.Id ?? null, Submissions:submissions,
     VersionToken:files.map(f => f.VersionToken).sort().at(-1),
     CreatedAt:files.map(f => f.CreatedAt).sort()[0], UpdatedAt:files.map(f => f.UpdatedAt).sort().at(-1) };
@@ -71,6 +73,9 @@ export function createItCertificationsRepository({query=queryLocalDatabase,
     } catch (error) {
       if (error instanceof AppError) throw error;
       const message = error.message ?? '';
+      if (/invalid column name.*StudentSnapshotJson/i.test(message))
+        throw new AppError('Cần cập nhật thông tin sinh viên cho chứng chỉ tin học.',503,
+          {code:'CERT_SCHEMA_MIGRATION_REQUIRED',migration:'certifications-student-information-issuers.sql'});
       if (/invalid object name.*tmCNTTChungChi/i.test(message))
         throw new AppError('DB chứng chỉ tin học chưa được khởi tạo.',503,{code:'ITCERT_SCHEMA_REQUIRED'});
       const mapped = [
@@ -103,7 +108,8 @@ export function createItCertificationsRepository({query=queryLocalDatabase,
     records({actor,page,pageSize}) {
       return run(`SELECT(SELECT (SELECT COUNT(*) FROM ${certificateTable} c
           WHERE JSON_VALUE(@input,'$.actor.role')='reviewer' OR c.MaHS=JSON_VALUE(@input,'$.actor.studentCode')) AS totalRecords,
-        JSON_QUERY(COALESCE((SELECT c.* FROM ${certificateTable} c
+        JSON_QUERY(COALESCE((SELECT c.*,JSON_QUERY((SELECT TOP(1) f.StudentSnapshotJson FROM ${fileTable} f
+          WHERE f.CertificateId=c.ID ORDER BY f.Sequence DESC,f.UpdatedAt DESC,f.Id)) AS StudentSnapshot FROM ${certificateTable} c
           WHERE JSON_VALUE(@input,'$.actor.role')='reviewer' OR c.MaHS=JSON_VALUE(@input,'$.actor.studentCode')
           ORDER BY c.ID OFFSET (TRY_CONVERT(int,JSON_VALUE(@input,'$.page'))-1)*TRY_CONVERT(int,JSON_VALUE(@input,'$.pageSize')) ROWS
           FETCH NEXT TRY_CONVERT(int,JSON_VALUE(@input,'$.pageSize')) ROWS ONLY
@@ -116,7 +122,7 @@ export function createItCertificationsRepository({query=queryLocalDatabase,
       return run(`SELECT(SELECT TRY_CONVERT(int,JSON_VALUE(@input,'$.page')) AS page,
         TRY_CONVERT(int,JSON_VALUE(@input,'$.pageSize')) AS pageSize,
         (SELECT COUNT(*) FROM (${summarySql}) a WHERE ${filter}) AS totalRecords,
-        JSON_QUERY(COALESCE((SELECT a.*,
+        JSON_QUERY(COALESCE((SELECT a.*,JSON_QUERY(a.StudentSnapshotJson) AS StudentSnapshot,
           (SELECT t.TenCC FROM ${certificateTable} c JOIN certification.tmCNTTChungChi t ON t.MaCC=c.MaCC WHERE c.ID=a.CertificateId) AS CertificateTypeName,
           JSON_QUERY((SELECT c.* FROM ${certificateTable} c WHERE c.ID=a.CertificateId
           FOR JSON PATH,INCLUDE_NULL_VALUES,WITHOUT_ARRAY_WRAPPER)) AS Certificate FROM (${summarySql}) a WHERE ${filter}
@@ -147,11 +153,11 @@ export function createItCertificationsRepository({query=queryLocalDatabase,
           INSERT ${certificateTable}(ID,${nativeFields.join(',')}) VALUES(@certificate,${nativeFields.map(nativeValue).join(',')});
         END;
         INSERT ${fileTable}(Id,ApplicationId,SubmissionId,CertificateId,Sequence,ActorReference,ActorSource,
-          OriginalFileName,DeclaredContentType,DeclaredSizeBytes,Bucket,ObjectKey,ExpiresAt,CreatedAt,UpdatedAt)
+          OriginalFileName,DeclaredContentType,DeclaredSizeBytes,Bucket,ObjectKey,ExpiresAt,CreatedAt,UpdatedAt,StudentSnapshotJson)
         SELECT TRY_CONVERT(uniqueidentifier,JSON_VALUE(f.value,'$.id')),@application,@submission,@certificate,@sequence,
           JSON_VALUE(@input,'$.actor.reference'),JSON_VALUE(@input,'$.actor.source'),JSON_VALUE(f.value,'$.fileName'),
           JSON_VALUE(f.value,'$.contentType'),TRY_CONVERT(bigint,JSON_VALUE(f.value,'$.sizeBytes')),
-          JSON_VALUE(@input,'$.bucket'),JSON_VALUE(f.value,'$.objectKey'),TRY_CONVERT(datetime2(3),JSON_VALUE(@input,'$.expiresAt'),127),@now,@now
+          JSON_VALUE(@input,'$.bucket'),JSON_VALUE(f.value,'$.objectKey'),TRY_CONVERT(datetime2(3),JSON_VALUE(@input,'$.expiresAt'),127),@now,@now,JSON_QUERY(@input,'$.student')
           FROM OPENJSON(@input,'$.files') f;`);
     },
     claimSubmission(input) {
@@ -174,7 +180,8 @@ export function createItCertificationsRepository({query=queryLocalDatabase,
         IF EXISTS(SELECT 1 FROM ${fileTable} WHERE SubmissionId=@submission AND ExpiresAt<=@now) THROW 51810,'ITCERT_EXPIRED',1;
         IF (SELECT COUNT(*) FROM ${fileTable} WHERE SubmissionId=@submission)<>(SELECT COUNT(*) FROM OPENJSON(@input,'$.files'))
           OR NOT EXISTS(SELECT 1 FROM OPENJSON(@input,'$.files')) THROW 51809,'ITCERT_CONFLICT',1;
-        UPDATE f SET Status='completed',ClaimToken=NULL,InspectionJson=JSON_QUERY(j.value,'$.inspection'),CompletedAt=@now,UpdatedAt=@now
+        UPDATE f SET Status='completed',ClaimToken=NULL,InspectionJson=JSON_QUERY(j.value,'$.inspection'),CompletedAt=@now,UpdatedAt=@now,
+          StudentSnapshotJson=JSON_QUERY(@input,'$.student')
           FROM ${fileTable} f JOIN OPENJSON(@input,'$.files') j ON f.Id=TRY_CONVERT(uniqueidentifier,JSON_VALUE(j.value,'$.id'))
           WHERE f.SubmissionId=@submission AND f.ApplicationId=@application;
         IF @@ROWCOUNT<>(SELECT COUNT(*) FROM OPENJSON(@input,'$.files')) THROW 51809,'ITCERT_CONFLICT',1;`);
