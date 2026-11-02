@@ -14,9 +14,10 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "certifications:fe": "node certification-web-test/server.js",
-    "auth:db:init": "node scripts/auth-db.mjs init",
-    "auth:user:create": "node scripts/auth-db.mjs create",
-    "test": "node --test \"src/**/*.test.js\" \"tests/**/*.test.js\""
+    "auth:db:init": "node src/modules/auth/cli/auth-db.mjs init",
+    "auth:user:create": "node src/modules/auth/cli/auth-db.mjs create",
+    "test": "node --test \"src/**/*.test.js\"",
+    "test:workspace": "node --test \"src/**/*.test.js\" \"tests/**/*.test.js\""
   },
   "repository": {
     "type": "git",
