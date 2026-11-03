@@ -71,6 +71,7 @@ const corsOrigins = Object.freeze(
   [...new Set([
     ...parseList(process.env.CORS_STUDENT_ORIGINS ?? studentFrontendUrl),
     ...parseList(process.env.CORS_ADMIN_ORIGINS ?? adminFrontendUrl),
+    ...(process.env.STAFF_FRONTEND_URL ? [parseOrigin('STAFF_FRONTEND_URL', process.env.STAFF_FRONTEND_URL)] : []),
   ])].map((origin, index) => parseOrigin(`CORS_ORIGINS[${index}]`, origin)),
 );
 
@@ -94,6 +95,7 @@ export const env = Object.freeze({
     url: process.env.APP_URL ?? 'http://localhost:3003',
     studentFrontendUrl,
     adminFrontendUrl,
+    staffFrontendUrl: parseOrigin('STAFF_FRONTEND_URL', process.env.STAFF_FRONTEND_URL ?? adminFrontendUrl),
     corsOrigins,
   }),
   database: Object.freeze({

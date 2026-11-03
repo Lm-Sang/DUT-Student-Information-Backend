@@ -107,3 +107,16 @@ Kiểm tra cấu hình cuối: local đã có khóa SSO nhưng **chưa có issue
 cho đến khi có thông số được phía SSO xác nhận. Không tự suy đoán hoặc giảm kiểm tra
 để làm đăng nhập qua. Tài khoản chuyên viên đầu tiên cũng chưa được tạo với mật khẩu
 vận hành; dùng CLI nêu trên sau khi người quản trị cung cấp mật khẩu.
+
+## Giao diện kiểm thử JWT
+
+FE sibling `D:/PBL6_DUT/DUT-Student-Information-Frontend` đã được đổi khỏi opaque
+session demo: đăng nhập SSO/chuyên viên, refresh cookie HttpOnly, đăng xuất, xem
+quyền hiện tại, danh mục DB và role không có quyền mặc định. Mở localhost:5173;
+`STAFF_FRONTEND_URL=http://localhost:5173` cho phép dùng cùng FE khi test.
+Proxy giữ Origin và các Set-Cookie, không rewrite Origin để vượt kiểm tra.
+Readiness endpoint `/api/staff/auth/configuration` chỉ bật ngoài production,
+trả boolean và tên cấu hình thiếu, không trả khóa/tài khoản. 27 test FE qua;
+125 test backend qua lại. Đã kiểm tra hai tab đăng nhập trên trình duyệt.
+Đăng nhập thực tế vẫn cần issuer/audience SSO và tài khoản chuyên viên do quản
+trị đặt mật khẩu. Hướng dẫn tại README của FE; không có mật khẩu mặc định.

@@ -14,7 +14,15 @@ export function createAuthModule({ channel = 'student', service = authService,
   secureCookies = env.nodeEnv === 'production', frontendOrigin,
 } = {}) {
   const controller = createAuthController(channel, service, { secureCookies, frontendOrigin });
-  return { basePath: `/api/${channel}/auth`, router: createAuthRouter(channel, controller, service) };
+  const router = createAuthRouter(channel, controller, service);
+  if (env.nodeEnv !== 'production') router.get('/configuration', (_req,res) => {
+    const missing = [];
+    if (!env.microsoftSso.jwtSecret) missing.push('MICROSOFT_SSO_JWT_SECRET');
+    if (!env.microsoftSso.jwtIssuer) missing.push('MICROSOFT_SSO_JWT_ISSUER');
+    if (!env.microsoftSso.jwtAudience && !env.microsoftSso.allowMissingAudience) missing.push('MICROSOFT_SSO_JWT_AUDIENCE');
+    res.set('Cache-Control','no-store').json({data:{ready:missing.length===0,missing}});
+  });
+  return { basePath: `/api/${channel}/auth`, router };
 }
 
 export function createStaffAuthModule(options = {}) {
