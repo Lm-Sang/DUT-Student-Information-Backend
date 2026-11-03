@@ -11,9 +11,11 @@ export function createAcademicLeaveController(service,{renderPdf,printAccess}) {
   });
   const empty=req=>{object(req.query,[]);object(req.body??{},[]);};
   return{
-    form:handler(req=>{empty(req);return service.form(req.leaveActor,req.leaveAccessToken);}),
+    form:handler(req=>{empty(req);return service.form(req.leaveActor);}),
     list:handler(req=>{object(req.body??{},[]);return service.list(req.leaveActor,list(req.query));}),
     get:handler(req=>{empty(req);return service.get(req.leaveActor,id(req.params.id));}),
+    history:handler(req=>{object(req.body??{},[]);object(req.query,['page']);return service.history(req.leaveActor,list(req.query));}),
+    applicationHistory:handler(req=>{object(req.body??{},[]);object(req.query,['page']);return service.applicationHistory(req.leaveActor,id(req.params.id),list(req.query));}),
     create:handler(req=>{object(req.query,[]);return service.save(req.leaveActor,draft(req.body));},201),
     update:handler(req=>{object(req.query,[]);return service.save(req.leaveActor,draft(req.body),id(req.params.id),version(req.headers['if-match']));}),
     confirm:handler(req=>{empty(req);return service.confirm(req.leaveActor,id(req.params.id),version(req.headers['if-match']),req.leaveAccessToken);}),

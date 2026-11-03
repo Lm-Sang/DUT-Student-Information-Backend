@@ -7,12 +7,14 @@ import {createAcademicLeavePrintAccess} from './middlewares/academic-leave-print
 import {pdfRenderer} from '../../infrastructure/pdf/chromium-pdf.js';
 import {createAcademicLeaveController} from './controllers/academic-leave.controller.js';
 import {createAcademicLeaveRouter} from './routes/academic-leave.routes.js';
+const applicationData=createStudentApplicationDataService();
 
 export function createAcademicLeaveModule({repository=createAcademicLeaveRepository(),
-  snapshotProvider=(actor,token)=>createStudentApplicationDataService().snapshot(actor,token),
+  snapshotProvider=(actor,token)=>applicationData.snapshot(actor,token),
+  prefillProvider=actor=>applicationData.prefill(actor),
   studentContextProvider=createDutStudentContext(),reviewerContextProvider=createLocalPermissionContext('academic-leave:review'),clock,
   renderPdf=html=>pdfRenderer.render(html),printAccess=createAcademicLeavePrintAccess()}={}) {
-  const service=createAcademicLeaveService({repository,snapshotProvider,clock});
+  const service=createAcademicLeaveService({repository,snapshotProvider,prefillProvider,clock});
   const context=createAcademicLeaveMiddleware({studentContextProvider,reviewerContextProvider});
   return{basePath:'/api/academic-leave',service,router:createAcademicLeaveRouter(createAcademicLeaveController(service,{renderPdf,printAccess}),
     context,createAcademicLeavePrintMiddleware({studentContext:context('student'),printAccess}))};

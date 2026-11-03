@@ -22,15 +22,19 @@ export function printQuery(value) {
 }
 export function draft(value) {
   object(value,['kind','parentApplicationId','reasonCode','startSemesterCode','semesterCount','content']);
-  if(!['leave','extension'].includes(value.kind))fail('Loại đơn không hợp lệ.','kind');
-  if(!reasons.some(item=>item.code===value.reasonCode))fail('Chọn một trong bốn lý do.','reasonCode');
+  if(!['leave','extension','return'].includes(value.kind))fail('Loại đơn không hợp lệ.','kind');
+  if(value.kind!=='return'&&!reasons.some(item=>item.code===value.reasonCode))fail('Chọn một trong bốn lý do.','reasonCode');
+  if(value.kind==='return'&&value.reasonCode!==undefined)fail('Lý do trở lại học được lấy từ đơn ngừng học trước.','reasonCode');
   if(typeof value.startSemesterCode!=='string')fail('Chọn học kỳ bắt đầu.','startSemesterCode');
   semester(value.startSemesterCode);
-  if(!Number.isInteger(value.semesterCount)||value.semesterCount<1||value.semesterCount>4)fail('Số kỳ mỗi lần phải từ 1 đến 4.','semesterCount');
+  const semesterCount=value.semesterCount??(value.kind==='return'?0:1);
+  const maximum=value.kind==='return'?0:value.reasonCode==='military'?4:1;
+  if(!Number.isInteger(semesterCount)||semesterCount<(value.kind==='return'?0:1)||semesterCount>maximum)
+    fail('Mỗi lần chỉ được 1 kỳ; riêng nghĩa vụ quân sự tối đa 4 kỳ. Đơn trở lại học có số kỳ bằng 0.','semesterCount');
   const parentApplicationId=value.parentApplicationId==null?null:id(value.parentApplicationId);
-  if((value.kind==='extension')!==(parentApplicationId!==null))fail('Chọn đơn trước cho đơn gia hạn.','parentApplicationId');
+  if((value.kind!=='leave')!==(parentApplicationId!==null))fail('Gia hạn/trở lại học cần chọn đơn trước trong lịch sử.','parentApplicationId');
   if(value.content!==undefined&&(typeof value.content!=='string'||value.content.trim().length>2000))fail('Nội dung tối đa 2000 ký tự.','content');
-  return {...value,parentApplicationId,content:value.content?.trim()??''};
+  return {...value,semesterCount,parentApplicationId,content:value.content?.trim()??''};
 }
 export function review(value) {
   object(value,['decision','note']);

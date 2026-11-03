@@ -16,6 +16,7 @@
     "certifications:fe": "node certification-web-test/server.js",
     "auth:db:init": "node src/modules/auth/cli/auth-db.mjs init",
     "auth:user:create": "node src/modules/auth/cli/auth-db.mjs create",
+    "academic-leave:db:init": "node src/modules/academic-leave/cli/academic-leave-db.mjs",
     "test": "node --test \"src/**/*.test.js\"",
     "test:workspace": "node --test \"src/**/*.test.js\" \"tests/**/*.test.js\""
   },

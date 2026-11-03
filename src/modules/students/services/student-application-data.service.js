@@ -4,11 +4,13 @@ import {createStudentAcademicRepository} from '../repositories/student-academic.
 import {normalizeAcademicStatistics} from '../validators/academic-statistics.validator.js';
 export {normalizeAcademicStatistics} from '../validators/academic-statistics.validator.js';
 export function createStudentApplicationDataService({identityService=studentService,academicRepository=createStudentAcademicRepository()}={}) {
-  return Object.freeze({async snapshot(actor,accessToken) {
+  async function prefill(actor) {
     if(actor?.role!=='student')throw new AppError('Cần hồ sơ sinh viên đã xác thực.',403);
-    const [identity,data]=await Promise.all([identityService.getIdentityForAuthenticatedStudent(actor),academicRepository.statistics(accessToken)]);
-    return{student:{studentCode:actor.studentCode,fullName:actor.name,birthday:actor.birthday?.slice(0,10)??'',
-      phoneNumber:actor.phoneNumber??'',className:actor.className??'',cccd:identity.cccd,cccdSource:identity.source},
-      academicRows:normalizeAcademicStatistics(data),academicSource:'https://xemdiem.dut.udn.vn/api/stats'};
+    return{student:await identityService.getApplicationProfile(actor)};
+  }
+  return Object.freeze({prefill,async snapshot(actor,accessToken) {
+    if(actor?.role!=='student')throw new AppError('Cần hồ sơ sinh viên đã xác thực.',403);
+    const [profile,data]=await Promise.all([prefill(actor),academicRepository.statistics(accessToken)]);
+    return{...profile,academicRows:normalizeAcademicStatistics(data),academicSource:'https://xemdiem.dut.udn.vn/api/stats'};
   }});
 }
