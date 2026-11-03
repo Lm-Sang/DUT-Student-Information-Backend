@@ -1,4 +1,4 @@
-import { queryLocalDatabase } from '../../../infrastructure/database/index.js';
+import { queryLocalDatabase,transactionLocalDatabase } from '../../../database.js';
 import { env } from '../../../config/env.js';
 import { AppError } from '../../../shared/errors/app-error.js';
 
@@ -62,13 +62,13 @@ function applicationFromFiles(files) {
     CreatedAt:files.map(f => f.CreatedAt).sort()[0], UpdatedAt:files.map(f => f.UpdatedAt).sort().at(-1) };
 }
 
-export function createItCertificationsRepository({query=queryLocalDatabase,
+export function createItCertificationsRepository({query=queryLocalDatabase,transaction=query===queryLocalDatabase?transactionLocalDatabase:query,
   databaseName=env.localDatabase.name,databaseHost=env.localDatabase.host} = {}) {
-  async function run(statement, input = {}) {
-    if (databaseName !== 'Studentpage' || !['localhost','127.0.0.1','::1'].includes(databaseHost.toLowerCase()))
+  async function run(statement, input = {},transactional=false) {
+    if (!['Studentpage','sv_dut','Studentpage_Integration_20261103'].includes(databaseName) || !['localhost','127.0.0.1','::1'].includes(databaseHost.toLowerCase()))
       throw new AppError('Chứng chỉ tin học yêu cầu DB local Studentpage.',503);
     try {
-      const result = await query('SET NOCOUNT ON; DECLARE @input nvarchar(max)=?; '+statement,[JSON.stringify(input)]);
+      const result = await (transactional?transaction:query)('SET NOCOUNT ON; DECLARE @input nvarchar(max)=?; '+statement,[JSON.stringify(input)]);
       return JSON.parse(result.first[0]?.Json ?? 'null');
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -92,10 +92,10 @@ export function createItCertificationsRepository({query=queryLocalDatabase,
     }
   }
   async function mutate(input, statement) {
-    return applicationFromFiles(await run(`SET XACT_ABORT ON; BEGIN TRY BEGIN TRANSACTION;
+    return applicationFromFiles(await run(`SET XACT_ABORT ON;
       DECLARE @now datetime2(3)=SYSUTCDATETIME(); ${statement}
-      SELECT (${applicationSql}) AS Json; COMMIT TRANSACTION;
-      END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK TRANSACTION; THROW; END CATCH;`,input));
+      SELECT (${applicationSql}) AS Json;
+      `,input,true));
   }
   return Object.freeze({
     catalog() {

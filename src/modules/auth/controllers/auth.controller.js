@@ -59,6 +59,16 @@ export function createAuthController(channel, service, {
       requireFrontendOrigin(req);
       return sendSession(res, await service.loginWithPassword(channel, req.body));
     },
+    async changePassword(req,res) {
+      requireFrontendOrigin(req);
+      const result=await service.updateStaffPassword(req.user,req.body);
+      res.clearCookie(refreshCookieName,refreshCookieOptions);
+      return sendSuccess(res,result);
+    },
+    async resetStaffPassword(req,res) {
+      requireFrontendOrigin(req);
+      return sendSuccess(res,await service.updateStaffPassword(req.user,req.body,{targetId:req.params.id}));
+    },
     async refresh(req, res) {
       requireFrontendOrigin(req);
       if (req.body && (typeof req.body !== 'object' || Array.isArray(req.body) || Object.keys(req.body).length)) {

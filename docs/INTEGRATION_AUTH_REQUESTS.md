@@ -143,3 +143,12 @@ Tài khoản test đăng nhập qua FE proxy 200, đọc /me/catalogs/requests 2
 trị role 403, logout 200; SSO login trả redirect302 tới sso.dut.udn.vn. Chưa hoàn tất
 đăng nhập SSO bằng tài khoản sinh viên thật; lần thử tương tác trình duyệt không
 kết nối được nên phần xác nhận mới dựa trên HTTP thực tế và test tự động.
+# Tối ưu tải trang sau SSO (2026-11-03)
+
+FE mở trang bằng 4 API song song (`me`, `catalogs`, `requests`, `profile`). Trước đây mỗi API đều đọc hồ sơ trường và đồng bộ DB local; `profile` đọc lại thêm một lần, tổng cộng 5 lượt đọc hồ sơ. Đo SELECT trực tiếp trong phiên kiểm tra: mở kết nối mới khoảng 3.909 ms, tái sử dụng kết nối khoảng 693 ms. Đây là thời gian một lượt đọc hồ sơ, không phải thời gian toàn bộ đăng nhập SSO.
+
+Các API cùng phiên SSO hiện dùng chung một lần liên kết hồ sơ đang chạy. Liên kết session/identity → actor được giữ tối đa 5 phút trong bộ nhớ, giới hạn 1.000 mục; phiên hoặc danh tính khác không dùng chung liên kết, lỗi không được cache. Mỗi API vẫn xác minh JWT, phiên, tài khoản SQL hiện hành và quyền. Middleware kiểm tra lại nguồn SSO và MSSV trên tài khoản local.
+
+API xem hồ sơ có thể dùng dữ liệu vừa đồng bộ trong vòng 30 giây, với điều kiện mã hồ sơ trường và MSSV vẫn khớp. Tạo đơn và tải/xuất PDF vẫn buộc làm mới hồ sơ. Như vậy lần mở trang bình thường chỉ đọc hồ sơ trường một lượt. FE đổi mã SSO ngay khi quay về, không chờ API kiểm tra cấu hình chuyên viên; giao diện hiển thị riêng bước xác thực phiên và tải hồ sơ.
+
+Kiểm thử backend: 133 đạt, 1 kiểm thử SQL tùy chọn bỏ qua. FE: 27 đạt, kiểm tra cú pháp đạt. Sáu kiểm thử mới bao phủ gộp truy vấn đồng thời, thu hồi phiên/tài khoản, cách ly danh tính, hết hạn và thử lại, làm mới PDF và giới hạn bộ nhớ. Chưa đo toàn bộ luồng đăng nhập tương tác trên hệ thống SSO của trường; độ trễ ở hệ thống SSO bên ngoài là bước riêng.

@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
-import sql from 'mssql';
+import {sqlTypes as sql} from '../src/infrastructure/database/typeorm-types.js';
 
 import { connectDatabase, disconnectDatabases } from '../src/infrastructure/database/sql-server.js';
 

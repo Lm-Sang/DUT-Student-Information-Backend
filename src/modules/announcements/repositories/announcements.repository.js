@@ -1,6 +1,6 @@
-import sql from 'mssql';
+import {sqlTypes as sql} from '../../../infrastructure/database/typeorm-types.js';
 
-import { connectDatabase } from '../../../infrastructure/database/sql-server.js';
+import { connectDatabase } from '../../../database.js';
 
 const visible = '(Hide IS NULL OR Hide = 0) AND Ngaydang <= GETDATE()';
 

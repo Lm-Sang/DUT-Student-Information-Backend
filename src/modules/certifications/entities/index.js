@@ -1,0 +1,12 @@
+import {certification_CertificateLevels} from './CertificateLevels.entity.js';
+import {certification_CertificateTypeIssuers} from './CertificateTypeIssuers.entity.js';
+import {certification_CertificateTypes} from './CertificateTypes.entity.js';
+import {certification_EvidenceFiles} from './EvidenceFiles.entity.js';
+import {certification_IssuingOrganizations} from './IssuingOrganizations.entity.js';
+import {certification_Languages} from './Languages.entity.js';
+import {certification_RecognitionPolicies} from './RecognitionPolicies.entity.js';
+import {certification_StudentCertificates} from './StudentCertificates.entity.js';
+import {certification_tmCNTTChungChi} from './tmCNTTChungChi.entity.js';
+import {certification_tmCNTTChungChi_File} from './tmCNTTChungChi_File.entity.js';
+import {certification_tmCNTTChungChi_SV} from './tmCNTTChungChi_SV.entity.js';
+export const certificationEntities=[certification_CertificateLevels,certification_CertificateTypeIssuers,certification_CertificateTypes,certification_EvidenceFiles,certification_IssuingOrganizations,certification_Languages,certification_RecognitionPolicies,certification_StudentCertificates,certification_tmCNTTChungChi,certification_tmCNTTChungChi_File,certification_tmCNTTChungChi_SV];

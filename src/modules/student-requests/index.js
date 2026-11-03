@@ -18,7 +18,7 @@ export function createRequestsModule({ repository = createRequestsRepository(), 
   if (env.nodeEnv === 'production') throw new Error('Request demo must not run in production.');
   const school=createSchoolStudentService(repository);
   const profile=createStudentProfileService(repository,school);
-  const loadProfile=id=>profile.get(id);
+  const loadProfile=(id,options)=>profile.get(id,options);
   const paperFiles=createPaperFilesService(repository,{loadProfile});
   const confirmationFiles=createConfirmationFilesService(repository,{loadProfile});
   const service = createRequestsService(repository,{loadProfile,paperFiles,confirmationFiles});
@@ -35,7 +35,7 @@ export function createRequestsApiModule({ channel = 'student', repository = crea
   if (!enabled) return null;
   const school = createSchoolStudentService(repository);
   const profile = createStudentProfileService(repository, school);
-  const loadProfile = id => profile.get(id);
+  const loadProfile = (id,options) => profile.get(id,options);
   const service = createRequestsService(repository, {
     loadProfile, paperFiles: createPaperFilesService(repository,{loadProfile}),
     confirmationFiles: createConfirmationFilesService(repository,{loadProfile}),

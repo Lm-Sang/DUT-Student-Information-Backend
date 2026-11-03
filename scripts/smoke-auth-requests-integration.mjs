@@ -1,7 +1,9 @@
 // Isolated HTTP smoke: random process-only key, disposable SQL fixture, no school writes.
 import {randomUUID,randomBytes} from 'node:crypto';import assert from 'node:assert/strict';
+process.env.AUTH_DATABASE_PATH=':memory:';
 process.env.MICROSOFT_SSO_JWT_SECRET=randomBytes(48).toString('base64');process.env.MICROSOFT_SSO_JWT_SECRET_ENCODING='base64';process.env.MICROSOFT_SSO_JWT_ISSUER='integration-smoke-sso';process.env.MICROSOFT_SSO_JWT_AUDIENCE='integration-smoke-client';process.env.JWT_SHARE_SSO_KEY='true';process.env.ENABLE_REQUESTS_DEMO='false';process.env.ENABLE_DEMO_IMPERSONATION='false';
 const [{createApp},{queryLocalDatabase:q,disconnectAllDatabases},{hashPassword},{closeAuthStore}]=await Promise.all([import('../src/app.js'),import('../src/infrastructure/database/index.js'),import('../src/modules/auth/services/password.service.js'),import('../src/modules/auth/index.js')]);
+const {env}=await import('../src/config/env.js');
 const {localDatabaseGuardSql,assertLocalDemoTarget}=await import('../src/infrastructure/database/local-write-guard.js');assertLocalDemoTarget();
 const id='cv:'+randomUUID(),role='test:'+randomUUID(),username='http-'+randomUUID(),password=randomBytes(24).toString('base64url');let server;
 const write=(sql,params=[])=>q(localDatabaseGuardSql+sql,params);
@@ -10,7 +12,7 @@ try{
  INSERT svc_demo.DangNhapChuyenVien(MaHS,TenDangNhap,MatKhauBam)VALUES(?,?,?);INSERT svc_demo.VaiTroRBAC(MaRole,TenRole,MoTa,NguoiTao)VALUES(?,?,N'fixture',?);
  INSERT svc_demo.VaiTroQuyen(MaRole,MaQuyen)VALUES(?,'requests.view');INSERT svc_demo.TaiKhoanVaiTro(MaHS,MaRole,NguoiGan)VALUES(?,?,?);COMMIT;`,[id,id,username,await hashPassword(password),role,role,id,role,id,role,id]);
  const app=createApp();server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base='http://127.0.0.1:'+server.address().port;
- const call=async(path,{status=200,token,body,method}={})=>{const r=await fetch(base+path,{method:method||(body?'POST':'GET'),headers:{Origin:'http://localhost:5174','Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});const j=await r.json();assert.equal(r.status,status,JSON.stringify(j));return j.data;};
+ const call=async(path,{status=200,token,body,method}={})=>{const r=await fetch(base+path,{method:method||(body?'POST':'GET'),headers:{Origin:env.app.staffFrontendUrl,'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});const j=await r.json();assert.equal(r.status,status,JSON.stringify(j));return j.data;};
  await call('/api/staff/student-services/catalogs',{status:401});await call('/api/demo/student-requests/actors',{status:404});
  const session=await call('/api/staff/auth/login',{body:{username,password}});assert.equal(session.accessToken.split('.').length,3);
  const token=session.accessToken;assert.equal((await call('/api/staff/auth/me',{token})).channel,'staff');

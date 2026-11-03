@@ -39,3 +39,13 @@ export function parsePasswordLogin(body) {
   }
   return { username: body.username.toLowerCase(), password: body.password };
 }
+
+export function parsePasswordUpdate(body,{reset=false}={}) {
+  const allowed=reset?['newPassword']:['currentPassword','newPassword'];
+  if(!body||typeof body!=='object'||Array.isArray(body)||Object.keys(body).some(key=>!allowed.includes(key))
+    ||typeof body.newPassword!=='string'||[...body.newPassword].length<12||body.newPassword.length>128||body.newPassword.includes('\0')
+    ||(!reset&&(typeof body.currentPassword!=='string'||!body.currentPassword.length||body.currentPassword.length>128))) {
+    throw new AppError('Mật khẩu mới cần từ 12 đến 128 ký tự; vui lòng điền đầy đủ thông tin.',400);
+  }
+  return {newPassword:body.newPassword,...(!reset?{currentPassword:body.currentPassword}:{})};
+}

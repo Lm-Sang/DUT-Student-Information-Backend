@@ -1,5 +1,5 @@
-import sql from 'mssql';
-import {connectDatabase} from '../../../infrastructure/database/sql-server.js';
+import {sqlTypes as sql} from '../../../infrastructure/database/typeorm-types.js';
+import {connectDatabase} from '../../../database.js';
 import {AppError} from '../../../shared/errors/app-error.js';
 import {mapSchoolAcademics} from '../domain/student-academics.js';
 

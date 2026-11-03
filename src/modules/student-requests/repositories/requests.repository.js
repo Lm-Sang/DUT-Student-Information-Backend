@@ -1,17 +1,18 @@
 import {createRbacRepository} from './rbac.repository.js';
 import {actionPermission} from '../domain/rbac.js';
-import { queryLocalDatabase } from '../../../infrastructure/database/local-sql-server.js';
+import { queryLocalDatabase,transactionLocalDatabase,entitySchema } from '../../../database.js';
+import {selectEntity,selectRows} from '../../../infrastructure/database/typeorm-repository.js';
 import { assertLocalDemoTarget, localDatabaseGuardSql } from '../../../infrastructure/database/local-write-guard.js';
 import { AppError } from '../../../shared/errors/app-error.js';
 import { allPayloadColumns, paperColumns, documentColumns, emailColumns, columnValue, payloadFromColumns, departmentToDatabase } from '../domain/request-fields.js';
 import { workKey } from '../domain/work-permissions.js';
 
 const department = c => `CASE ${c} WHEN '115' THEN 'DT' WHEN '120' THEN 'CTSV' ELSE ${c} END`;
-const actorSelect = `SELECT MaHS AS Id,Hoten AS DisplayName,VaiTro AS Role,${department('MaDV')} AS Department,SoThe AS StudentNumber,PhienBanQuyen AS PermissionVersion,NguonDanhTinh AS IdentitySource,MaHSTruong AS SchoolId FROM svc_demo.TaiKhoan`;
-const documentSelect = `SELECT IDCode AS termCode,MaVanBan AS code,ID AS sourceId,TenVanBan AS name,${department('MaDVcap')} AS department,
+const actorQuery = ()=>selectEntity('svc_demo.TaiKhoan','tk').select(`MaHS AS Id,Hoten AS DisplayName,VaiTro AS Role,${department('MaDV')} AS Department,SoThe AS StudentNumber,PhienBanQuyen AS PermissionVersion,NguonDanhTinh AS IdentitySource,MaHSTruong AS SchoolId`);
+const documentQuery = ()=>selectEntity('svc_demo.Sys_VanBan','vb').select(`IDCode AS termCode,MaVanBan AS code,ID AS sourceId,TenVanBan AS name,${department('MaDVcap')} AS department,
  ThongTinDinhKem AS guidance,LePhiThuong AS normalFee,LePhiNhanh AS rushFee,CONVERT(bit,CASE WHEN KhongMienPhi=0 THEN 1 ELSE 0 END) AS freeAllowed,
- CONVERT(bit,CASE WHEN KhongMienPhi IS NULL THEN 0 ELSE 1 END) AS feePolicyKnown,SoLuongMien_Ngay AS dailyFreeQuota,KhongCapNeuKhongHoc AS registrationRequired FROM svc_demo.Sys_VanBan`;
-const selectRequest = `SELECT ld.MaMauDuLieu AS ValidationProfile,ld.Nhom AS RequestGroup,ld.CachNop AS SubmissionMode,r.ID AS Id,r.STT AS Number,r.MaHS AS StudentId,r.LoaiDon AS TypeCode,${department('r.MaDV')} AS Department,r.TrangThai AS Status,
+ CONVERT(bit,CASE WHEN KhongMienPhi IS NULL THEN 0 ELSE 1 END) AS feePolicyKnown,SoLuongMien_Ngay AS dailyFreeQuota,KhongCapNeuKhongHoc AS registrationRequired`);
+const requestQuery=()=>selectEntity('svc_demo.DonDeNghi','r').select(`ld.MaMauDuLieu AS ValidationProfile,ld.Nhom AS RequestGroup,ld.CachNop AS SubmissionMode,r.ID AS Id,r.STT AS Number,r.MaHS AS StudentId,r.LoaiDon AS TypeCode,${department('r.MaDV')} AS Department,r.TrangThai AS Status,
  r.IDCode AS SubmittedTerm,r.MaCBND AS AssignedStaffId,r.NgayDeNghi AS CreatedAt,r.NgayCapNhat AS UpdatedAt,r.NgayNhanDon AS ReceivedAt,
  r.NgayHoanTat AS CompletedAt,r.TruongPhanHoi AS LastFeedback,r.KetQuaXuLy AS ResultSummary,r.VaiTroNguoiHuy AS CancelledByRole,
  r.NguoiHuy AS CancelledBy,r.LyDoHuy AS CancelReason,r.NgayHuy AS CancelledAt,r.PhienBan AS Version,r.NgayIn AS PrintedAt,
@@ -20,10 +21,14 @@ const selectRequest = `SELECT ld.MaMauDuLieu AS ValidationProfile,ld.Nhom AS Req
  ${Object.values(paperColumns).map(c=>`p.[${c}]`).join(',')},${Object.values(documentColumns).map(c=>`v.[${c}]`).join(',')},
  ${Object.values(emailColumns).map(c=>`e.[${c}]`).join(',')},v.IDCode AS CatalogTerm,v.LePhi AS UnitFee,
  vb.TenVanBan AS DocumentName,vb.ThongTinDinhKem AS Guidance,vb.LePhiThuong AS NormalFee,vb.LePhiNhanh AS RushFee,
- vb.KhongMienPhi,vb.SoLuongMien_Ngay AS DailyFreeQuota,vb.KhongCapNeuKhongHoc AS RegistrationRequired
- FROM svc_demo.DonDeNghi r LEFT JOIN svc_demo.LoaiDon ld ON ld.MaLoaiDon=r.LoaiDon JOIN svc_demo.TaiKhoan a ON a.MaHS=r.MaHS LEFT JOIN svc_demo.TaiKhoan s ON s.MaHS=r.MaCBND
- LEFT JOIN svc_demo.His_InDon p ON p.ID=r.ID LEFT JOIN svc_demo.DeNghiVanBan v ON v.ID=r.ID
- LEFT JOIN svc_demo.DeNghiEmail e ON e.ID=r.ID LEFT JOIN svc_demo.Sys_VanBan vb ON vb.IDCode=v.IDCode AND vb.MaVanBan=v.MaVanban`;
+ vb.KhongMienPhi,vb.SoLuongMien_Ngay AS DailyFreeQuota,vb.KhongCapNeuKhongHoc AS RegistrationRequired`)
+  .leftJoin(entitySchema('svc_demo.LoaiDon'),'ld','ld.MaLoaiDon=r.LoaiDon')
+  .innerJoin(entitySchema('svc_demo.TaiKhoan'),'a','a.MaHS=r.MaHS')
+  .leftJoin(entitySchema('svc_demo.TaiKhoan'),'s','s.MaHS=r.MaCBND')
+  .leftJoin(entitySchema('svc_demo.His_InDon'),'p','p.ID=r.ID')
+  .leftJoin(entitySchema('svc_demo.DeNghiVanBan'),'v','v.ID=r.ID')
+  .leftJoin(entitySchema('svc_demo.DeNghiEmail'),'e','e.ID=r.ID')
+  .leftJoin(entitySchema('svc_demo.Sys_VanBan'),'vb','vb.IDCode=v.IDCode AND vb.MaVanBan=v.MaVanban');
 function hydrate(row, fields=[]) {
   if (!row) return row;
   row.Payload = payloadFromColumns(row);
@@ -39,12 +44,13 @@ function hydrate(row, fields=[]) {
 function typedValues(payload, columns, bind) {
   return Object.keys(columns).map(key=>bind(columnValue(key,payload)));
 }
-export function createRequestsRepository({ query=queryLocalDatabase, guard=assertLocalDemoTarget }={}) {
+export function createRequestsRepository({ query=queryLocalDatabase,transaction=query===queryLocalDatabase?transactionLocalDatabase:query, guard=assertLocalDemoTarget }={}) {
+  async function rows(builder){guard();return selectRows(builder,query);}
+  function table(name,columns='*'){return selectEntity('svc_demo.'+name,'x').select(columns);}
   async function read(sql,params=[]) { guard(); return (await query(sql,params)).first; }
   async function write(build) {
     guard();const params=[];const bind=value=>{params.push(value??null);return '?';};const sql=build(bind);
-    try {return (await query(`SET NOCOUNT ON;SET XACT_ABORT ON;${localDatabaseGuardSql}
-      BEGIN TRY BEGIN TRANSACTION;${sql} COMMIT TRANSACTION;END TRY BEGIN CATCH IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;THROW;END CATCH;`,params)).first;}
+    try {return (await transaction(`SET NOCOUNT ON;SET XACT_ABORT ON;${localDatabaseGuardSql}${sql}`,params)).first;}
     catch(error){if(/IDENTITY_CONFLICT/.test(String(error.message)))throw new AppError('Mã hồ sơ đã liên kết với MSSV khác. Cần kiểm tra dữ liệu trước khi mở hồ sơ.',409,{code:'STUDENT_IDENTITY_CONFLICT'});if(/STALE_VERSION|IDEMPOTENCY_CONFLICT/.test(String(error.message)))throw new AppError('Hồ sơ hoặc quyền đã thay đổi; hãy tải lại và kiểm tra người phụ trách.',409);if(/PERMISSION_REVOKED/.test(String(error.message)))throw new AppError('Quyền xử lý đã thay đổi; hãy tải lại.',403);throw error;}
   }
   function saveDetails(d,b,update=false) {
@@ -136,17 +142,17 @@ export function createRequestsRepository({ query=queryLocalDatabase, guard=asser
           VALUES(@id,${b(s.termCode)},${b(s.sortOrder)},${b(s.termName)},${b(s.credits)},${b(s.repeatedCredits)},${b(s.scholarshipAverage)},${b(s.gpa)},${b(s.cumulativeGpa)},${b(s.hasLowGrade)},${b(s.conductScore)});`).join('\n')}`);
       return id;
     },
-    actors:()=>read(`${actorSelect} WHERE HieuLuc=1 AND NguonDanhTinh='DEMO' ORDER BY VaiTro,MaHS`),
+    actors:()=>rows(actorQuery().where("HieuLuc=1 AND NguonDanhTinh='DEMO'").orderBy('VaiTro').addOrderBy('MaHS')),
     async actor(id){
-      const row=(await read(`${actorSelect} WHERE MaHS=? AND HieuLuc=1`,[id]))[0];if(!row)return null;
-      const[permissions,roles,login]=await Promise.all([read('SELECT DISTINCT MaQuyen FROM svc_demo.vQuyenHieuLuc WHERE MaHS=?',[id]),read('SELECT r.MaRole AS id,r.TenRole AS name,r.HieuLuc AS active FROM svc_demo.TaiKhoanVaiTro u JOIN svc_demo.VaiTroRBAC r ON r.MaRole=u.MaRole WHERE u.MaHS=?',[id]),read('SELECT TenDangNhap AS username FROM svc_demo.DangNhapChuyenVien WHERE MaHS=?',[id])]);
+      const row=(await rows(actorQuery().where('MaHS=:id AND HieuLuc=1',{id})))[0];if(!row)return null;
+      const[permissions,roles,login]=await Promise.all([rows(table('vQuyenHieuLuc','MaQuyen').distinct().where('MaHS=:id',{id})),rows(selectEntity('svc_demo.TaiKhoanVaiTro','u').innerJoin(entitySchema('svc_demo.VaiTroRBAC'),'r','r.MaRole=u.MaRole').select(['r.MaRole AS id','r.TenRole AS name','r.HieuLuc AS active']).where('u.MaHS=:id',{id})),rows(table('DangNhapChuyenVien','TenDangNhap AS username').where('MaHS=:id',{id}))]);
       row.Permissions=permissions.map(p=>p.MaQuyen);row.WorkPermissions=row.Permissions.filter(p=>p.startsWith('work:')).map(p=>p.slice(5));row.Roles=roles;row.Username=login[0]?.username??null;return row;
     },
     async staff(){
-      const[people,permissions,roles,logins]=await Promise.all([read(`${actorSelect} WHERE VaiTro='STAFF' AND HieuLuc=1 ORDER BY MaDV,Hoten`),read('SELECT DISTINCT MaHS,MaQuyen FROM svc_demo.vQuyenHieuLuc'),read('SELECT u.MaHS,r.MaRole AS id,r.TenRole AS name,r.HieuLuc AS active FROM svc_demo.TaiKhoanVaiTro u JOIN svc_demo.VaiTroRBAC r ON r.MaRole=u.MaRole'),read('SELECT MaHS,TenDangNhap AS username FROM svc_demo.DangNhapChuyenVien')]);
+      const[people,permissions,roles,logins]=await Promise.all([rows(actorQuery().where("VaiTro='STAFF' AND HieuLuc=1").orderBy('MaDV').addOrderBy('Hoten')),rows(table('vQuyenHieuLuc',['MaHS','MaQuyen']).distinct()),rows(selectEntity('svc_demo.TaiKhoanVaiTro','u').innerJoin(entitySchema('svc_demo.VaiTroRBAC'),'r','r.MaRole=u.MaRole').select(['u.MaHS AS MaHS','r.MaRole AS id','r.TenRole AS name','r.HieuLuc AS active'])),rows(table('DangNhapChuyenVien',['MaHS','TenDangNhap AS username']))]);
       return people.map(row=>{const keys=permissions.filter(p=>p.MaHS===row.Id).map(p=>p.MaQuyen);return{...row,Permissions:keys,WorkPermissions:keys.filter(p=>p.startsWith('work:')).map(p=>p.slice(5)),Roles:roles.filter(p=>p.MaHS===row.Id).map(({MaHS,...role})=>role),Username:logins.find(l=>l.MaHS===row.Id)?.username??null};});
     },
-    async workbookSecret(){return (await read("SELECT GiaTri FROM svc_demo.CauHinh WHERE MaCauHinh='workbookSigningKey'"))[0]?.GiaTri;},
+    async workbookSecret(){return (await rows(table('CauHinh','GiaTri').where('MaCauHinh=:key',{key:'workbookSigningKey'})))[0]?.GiaTri;},
     async setPermissions({adminId,staffId,version,keys}){return createRbacRepository({query,guard}).legacy(adminId,staffId,version,keys);},
     async reassign(d){await write(b=>`DECLARE @id uniqueidentifier=${b(d.id)},@admin nvarchar(40)=${b(d.adminId)},@target nvarchar(40)=${b(d.staffId)},@previous nvarchar(40),@status varchar(30),@work varchar(60),@key nvarchar(100)=${b(d.key)},@hash varchar(64)=${b(d.hash)};
       IF NOT EXISTS(SELECT 1 FROM svc_demo.TaiKhoan WHERE MaHS=@admin AND HieuLuc=1 AND (VaiTro='ADMIN' OR EXISTS(SELECT 1 FROM svc_demo.vQuyenHieuLuc WITH(UPDLOCK,HOLDLOCK) WHERE MaHS=@admin AND MaQuyen='requests.reassign'))) THROW 51003,'PERMISSION_REVOKED',1;
@@ -161,8 +167,8 @@ export function createRequestsRepository({ query=queryLocalDatabase, guard=asser
        INSERT svc_demo.ChongGuiTrung(MaHS,MaThaoTac,MaBamNoiDung,IDDon) VALUES(@admin,@key,@hash,@id);
       END`);},
     async profile(id) {
-      const row=(await read('SELECT * FROM svc_demo.NhanThan WHERE MaHS=?',[id]))[0];if(!row)return null;
-      const results=await read('SELECT * FROM svc_demo.KetQuaHocTapHocKy WHERE MaHS=? ORDER BY ThuTu,IDCode',[id]);
+      const row=(await rows(table('NhanThan').where('MaHS=:id',{id})))[0];if(!row)return null;
+      const results=await rows(table('KetQuaHocTapHocKy').where('MaHS=:id',{id}).orderBy('ThuTu').addOrderBy('IDCode'));
       const dob=row.NgaySinh?new Date(row.NgaySinh):null;
       return {name:row.Hoten,studentNumber:row.SoThe,className:row.Lop,dateOfBirth:dob?`${String(dob.getUTCDate()).padStart(2,'0')}/${String(dob.getUTCMonth()+1).padStart(2,'0')}/${dob.getUTCFullYear()}`:'',
         identityNumber:row.SoCCCD,phone:row.DienThoai,birthPlace:row.NoiSinh,gender:row.GioiTinh,ethnicity:row.DanToc,programName:row.TenNganhTQ,
@@ -171,15 +177,15 @@ export function createRequestsRepository({ query=queryLocalDatabase, guard=asser
         semesterResults:results.map(s=>({termCode:s.IDCode,termName:s.TenKH,credits:s.SoTinChi,repeatedCredits:s.SoTinChiHocLai,scholarshipAverage:s.DiemTBCHB,gpa:s.DiemTBC,cumulativeGpa:s.DiemTBCTL,hasLowGrade:s.CoDiemDuoi5,conductScore:s.DiemRL}))};
     },
     async catalogs(){const [terms,programs,settings,documents,supportSystems]=await Promise.all([
-      read('SELECT IDCode AS code,TenKH AS name,ThuTu AS sortOrder,Hientai AS selectable FROM svc_demo.tmKehoach ORDER BY ThuTu'),
-      read('SELECT MaNganhTQ AS code,TenNganhTQ AS name FROM svc_demo.tmNganhTQ WHERE HieuLuc=1 ORDER BY TenNganhTQ'),
-      read('SELECT MaCauHinh AS SettingKey,GiaTri AS SettingValue,NgayDongBo AS ObservedAt FROM svc_demo.CauHinh'),
-      read(`${documentSelect} WHERE HieuLuc=1 ORDER BY MaVanBan`),read('SELECT MaEmail AS code,TenDenghi AS name FROM svc_demo.Sys_Email WHERE HieuLuc=1 ORDER BY MaEmail')]);return {terms,programs,settings,documents,supportSystems};},
+      rows(table('tmKehoach',['IDCode AS code','TenKH AS name','ThuTu AS sortOrder','Hientai AS selectable']).orderBy('ThuTu')),
+      rows(table('tmNganhTQ',['MaNganhTQ AS code','TenNganhTQ AS name']).where('HieuLuc=1').orderBy('TenNganhTQ')),
+      rows(table('CauHinh',['MaCauHinh AS SettingKey','GiaTri AS SettingValue','NgayDongBo AS ObservedAt'])),
+      rows(documentQuery().where('HieuLuc=1').orderBy('MaVanBan')),rows(table('Sys_Email',['MaEmail AS code','TenDenghi AS name']).where('HieuLuc=1').orderBy('MaEmail'))]);return {terms,programs,settings,documents,supportSystems};},
     async list(actor){if(actor.role==='STAFF'&&!actor.permissions?.includes('requests.view'))return[];const scope=actor.role==='ADMIN'?'1=1':actor.role==='STUDENT'?'r.MaHS=?':`(r.MaCBND=? OR EXISTS(SELECT 1 FROM svc_demo.vQuyenXuLy q WHERE q.MaHS=? AND q.QuyenNhanDon=1 AND q.QuyenXuLy=1 AND q.MaCongViec=CASE WHEN r.LoaiDon='CONFIRMATION' THEN 'CONFIRMATION:'+v.MaVanban ELSE r.LoaiDon END))`;
       const params=actor.role==='ADMIN'?[]:actor.role==='STUDENT'?[actor.id]:[actor.id,actor.id];
-      const rows=await read(`${selectRequest} WHERE ${scope} ORDER BY r.NgayCapNhat DESC,r.ID DESC`,params);
-      return rows.map(row=>hydrate(row));},
-    async get(id){const row=(await read(`${selectRequest} WHERE r.ID=?`,[id]))[0];return row?hydrate(row,await read('SELECT IDDon,TenTruong FROM svc_demo.TruongCanBoSung WHERE IDDon=?',[id])):null;},
+      const bindings=Object.fromEntries(params.map((value,index)=>['p'+index,value]));let index=0;const selected=requestQuery().where(scope.replace(/\?/g,()=>':p'+index++),bindings).orderBy('r.NgayCapNhat','DESC').addOrderBy('r.ID','DESC');const resultRows=await rows(selected);
+      return resultRows.map(row=>hydrate(row));},
+    async get(id){const row=(await rows(requestQuery().where('r.ID=:id',{id})))[0];return row?hydrate(row,await rows(table('TruongCanBoSung',['IDDon','TenTruong']).where('IDDon=:id',{id}))):null;},
     async events(id){const rows=await read(`SELECT e.ID AS Id,e.MaHS AS ActorId,e.VaiTro AS ActorRole,e.ThaoTac AS EventType,e.TrangThaiTruoc AS FromStatus,e.TrangThaiSau AS ToStatus,
       e.NoiDung AS Message,e.NgayLap AS CreatedAt,a.Hoten AS ActorName,e.MaLyDoHuy,e.LyDoMau,e.NoiDungThem,e.NgayXuLy,e.NgayHenTra,e.NoiTraHS,e.QuyTacHenTra,e.MaCBTruoc,e.MaCBSau,e.LyDoBanGiao,e.NgayIn
       FROM svc_demo.LichSuXuLyDon e JOIN svc_demo.TaiKhoan a ON a.MaHS=e.MaHS WHERE e.IDDon=? ORDER BY e.ID`,[id]);

@@ -1,4 +1,4 @@
-import { queryLocalDatabase } from '../../../infrastructure/database/index.js';
+import { queryLocalDatabase,transactionLocalDatabase } from '../../../database.js';
 import { env } from '../../../config/env.js';
 import { AppError } from '../../../shared/errors/app-error.js';
 
@@ -45,13 +45,13 @@ const certificateFields = `CertificateTypeId=TRY_CONVERT(int,JSON_VALUE(@input,'
  ReviewReason=NULL,VerificationMethod=NULL,ReviewedAt=NULL,
  ExpiresAt=TRY_CONVERT(datetime2(3),JSON_VALUE(@input,'$.expiresAt'),127),UpdatedAt=@now`;
 
-export function createCertificationsRepository({query=queryLocalDatabase,
+export function createCertificationsRepository({query=queryLocalDatabase,transaction=query===queryLocalDatabase?transactionLocalDatabase:query,
   databaseName=env.localDatabase.name,databaseHost=env.localDatabase.host} = {}) {
-  async function run(statement,input={}) {
-    if(databaseName!=='Studentpage'||!['localhost','127.0.0.1','::1'].includes(databaseHost.toLowerCase()))
+  async function run(statement,input={},transactional=false) {
+    if(!['Studentpage','sv_dut','Studentpage_Integration_20261103'].includes(databaseName)||!['localhost','127.0.0.1','::1'].includes(databaseHost.toLowerCase()))
       throw new AppError('Certification yêu cầu DB local Studentpage.',503);
     try {
-      const result=await query('SET NOCOUNT ON; DECLARE @input nvarchar(max)=?; '+statement,[JSON.stringify(input)]);
+      const result=await (transactional?transaction:query)('SET NOCOUNT ON; DECLARE @input nvarchar(max)=?; '+statement,[JSON.stringify(input)]);
       return JSON.parse(result.first[0]?.Json??'null');
     } catch(error) {
       if(error instanceof AppError)throw error;
@@ -71,10 +71,10 @@ export function createCertificationsRepository({query=queryLocalDatabase,
     }
   }
   function mutate(input,statement,output=applicationSql) {
-    return run(`SET XACT_ABORT ON; BEGIN TRY BEGIN TRANSACTION;
+    return run(`SET XACT_ABORT ON;
       DECLARE @now datetime2(3)=SYSUTCDATETIME(); ${statement}
-      SELECT (${output}) AS Json; COMMIT TRANSACTION;
-      END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK TRANSACTION; THROW; END CATCH;`,input);
+      SELECT (${output}) AS Json;
+      `,input,true);
   }
   const levelsSql = `JSON_QUERY(COALESCE((SELECT l.Id,l.Code,l.DisplayName,l.Weight
    FROM certification.CertificateLevels l WHERE l.CertificateTypeId=t.Id ORDER BY l.SortOrder,l.Id FOR JSON PATH),'[]')) AS Levels`;

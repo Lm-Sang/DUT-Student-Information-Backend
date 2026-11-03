@@ -1,4 +1,4 @@
-import {queryLocalDatabase,connectDatabase} from '../../../infrastructure/database/index.js';
+import {queryLocalDatabase,transactionLocalDatabase,connectDatabase} from '../../../database.js';
 import {AppError} from '../../../shared/errors/app-error.js';
 
 const table='academic_leave.Applications';
@@ -42,11 +42,11 @@ const parentCheck=`DECLARE @kind varchar(20)=JSON_VALUE(@input,'$.data.kind'),
       WHERE child.ParentApplicationId=p.Id AND child.Status IN('approved','paper_received')))
     THROW 51509,'AL_ACTIVE_LEAVE',1;`;
 
-export function createAcademicLeaveRepository({query=queryLocalDatabase,connect=connectDatabase,now=Date.now,semesterCacheTtlMs=60000}={}) {
+export function createAcademicLeaveRepository({query=queryLocalDatabase,transaction=query===queryLocalDatabase?transactionLocalDatabase:query,connect=connectDatabase,now=Date.now,semesterCacheTtlMs=60000}={}) {
   let semesterCode,semesterExpiresAt=0,semesterLoading;
-  async function run(statement,input={}) {
+  async function run(statement,input={},transactional=false) {
     try {
-      const result=await query('SET NOCOUNT ON; DECLARE @input nvarchar(max)=?; '+statement,[JSON.stringify(input)]);
+      const result=await (transactional?transaction:query)('SET NOCOUNT ON; DECLARE @input nvarchar(max)=?; '+statement,[JSON.stringify(input)]);
       return JSON.parse(result.first?.[0]?.Json??'null');
     }catch(error){
       const message=String(error.message??error);
@@ -60,7 +60,7 @@ export function createAcademicLeaveRepository({query=queryLocalDatabase,connect=
     }
   }
   function mutate(input,statement,action) {
-    return run(`SET XACT_ABORT ON; BEGIN TRY BEGIN TRANSACTION; DECLARE @now datetime2(3)=SYSUTCDATETIME();
+    return run(`SET XACT_ABORT ON; DECLARE @now datetime2(3)=SYSUTCDATETIME();
       DECLARE @studentLock varchar(9)=COALESCE(JSON_VALUE(@input,'$.actor.studentCode'),
         (SELECT StudentCode FROM ${table} WHERE Id=TRY_CONVERT(int,JSON_VALUE(@input,'$.id'))));
       DECLARE @resource nvarchar(255)=N'academic_leave:'+COALESCE(@studentLock,''),@lockResult int;
@@ -71,8 +71,8 @@ export function createAcademicLeaveRepository({query=queryLocalDatabase,connect=
       INSERT academic_leave.ApplicationHistory(ApplicationId,Action,ActorSource,ActorReference,ActorName,Status,DataJson,CreatedAt)
         SELECT @id,JSON_VALUE(@input,'$.action'),JSON_VALUE(@input,'$.actor.source'),JSON_VALUE(@input,'$.actor.reference'),
           JSON_VALUE(@input,'$.actor.name'),Status,@result,@now FROM ${table} WHERE Id=@id;
-      COMMIT TRANSACTION; SELECT @result AS Json;
-      END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK TRANSACTION; THROW; END CATCH;`,{...input,action});
+      SELECT @result AS Json;
+      `,{...input,action},true);
   }
   return Object.freeze({
     async currentSemesterCode({fresh=false}={}) {

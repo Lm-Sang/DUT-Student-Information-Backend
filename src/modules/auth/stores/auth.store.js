@@ -20,6 +20,7 @@ export function createAuthStore({ filename = ':memory:', now = Date.now, maxEntr
       expires_at INTEGER NOT NULL, revoked INTEGER NOT NULL DEFAULT 0, payload TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS auth_sessions_expiry ON auth_sessions(expires_at);
+    CREATE INDEX IF NOT EXISTS auth_sessions_account ON auth_sessions(channel,subject);
     CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
       hash TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES auth_sessions(id) ON DELETE CASCADE,
       used INTEGER NOT NULL DEFAULT 0
@@ -105,6 +106,9 @@ export function createAuthStore({ filename = ':memory:', now = Date.now, maxEntr
     },
     revokeSession(id) {
       database().prepare("UPDATE auth_sessions SET revoked = 1, payload = '{}' WHERE id = ?").run(id);
+    },
+    revokeAccountSessions(channel,subject) {
+      database().prepare("UPDATE auth_sessions SET revoked = 1, payload = '{}' WHERE channel = ? AND subject = ?").run(channel,subject);
     },
     rateLimit(key, limit, windowMs) {
       return transaction(connection => {

@@ -8,12 +8,15 @@ Xem [cấu trúc feature và cách chia việc](docs/ARCHITECTURE.md) và
 [quy ước đóng góp](CONTRIBUTING.md). Mỗi feature có code và test riêng;
 `course-registration` và `timetable` được tách độc lập.
 
-Các tầng bên trong feature: `controllers`, `services`, `repositories`, `dto`,
+SQL Server hiện dùng **TypeORM + EntitySchema**, hỗ trợ đồng thời Windows Authentication local
+và DB trường chỉ đọc qua SSH. Xem [hướng dẫn TypeORM, cấu trúc entity và kiểm thử](docs/TYPEORM_MIGRATION.md).
+
+Các tầng bên trong feature: `entities`, `controllers`, `services`, `repositories`, `dto`,
 `mappers`, `routes`. Xem [trách nhiệm và mẫu thêm các lớp](docs/LAYERS.md).
 
 Luồng đơn sinh viên và FE local: [hướng dẫn demo](docs/REQUESTS_DEMO.md).
 Sáu loại đơn đề nghị đã có [bộ mẫu trống và xuất PDF](assets/request-forms/README.md),
-điền hồ sơ demo local, lưu snapshot và tải lại đúng file qua **In lại**.
+điền hồ sơ sinh viên và tạo PDF khi tải; **In lại** tạo lại file từ các field hiện có, không lưu PDF trong DB.
 
 ## Chay du an
 
@@ -25,7 +28,7 @@ npm run dev
 Server tự kết nối đồng thời DB trường và DB local `sv_dut`, rồi ghi trạng thái
 `[DB:school]` / `[DB:local]`. Một DB gặp lỗi không chặn server và DB còn lại.
 
-Yeu cau Node.js >= 24 de dung SQLite tich hop cho kho state/phien SSO.
+Yêu cầu Node.js >= 24.11.0 để dùng TypeORM hiện tại và SQLite tích hợp cho kho state/phiên SSO.
 
 Kiem tra server tai `GET /api/health`.
 

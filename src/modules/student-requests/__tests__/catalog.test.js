@@ -15,10 +15,10 @@ const row = { Id:'test',TypeCode:type.code,StudentId:actor.id,StudentNumber:'000
 test('catalog repository returns typed DB metadata and ordered form fields',async()=>{
   const sql=[];
   const repo=createRequestCatalogRepository({guard:()=>{},query:async statement=>{
-    sql.push(statement);return{first:statement.includes('FROM svc_demo.LoaiDon')?[{...type,active:1}]:[{MaLoaiDon:type.code,TenTruong:'reasonCode',BatBuoc:1}]};
+    const normalized=statement.replaceAll('"','');sql.push(normalized);return{first:normalized.includes('FROM svc_demo.LoaiDon')?[{...type,active:1}]:[{MaLoaiDon:type.code,TenTruong:'reasonCode',BatBuoc:1}]};
   }});
   const [result]=await repo.list();assert.equal(result.code,type.code);assert.equal(result.fields[0].key,'reasonCode');assert(result.fields[0].required);
-  assert(sql[0].includes('WHERE HieuLuc=1'));assert(!sql.some(q=>/INSERT|UPDATE|DELETE/.test(q)));
+  assert.match(sql[0],/WHERE (?:ld\.)?HieuLuc=1/);assert(!sql.some(q=>/INSERT|UPDATE|DELETE/.test(q)));
 });
 
 test('new DB type is created through known validation profile and mapped without hardcoded type list',async()=>{

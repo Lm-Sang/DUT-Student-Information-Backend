@@ -1,9 +1,10 @@
-import sql from 'msnodesqlv8';
+import {createLocalDatabase} from '../src/infrastructure/database/local-sql-server.js';
+import {env} from '../src/config/env.js';
 import {writeFile} from 'node:fs/promises';
 const source='sv_dut',target='Studentpage_Integration_20261103';
-const p=new sql.Pool({connectionString:`Driver={ODBC Driver 17 for SQL Server};Server={localhost,1433};Database={${target}};Trusted_Connection=Yes;Encrypt=No;TrustServerCertificate=Yes;`,floor:1,ceiling:1});
+const p=createLocalDatabase({config:{...env.localDatabase,host:'localhost',port:1433,name:target,queryTimeoutMs:120000}});
 const q=n=>'['+n.replaceAll(']',']]')+']';
-try {await p.promises.open();const run=async s=>(await p.promises.query(s)).first;
+try {await p.connect();const run=async s=>(await p.query(s)).first;
 const tables=await run(`SELECT t.object_id,t.name FROM ${source}.sys.tables t JOIN ${source}.sys.schemas s ON s.schema_id=t.schema_id WHERE s.name='svc_demo'`);
 if((await run("SELECT 1 AS x FROM sys.tables t JOIN sys.schemas s ON s.schema_id=t.schema_id WHERE s.name='svc_demo'")).length){console.log('Target svc_demo already exists; copy skipped.');process.exitCode=0;}
 else{
@@ -20,8 +21,8 @@ statements.push(`INSERT svc_demo.${q(t.name)}(${names}) SELECT ${names} FROM ${s
 }
 for(const name of [...new Set(foreign.map(f=>f.name))]){const f=foreign.filter(f=>f.name===name);statements.push(`ALTER TABLE svc_demo.${q(f[0].pt)} ADD CONSTRAINT ${q(name)} FOREIGN KEY(${f.map(f=>q(f.pc))}) REFERENCES svc_demo.${q(f[0].rt)}(${f.map(f=>q(f.rc))});`);}
 for(const t of tables)statements.push(`IF (SELECT COUNT_BIG(*) FROM svc_demo.${q(t.name)})<>(SELECT COUNT_BIG(*) FROM ${source}.svc_demo.${q(t.name)}) THROW 51001,'Copy count mismatch',1;`);
-statements.push('COMMIT TRANSACTION;');await writeFile('.data/research/copy-request-schema.sql',statements.join('\n'));await p.promises.query(statements.join('\n'),[],{timeoutMs:120000});
-for(const v of views.sort((a,b)=>a.name==='vQuyenHieuLuc'?-1:b.name==='vQuyenHieuLuc'?1:0))await p.promises.query(v.definition);
+statements.push('COMMIT TRANSACTION;');await writeFile('.data/research/copy-request-schema.sql',statements.join('\n'));await p.query(statements.join('\n'),[],{timeoutMs:120000});
+for(const v of views.sort((a,b)=>a.name==='vQuyenHieuLuc'?-1:b.name==='vQuyenHieuLuc'?1:0))await p.query(v.definition);
 console.log(`Copied ${tables.length} request tables with rows, PK/FK/defaults and ${views.length} views; source unchanged.`);
 }
-}finally{await p.promises.close()}
+}finally{await p.disconnect()}

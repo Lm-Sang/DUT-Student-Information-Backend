@@ -4,10 +4,10 @@ import { env } from '../../../config/env.js';
 import { AppError } from '../../../shared/errors/app-error.js';
 import { authRepository } from '../repositories/auth.repository.js';
 import { authStore } from '../stores/auth.store.js';
-import { parseSsoAccessToken, parsePasswordLogin } from '../dto/auth.request.dto.js';
+import { parseSsoAccessToken, parsePasswordLogin,parsePasswordUpdate } from '../dto/auth.request.dto.js';
 import { createAuthSessionDto } from '../dto/auth.response.dto.js';
 import { toSsoIdentityDto } from '../mappers/auth.mapper.js';
-import { verifyPassword } from './password.service.js';
+import { verifyPassword,hashPassword } from './password.service.js';
 
 const digest = value => createHash('sha256').update(value).digest('hex');
 const failToken = () => new AppError('Invalid or expired application token', 401);
@@ -233,6 +233,27 @@ export function createAuthService({ config = env, repository = authRepository, s
       user: { ...identity, localUserId: null, roles: ['student'], permissions: [], authorizationStatus: 'active' } };
   }
 
+  async function updateStaffPassword(claims,body,{targetId}={}) {
+    if(claims?.channel!=='staff'||claims.authMethod!=='password')throw new AppError('Chỉ tài khoản chuyên viên đăng nhập bằng mật khẩu được sử dụng chức năng này.',403);
+    const session=await activeSession(claims),reset=targetId!==undefined;
+    const actor=await repository.findStaffById(session.user.localUserId);
+    if(!actor?.isActive||actor.version!==session.accountVersion)throw failToken();
+    if(reset&&!actor.permissions.includes('rbac.staff.manage'))throw new AppError('Bạn chưa có quyền quản lý tài khoản chuyên viên.',403);
+    if(reset&&(typeof targetId!=='string'||!/^[\w:-]{1,40}$/.test(targetId)))throw new AppError('Mã tài khoản không hợp lệ.',400);
+    if(reset&&targetId===actor.id)throw new AppError('Hãy dùng chức năng Đổi mật khẩu cho tài khoản của chính bạn.',400);
+    const data=parsePasswordUpdate(body,{reset});
+    rateLimit(reset?'password-reset':'password-change',actor.id,reset?10:5,900000);
+    const account=reset?await repository.findStaffById(targetId):actor;
+    if(!account?.isActive||account.channel!=='staff')throw new AppError('Không tìm thấy tài khoản chuyên viên có hiệu lực.',404);
+    if(!reset&&!await verifyPassword(data.currentPassword,account.passwordHash))throw new AppError('Mật khẩu hiện tại không đúng.',400);
+    if(await verifyPassword(data.newPassword,account.passwordHash))throw new AppError('Mật khẩu mới phải khác mật khẩu hiện tại.',400);
+    const passwordHash=await hashPassword(data.newPassword);
+    await repository.updateStaffPassword({actor,account,passwordHash,reset});
+    // Hash/version verification also invalidates sessions in other API processes.
+    store.revokeAccountSessions('staff',`local:${account.id}`);
+    return {requiresLogin:true,message:reset?'Đã đặt lại mật khẩu. Các phiên đăng nhập cũ của tài khoản đã bị thu hồi.':'Đã đổi mật khẩu. Vui lòng đăng nhập lại bằng mật khẩu mới.'};
+  }
+
   async function refreshSession(channel, refreshToken) {
     const claims = verifyJwt(refreshToken, channel, 'refresh');
     const session = await activeSession(claims);
@@ -307,7 +328,7 @@ export function createAuthService({ config = env, repository = authRepository, s
   }
 
   return Object.freeze({ loginUrl, startLogin, consumeState, exchangeToken, verifyToken, logoutUrl,
-    createHandoff, redeemHandoff, revokeSession, logoutSession, loginWithPassword, refreshSession, getSsoAccessToken, rateLimit });
+    createHandoff, redeemHandoff, revokeSession, logoutSession, loginWithPassword, refreshSession, getSsoAccessToken, rateLimit,updateStaffPassword });
 }
 
 export const authService = createAuthService();

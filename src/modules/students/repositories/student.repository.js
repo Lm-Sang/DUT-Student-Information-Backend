@@ -1,5 +1,5 @@
-import sql from 'mssql';
-import { connectDatabase } from '../../../infrastructure/database/index.js';
+import {sqlTypes as sql} from '../../../infrastructure/database/typeorm-types.js';
+import { connectDatabase } from '../../../database.js';
 
 export function createStudentRepository({ connect = connectDatabase } = {}) {
   return Object.freeze({

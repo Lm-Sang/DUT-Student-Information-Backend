@@ -1,6 +1,6 @@
-import sql from 'mssql';
+import {sqlTypes as sql} from '../../../infrastructure/database/typeorm-types.js';
 
-import { connectDatabase } from '../../../infrastructure/database/sql-server.js';
+import { connectDatabase } from '../../../database.js';
 import { env } from '../../../config/env.js';
 
 const programSelect = `

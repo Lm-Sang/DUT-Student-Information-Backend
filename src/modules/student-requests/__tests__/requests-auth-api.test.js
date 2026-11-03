@@ -11,20 +11,20 @@ import { AppError } from '../../../shared/errors/app-error.js';
 
 const id='00000000-0000-4000-8000-000000000001';
 const dynamicType={code:'DB_NEW',name:'Đơn thêm từ DB',department:'CTSV',group:'PETITION',submissionMode:'PAPER_FORM',validationProfile:'DonSV01',templateCode:'DonSV01',active:true};
-const student={id:'sv:sso',name:'Sinh viên SSO',studentNumber:'0001',role:'STUDENT',identitySource:'SSO'};
+const student={id:'sv:sso',name:'Sinh viên SSO',studentNumber:'000000001',role:'STUDENT',identitySource:'SSO'};
 const staff={id:'cv:local',name:'Chuyên viên local',role:'STAFF',permissions:[],workPermissions:[]};
-const row={Id:id,Number:1,TypeCode:dynamicType.code,StudentId:student.id,StudentName:student.name,StudentNumber:'0001',Department:'CTSV',Status:'SUBMITTED',Version:1,Payload:{reasonCode:'LOST_OR_DAMAGED',changeDescription:''}};
+const row={Id:id,Number:1,TypeCode:dynamicType.code,StudentId:student.id,StudentName:student.name,StudentNumber:student.studentNumber,Department:'CTSV',Status:'SUBMITTED',Version:1,Payload:{reasonCode:'LOST_OR_DAMAGED',changeDescription:''}};
 
 async function fixture(t) {
   const verified=[],linked=[];
   const repository={get:async()=>row,list:async()=>[row],events:async()=>[],revisions:async()=>[],
-    actor:async key=>key===student.id?{Id:student.id,DisplayName:student.name,Role:'STUDENT',StudentNumber:'0001',IdentitySource:'SSO'}:
+    actor:async key=>key===student.id?{Id:student.id,DisplayName:student.name,Role:'STUDENT',StudentNumber:student.studentNumber,IdentitySource:'SSO'}:
       {Id:staff.id,DisplayName:staff.name,Role:'STAFF',Permissions:staff.permissions,WorkPermissions:staff.workPermissions,IdentitySource:'LOCAL'},
     catalogs:async()=>({types:[dynamicType],settings:[{SettingKey:'currentTerm',SettingValue:'2610'}],terms:[{code:'2610',sortOrder:1}],programs:[],documents:[],supportSystems:[]})};
   const service=createRequestsService(repository,{loadTypes:async()=>[dynamicType]});
   const auth={verifyToken:async(token,channel)=>{
     verified.push({token,channel});
-    if(token==='student.jwt'&&channel==='student')return{authMethod:'sso',identity:{studentNumber:'0001'}};
+    if(token==='student.jwt'&&channel==='student')return{authMethod:'sso',identity:{microsoftId:'000000001@sv1.dut.udn.vn'}};
     if(token==='staff.jwt'&&channel==='staff')return{authMethod:'password',identity:{requestActorId:staff.id}};
     if(token==='staff-sso.jwt')return{authMethod:'sso',identity:{requestActorId:staff.id}};
     throw new AppError('JWT không hợp lệ hoặc sai audience.',401);
@@ -46,7 +46,7 @@ test('request APIs require channel JWT, use verified SSO identity directly and e
   assert.equal((await f.call('/api/student/requests/me')).status,401);
   assert.equal((await f.call('/api/student/requests/me','staff.jwt')).status,401);
   const me=await f.call('/api/student/requests/me','student.jwt');assert.equal(me.status,200);assert.equal((await me.json()).data.id,student.id);
-  assert.deepEqual(f.linked,[{studentNumber:'0001'}]);assert(f.verified.some(v=>v.channel==='student'));
+  assert.deepEqual(f.linked,[{microsoftId:'000000001@sv1.dut.udn.vn'}]);assert(f.verified.some(v=>v.channel==='student'));
   for(const path of ['/actors','/session','/sso/session','/staff/session']){
     const response=await f.call('/api/student/requests'+path,'student.jwt',path==='/actors'?undefined:{actorId:'admin-demo'});
     assert.equal(response.status,404);

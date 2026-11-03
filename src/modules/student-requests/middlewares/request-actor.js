@@ -1,5 +1,6 @@
 import { authService } from '../../auth/index.js';
 import { AppError } from '../../../shared/errors/app-error.js';
+import { studentNumberFromIdentity } from '../domain/student-identity.js';
 
 export function createRequestActorResolver({ channel, service, school, auth = authService }) {
   return async req => {
@@ -16,6 +17,10 @@ export function createRequestActorResolver({ channel, service, school, auth = au
     }
     const actor = await service.sessionActor(id);
     if (actor.role !== (channel === 'student' ? 'STUDENT' : 'STAFF')) throw new AppError('Tài khoản không đúng vai trò của API.', 403);
+    if (channel === 'student' && (actor.identitySource !== 'SSO'
+      || actor.studentNumber !== studentNumberFromIdentity(claims.identity))) {
+      throw new AppError('Liên kết hồ sơ không còn khớp tài khoản SSO.', 403);
+    }
     // Roles and scope always come from SQL on this request, never SSO claims.
     return actor;
   };

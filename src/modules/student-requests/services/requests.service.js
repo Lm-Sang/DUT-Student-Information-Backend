@@ -59,7 +59,9 @@ export function createRequestsService(repository, { paperFiles = createPaperFile
     async actor(id) { const row = await repository.actor(id); if (!row || row.IdentitySource !== 'DEMO') throw new AppError('Nhân vật thử nghiệm không hợp lệ.', 401); return actorDto(row); },
     async sessionActor(id) { const row = await repository.actor(id); if (!row) throw new AppError('Phiên không còn hiệu lực.', 401); return actorDto(row); },
     catalogs,
-    profile: async actor => actor.role === 'STUDENT' ? loadProfile(actor.id) : null,
+    // The actor resolver has just synced new SSO links. Avoid immediately doing
+    // the same school read again; PDF/create paths retain forced refreshes.
+    profile: async actor => actor.role === 'STUDENT' ? loadProfile(actor.id,{maxAgeMs:30_000}) : null,
     download: (actor, id) => paperFiles.download(actor, id),
     printConfirmation: (actor, id, input) => confirmationFiles.print(actor, id, input),
     list: async actor => {
