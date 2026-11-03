@@ -11,6 +11,7 @@ import { createRequestsService } from './services/requests.service.js';
 import { createAdminWorkflowService } from './services/admin-workflow.service.js';
 import { createWorkbookWorkflowService } from './services/workbook-workflow.service.js';
 import { createSchoolStudentService } from './services/school-student.service.js';
+import { createRequestActorResolver } from './middlewares/request-actor.js';
 
 export function createRequestsModule({ repository = createRequestsRepository(), enabled = env.features.requestsDemoEnabled } = {}) {
   if (!enabled) return null;
@@ -29,3 +30,20 @@ export function createRequestsModule({ repository = createRequestsRepository(), 
 }
 
 export default createRequestsModule();
+
+export function createRequestsApiModule({ channel = 'student', repository = createRequestsRepository(), enabled = env.features.requestsApiEnabled } = {}) {
+  if (!enabled) return null;
+  const school = createSchoolStudentService(repository);
+  const profile = createStudentProfileService(repository, school);
+  const loadProfile = id => profile.get(id);
+  const service = createRequestsService(repository, {
+    loadProfile, paperFiles: createPaperFilesService(repository,{loadProfile}),
+    confirmationFiles: createConfirmationFilesService(repository,{loadProfile}),
+  });
+  const rbac = createRbacService(createRbacRepository(),repository);
+  const admin = createAdminWorkflowService(repository,service,{rbac});
+  const workbook = createWorkbookWorkflowService(repository,service);
+  return { basePath: channel === 'student' ? '/api/student-services' : '/api/staff/student-services',
+    router: createRequestsRouter(createRequestsController(service),service,{admin,workbook,school,rbac,demo:false,
+      resolveActor:createRequestActorResolver({channel,service,school})}) };
+}

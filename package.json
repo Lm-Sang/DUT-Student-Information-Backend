@@ -13,8 +13,13 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch --watch-path=src --watch-path=assets src/server.js",
-    "check": "node scripts/check.js",
+    "certifications:fe": "node certification-web-test/server.js",
+    "auth:db:init": "node src/modules/auth/cli/auth-db.mjs init",
+    "auth:user:create": "node src/modules/auth/cli/auth-db.mjs create",
+    "academic-leave:db:init": "node src/modules/academic-leave/cli/academic-leave-db.mjs",
     "test": "node scripts/test.js",
+    "test:workspace": "node --test \"src/**/*.test.js\" \"tests/**/*.test.js\"",
+    "check": "node scripts/check.js",
     "test:feature": "node scripts/test.js --feature",
     "test:curriculum:live": "node scripts/smoke-curriculum-api.js",
     "test:db": "node scripts/test-database.js",
@@ -31,7 +36,10 @@
     "forms:blank": "node scripts/build-blank-request-forms.js",
     "forms:layout:references": "node scripts/build-request-layout-reference.js",
     "forms:layout:check": "node scripts/check-request-layout.js",
-    "test:requests:rbac": "node scripts/smoke-rbac.js"
+    "test:requests:rbac": "node scripts/smoke-rbac.js",
+    "auth:staff:create": "node src/modules/auth/cli/staff-account.mjs",
+    "db:requests:catalog": "node scripts/upgrade-request-catalog.js",
+    "test:auth:requests": "node scripts/smoke-auth-requests-integration.mjs"
   },
   "repository": {
     "type": "git",
@@ -54,7 +62,11 @@
     "mssql": "^12.7.3",
     "pdfkit": "^0.20.2",
     "pizzip": "^3.3.0",
-    "ssh2": "^1.17.0"
+    "ssh2": "^1.17.0",
+    "@aws-sdk/client-s3": "^3.1156.0",
+    "@aws-sdk/s3-request-presigner": "^3.1156.0",
+    "puppeteer-core": "^25.16.0",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@napi-rs/canvas": "^1.0.13",

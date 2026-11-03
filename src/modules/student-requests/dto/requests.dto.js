@@ -67,7 +67,8 @@ export function parseCreate(body) {
   const input = object(body);
   if (Object.keys(input).some(key => !['typeCode', 'payload', 'idempotencyKey'].includes(key))) throw new AppError('Thông tin gửi đơn có field không được phép.', 400);
   const typeCode = text(input.typeCode, 'loại đơn', { required: true, max: 20 });
-  return { typeCode, payload: parsePayload(typeCode, input.payload),
+  // Type-specific validation happens after the service resolves the DB profile.
+  return { typeCode, payload: object(input.payload ?? {}),
     idempotencyKey: text(input.idempotencyKey, 'mã chống gửi trùng', { required: true, max: 100 }) };
 }
 

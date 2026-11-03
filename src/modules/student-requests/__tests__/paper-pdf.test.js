@@ -5,6 +5,7 @@ import { createCanvas } from '@napi-rs/canvas';
 import { formDate, paperTemplates, renderPaperPdf } from '../services/paper-pdf.renderer.js';
 import { createPaperFilesService } from '../services/paper-files.service.js';
 import { createRequestsService } from '../services/requests.service.js';
+import { requestTypes } from '../domain/request-catalog.seed.js';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
@@ -99,7 +100,7 @@ function fileRepository(overrides = {}) {
   const row = { Id: 'test-id', TypeCode: 'DonSV07', Status: 'SUBMITTED', StudentId: 'test', StudentNumber: 'TEST0001',
     Department: 'DT', Version: 1, CreatedAt: snapshot.createdAt, Payload: { programCode: 'CS', startTerm: '2620' } };
   return { get: async () => row, profile: async () => ({ ...snapshot.profile, source: 'LOCAL_DEMO' }),
-    catalogs: async () => ({ programs: [{ code: 'CS', name: 'Tên CTĐT từ danh mục' }], terms: [{ code: '2620', name: 'Học kỳ kế tiếp' }] }), ...overrides };
+    catalogs: async () => ({ types: requestTypes, programs: [{ code: 'CS', name: 'Tên CTĐT từ danh mục' }], terms: [{ code: '2620', name: 'Học kỳ kế tiếp' }] }), ...overrides };
 }
 test('downloads obtain current server profile and catalog labels; no file or JSON is persisted', async () => {
   let rendered, count = 0, name = snapshot.profile.name;
@@ -125,7 +126,7 @@ test('creating a paper request saves fields without invoking the PDF renderer', 
   const repo = fileRepository({ receipt: async () => null, catalogs: async () => ({ settings: [{ SettingKey: 'currentTerm', SettingValue: '2610' }],
     terms: [{ code: '2610', sortOrder: 1, selectable: true }], programs: [] }),
     create: async input => { writes++; saved = input; return 'test-id'; } });
-  const service = createRequestsService(repo, { paperFiles: { prepare: () => { throw new Error('must not render'); } } });
+  const service = createRequestsService(repo, { loadTypes: async () => requestTypes, paperFiles: { prepare: () => { throw new Error('must not render'); } } });
   const request = await service.create(actor, { typeCode: 'DonSV01', payload: { reasonCode: 'LOST_OR_DAMAGED' }, idempotencyKey: 'key' });
   assert.equal(writes, 1); assert.equal(saved.payload.reasonCode, 'LOST_OR_DAMAGED');
   assert.equal(request.formFile.generation, 'ON_DOWNLOAD'); assert(!Object.hasOwn(saved, 'file'));

@@ -3,19 +3,18 @@ import { createHash } from 'node:crypto';
 import { AppError } from '../../../shared/errors/app-error.js';
 import { actorDto } from '../mappers/requests.mapper.js';
 import { requireAdmin, workCatalog, validatePermissionChange, canWork } from '../domain/work-permissions.js';
-import { requestTypes } from '../domain/request-rules.js';
 
 export function createAdminWorkflowService(repository, requests, {rbac} = {}) {
   return {
     async overview(actor) {
       requireManagement(actor);
       const [people,catalog] = await Promise.all([repository.staff(),requests.catalogs()]);
-      return { staff: people.map(actorDto), work: workCatalog(requestTypes,catalog.documents), ...(rbac?await rbac.overview(actor):{}) };
+      return { staff: people.map(actorDto), work: workCatalog(catalog.types,catalog.documents), ...(rbac?await rbac.overview(actor):{}) };
     },
     async permissions(actor,staffId,input) {
       requireAdmin(actor);
       const catalog = await requests.catalogs();
-      const change = validatePermissionChange(input,workCatalog(requestTypes,catalog.documents));
+      const change = validatePermissionChange(input,workCatalog(catalog.types,catalog.documents));
       const staff = await repository.actor(staffId);
       if (!staff || staff.Role!=='STAFF') throw new AppError('Chuyên viên không còn hoạt động.',404);
       await repository.setPermissions({adminId:actor.id,staffId,...change});

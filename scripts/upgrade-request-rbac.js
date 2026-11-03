@@ -3,7 +3,7 @@ import {createHash} from 'node:crypto';
 import {queryLocalDatabase as query,disconnectLocalDatabase} from '../src/infrastructure/database/local-sql-server.js';
 import {assertLocalDemoTarget,localDatabaseGuardSql as guard} from '../src/infrastructure/database/local-write-guard.js';
 import {createRequestsRepository} from '../src/modules/student-requests/repositories/requests.repository.js';
-import {requestTypes} from '../src/modules/student-requests/domain/request-rules.js';
+import {createRequestCatalogRepository} from '../src/modules/student-requests/repositories/catalog.repository.js';
 import {workCatalog} from '../src/modules/student-requests/domain/work-permissions.js';
 import {functionPermissions,legacyFunctions} from '../src/modules/student-requests/domain/rbac.js';
 import {effectivePermissionsViewSql} from '../src/modules/student-requests/repositories/rbac-views.js';
@@ -24,8 +24,8 @@ try{
   `IF OBJECT_ID('svc_demo.LichSuRBAC','U') IS NULL CREATE TABLE svc_demo.LichSuRBAC(ID bigint IDENTITY PRIMARY KEY,MaNguoiThucHien nvarchar(40) NOT NULL REFERENCES svc_demo.TaiKhoan(MaHS),ThaoTac varchar(30) NOT NULL,MaRole varchar(64) NULL,MaTaiKhoan nvarchar(40) NULL,MoTa nvarchar(2000) NOT NULL,NgayLap datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME());`,
  ];
  for(const statement of ddl)await query(guard+statement);
- const catalog=await createRequestsRepository().catalogs(),term=catalog.settings.find(s=>s.SettingKey==='currentTerm').SettingValue;
- const permissions=[...functionPermissions,...workCatalog(requestTypes,catalog.documents.filter(d=>d.termCode===term)).map(w=>({key:'work:'+w.key,name:w.name,group:'Phạm vi loại đơn'}))];
+ const [catalog,types]=await Promise.all([createRequestsRepository().catalogs(),createRequestCatalogRepository().list()]),term=catalog.settings.find(s=>s.SettingKey==='currentTerm').SettingValue;
+ const permissions=[...functionPermissions,...workCatalog(types,catalog.documents.filter(d=>d.termCode===term)).map(w=>({key:'work:'+w.key,name:w.name,group:'Phạm vi loại đơn'}))];
  for(const p of permissions)await query(guard+`IF NOT EXISTS(SELECT 1 FROM svc_demo.QuyenRBAC WHERE MaQuyen=?) INSERT svc_demo.QuyenRBAC VALUES(?,?,?);`,[p.key,p.key,p.name,p.group]);
  const view=effectivePermissionsViewSql;
  await query(guard+`EXEC(N'${view.replaceAll("'","''")}');`);

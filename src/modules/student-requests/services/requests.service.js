@@ -2,7 +2,8 @@ import { createHash, randomUUID } from 'node:crypto';
 import { AppError } from '../../../shared/errors/app-error.js';
 import { supplementFields, parsePayload } from '../dto/requests.dto.js';
 import { documentSnapshot, schoolYears } from '../domain/document-rules.js';
-import { canRead, requestTypes, statuses, transition, typeOf, visibleTerms, isPaperRequest } from '../domain/request-rules.js';
+import { canRead, statuses, transition, typeOf, visibleTerms, isPaperRequest } from '../domain/request-rules.js';
+import { createRequestCatalogRepository } from '../repositories/catalog.repository.js';
 import { actorDto, eventDto, requestDto } from '../mappers/requests.mapper.js';
 import { createPaperFilesService } from './paper-files.service.js';
 import { createConfirmationFilesService } from './confirmation-files.service.js';
@@ -10,11 +11,13 @@ import { cancellationReasons, cancellationFeedback } from '../domain/staff-workf
 
 function hash(value) { return createHash('sha256').update(JSON.stringify(value)).digest('hex'); }
 
-export function createRequestsService(repository, { paperFiles = createPaperFilesService(repository), confirmationFiles = createConfirmationFilesService(repository), now = () => new Date(), loadProfile=id=>repository.profile(id) } = {}) {
+export function createRequestsService(repository, { paperFiles = createPaperFilesService(repository), confirmationFiles = createConfirmationFilesService(repository), now = () => new Date(), loadProfile=id=>repository.profile(id), loadTypes = () => createRequestCatalogRepository().list({ includeInactive: true }) } = {}) {
+  async function allTypes(data) { return data?.types ?? await loadTypes(); }
+  async function typeFor(code, data) { return typeOf(code, await allTypes(data)); }
   async function get(actor, id) {
     const row = await repository.get(id);
     if (!row || !canRead(actor, { studentId: row.StudentId, department: row.Department, typeCode: row.TypeCode, payload: row.Payload, assignedStaffId: row.AssignedStaffId })) throw new AppError('Không tìm thấy hồ sơ trong phạm vi được phép.', 404);
-    return requestDto(row, actor);
+    return requestDto(row, actor, await typeFor(row.TypeCode));
   }
   async function catalogs() {
     const data = await repository.catalogs();
@@ -22,7 +25,7 @@ export function createRequestsService(repository, { paperFiles = createPaperFile
     const source = data.settings.find(s => s.SettingKey === 'catalogSource');
     if (!current) throw new AppError('Chưa khởi tạo danh mục. Chạy npm.cmd run db:demo:setup.', 503);
     const terms = visibleTerms(data.terms, current.SettingValue);
-    return { types: requestTypes, statuses, cancellationReasons, terms, years: schoolYears(terms), programs: data.programs,
+    return { types: (await allTypes(data)).filter(type => type.active !== false), statuses, cancellationReasons, terms, years: schoolYears(terms), programs: data.programs,
       documents: (data.documents ?? []).filter(doc => doc.termCode === current.SettingValue),
       supportSystems: (data.supportSystems ?? []).filter(system => system.code === '3'), currentTerm: current.SettingValue,
       nextTerm: terms.find(t => t.isNext)?.code ?? null, observedAt: current.ObservedAt,
@@ -31,10 +34,17 @@ export function createRequestsService(repository, { paperFiles = createPaperFile
   }
   async function validateCatalog(typeCode, payload) {
     const data = await catalogs();
+    data.selectedType = typeOf(typeCode, data.types);
+    const profileCode = data.selectedType.validationProfile || data.selectedType.code;
+    for (const field of data.selectedType.fields || []) {
+      if (field.required && (payload[field.key] === undefined || payload[field.key] === null || payload[field.key] === '')) {
+        throw new AppError(`Vui lòng nhập thông tin bắt buộc: ${field.key}.`, 400);
+      }
+    }
     for (const field of ['expectedTerm', 'targetTerm', 'reviewTerm', 'startTerm', 'periodTerm']) {
       if (payload[field] && !data.terms.some(term => term.code === payload[field])) throw new AppError('Học kỳ không nằm trong danh mục cho phép (tối đa kỳ kế tiếp).', 400);
     }
-    if (typeCode === 'DonSV07' && !data.programs.some(program => program.code === payload.programCode)) throw new AppError('Chương trình 2 không hợp lệ hoặc không còn hiển thị.', 400);
+    if (profileCode === 'DonSV07' && !data.programs.some(program => program.code === payload.programCode)) throw new AppError('Chương trình 2 không hợp lệ hoặc không còn hiển thị.', 400);
     if (typeCode === 'CONFIRMATION') {
       data.selectedDocument = data.documents.find(doc => doc.code === payload.documentCode);
       if (!data.selectedDocument) throw new AppError('Loại văn bản không nằm trong danh mục hiện hành.', 400);
@@ -52,8 +62,12 @@ export function createRequestsService(repository, { paperFiles = createPaperFile
     profile: async actor => actor.role === 'STUDENT' ? loadProfile(actor.id) : null,
     download: (actor, id) => paperFiles.download(actor, id),
     printConfirmation: (actor, id, input) => confirmationFiles.print(actor, id, input),
-    list: async actor => (await repository.list(actor)).map(row => ({ ...requestDto(row, actor),
-      ...(row.TypeCode === 'LMS_SUPPORT' ? { resultSummary: null } : {}) })),
+    list: async actor => {
+      const [rows, types] = await Promise.all([repository.list(actor), allTypes()]);
+      return rows.filter(row => canRead(actor, { studentId:row.StudentId,department:row.Department,typeCode:row.TypeCode,payload:row.Payload,assignedStaffId:row.AssignedStaffId }))
+        .map(row => ({ ...requestDto(row, actor, typeOf(row.TypeCode, types)),
+        ...(row.TypeCode === 'LMS_SUPPORT' ? { resultSummary: null } : {}) }));
+    },
     async detail(actor, id) {
       const request = await get(actor, id);
       const [events, revisions] = await Promise.all([repository.events(id), repository.revisions(id)]);
@@ -66,8 +80,12 @@ export function createRequestsService(repository, { paperFiles = createPaperFile
       const previous = await repository.receipt(actor.id, input.idempotencyKey, digest);
       if (previous) return get(actor, previous);
       if(actor.identitySource==='SSO'&&input.typeCode!=='LMS_SUPPORT')await loadProfile(actor.id);
-      const type = typeOf(input.typeCode);
+      const knownType = await typeFor(input.typeCode);
+      if (knownType.active === false) throw new AppError('Loại đơn không còn được mở.', 400);
+      const payload = parsePayload(knownType.validationProfile || knownType.code, input.payload);
+      input = { ...input, payload };
       const data = await validateCatalog(input.typeCode, input.payload);
+      const type = data.selectedType;
       const catalogSnapshot = input.typeCode === 'CONFIRMATION' ? documentSnapshot(data.selectedDocument, input.payload)
         : input.typeCode === 'LMS_SUPPORT' ? { ...data.supportSystems.find(system => system.code === '3'), source: 'DATA_GVien1.Sys_Email', isSimulation: true } : null;
       const proposedId = randomUUID(), createdAt = new Date().toISOString();
@@ -87,11 +105,11 @@ export function createRequestsService(repository, { paperFiles = createPaperFile
       let payload = request.payload;
       let catalogSnapshot = request.catalogSnapshot;
       if (input.action === 'requestInfo') {
-        const allowed = supplementFields(request.typeCode, request.payload);
+        const allowed = supplementFields(request.validationProfile || request.typeCode, request.payload);
         if (input.requiredFields.some(field => !allowed.includes(field))) throw new AppError('Field yêu cầu bổ sung không thuộc loại đơn này.', 400);
       }
       if (input.action === 'supplement') {
-        payload = parsePayload(request.typeCode, input.payload);
+        payload = parsePayload(request.validationProfile || request.typeCode, input.payload);
         if (Object.keys(payload).some(field => payload[field] !== request.payload[field] && !request.requiredFields.includes(field))) throw new AppError('Chỉ được sửa những field chuyên viên yêu cầu bổ sung.', 400);
         if (JSON.stringify(payload) === JSON.stringify(request.payload) && !input.message) throw new AppError('Vui lòng bổ sung nội dung hoặc ghi phản hồi cho chuyên viên.', 400);
         await validateCatalog(request.typeCode, payload);
@@ -107,7 +125,7 @@ export function createRequestsService(repository, { paperFiles = createPaperFile
       }
       await repository.update({ id, actorId: actor.id, role: actor.role, version: input.version,
         key: input.idempotencyKey, hash: digest, action: input.action, ...change, payload,
-        typeCode: request.typeCode, catalogSnapshot, isPaper: isPaperRequest(request.typeCode), ...resultDetails,
+        typeCode: request.typeCode, catalogSnapshot, isPaper: isPaperRequest(request.typeCode, request), ...resultDetails,
         requiredFields: input.action === 'requestInfo' ? input.requiredFields : [],
         eventDetails: input.action === 'requestInfo' ? { requiredFields: input.requiredFields }
           : input.action === 'supplement' ? { changedFields: Object.keys(payload).filter(field => payload[field] !== request.payload[field]) }

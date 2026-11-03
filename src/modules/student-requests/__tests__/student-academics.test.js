@@ -1,3 +1,4 @@
+import {requestTypes} from '../domain/request-catalog.seed.js';
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {mapSchoolAcademics,academicTermCode} from '../domain/student-academics.js';
@@ -36,7 +37,7 @@ test('scholarship fixed text remains for blank, new and older full-paragraph req
 });
 test('PDF service selects the requested semester and never substitutes latest results',async()=>{
  const row={Id:'qa',Status:'SUBMITTED',TypeCode:'DonSV05',StudentId:'student',StudentNumber:'000000001',Version:1,Payload:{reviewTerm:'2610'},CreatedAt:'2026-10-26'};
- const service=createPaperFilesService({get:async()=>row,catalogs:async()=>({programs:[],terms:[]})},{loadProfile:async()=>({name:'QA',studentNumber:'000000001',semesterResults:[{termCode:'2520',gpa:3.7}]}),renderer:async({snapshot})=>{assert.deepEqual(snapshot.scholarship,{});return{bytes:Buffer.from('%PDF-QA')};}});
+ const service=createPaperFilesService({get:async()=>row,catalogs:async()=>({types:requestTypes,programs:[],terms:[]})},{loadProfile:async()=>({name:'QA',studentNumber:'000000001',semesterResults:[{termCode:'2520',gpa:3.7}]}),renderer:async({snapshot})=>{assert.deepEqual(snapshot.scholarship,{});return{bytes:Buffer.from('%PDF-QA')};}});
  await service.download({role:'STUDENT',id:'student'},'qa');
 });
 test('school font is embedded with real Times New Roman on Windows',async()=>{

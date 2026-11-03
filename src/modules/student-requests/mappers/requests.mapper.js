@@ -6,9 +6,9 @@ export function actorDto(row) {
     identitySource: row.IdentitySource ?? 'DEMO' };
 }
 
-export function requestDto(row, actor) {
-  const paper = isPaperRequest(row.TypeCode);
-  const type = typeOf(row.TypeCode);
+export function requestDto(row, actor, catalogType) {
+  const type = catalogType || typeOf(row.TypeCode);
+  const paper = isPaperRequest(row.TypeCode, type);
   const request = { id: row.Id, number: `DN-${String(row.Number).padStart(6, '0')}`, studentId: row.StudentId,
     studentName: row.StudentName, studentNumber: row.StudentNumber, typeCode: row.TypeCode,
     department: row.Department, status: row.Status,
@@ -16,7 +16,7 @@ export function requestDto(row, actor) {
       ? row.Status === 'COMPLETED' ? 'Đã xử lý' : row.Status === 'SUBMITTED' ? 'Chờ tiếp nhận' : 'Đã tiếp nhận'
       : row.TypeCode === 'CONFIRMATION' && row.Status === 'READY' ? 'Đã xử lý · Chờ trả'
         : row.TypeCode === 'CONFIRMATION' && row.Status === 'COMPLETED' ? row.DeliveredAt ? 'Đã trả cho sinh viên' : 'Đã xử lý' : statuses[row.Status],
-    group: type.group, submissionMode: type.submissionMode,
+    group: type.group, submissionMode: type.submissionMode, validationProfile: type.validationProfile || type.code,
     formFile: paper ? { status: row.Status === 'CANCELLED' ? 'REQUEST_CANCELLED' : 'AVAILABLE',
       canDownload: row.Status !== 'CANCELLED', canPrint: canPrintRequest(actor,row), filename: `${row.TypeCode}-${row.Id}.pdf`,
       generation: 'ON_DOWNLOAD', createdAt: row.CreatedAt,
@@ -39,8 +39,8 @@ export function requestDto(row, actor) {
       policy: row.AppointmentPolicy ?? 'LEGACY',
     } : null,
     version: row.Version, isSimulation: true };
-  return { ...request, typeName: request.typeCode === 'CONFIRMATION' ? request.catalogSnapshot?.name || typeOf(request.typeCode).name : typeOf(request.typeCode).name,
-    categoryName: typeOf(request.typeCode).name, actions: actionsFor(actor, request) };
+  return { ...request, typeName: request.typeCode === 'CONFIRMATION' ? request.catalogSnapshot?.name || type.name : type.name,
+    categoryName: type.name, actions: actionsFor(actor, request) };
 }
 
 export function eventDto(row) {

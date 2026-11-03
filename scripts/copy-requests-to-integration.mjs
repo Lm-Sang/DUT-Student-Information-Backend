@@ -1,0 +1,27 @@
+import sql from 'msnodesqlv8';
+import {writeFile} from 'node:fs/promises';
+const source='sv_dut',target='Studentpage_Integration_20261103';
+const p=new sql.Pool({connectionString:`Driver={ODBC Driver 17 for SQL Server};Server={localhost,1433};Database={${target}};Trusted_Connection=Yes;Encrypt=No;TrustServerCertificate=Yes;`,floor:1,ceiling:1});
+const q=n=>'['+n.replaceAll(']',']]')+']';
+try {await p.promises.open();const run=async s=>(await p.promises.query(s)).first;
+const tables=await run(`SELECT t.object_id,t.name FROM ${source}.sys.tables t JOIN ${source}.sys.schemas s ON s.schema_id=t.schema_id WHERE s.name='svc_demo'`);
+if((await run("SELECT 1 AS x FROM sys.tables t JOIN sys.schemas s ON s.schema_id=t.schema_id WHERE s.name='svc_demo'")).length){console.log('Target svc_demo already exists; copy skipped.');process.exitCode=0;}
+else{
+const cols=await run(`SELECT c.object_id,c.column_id,c.name,ty.name AS type,c.max_length,c.precision,c.scale,c.is_nullable,c.is_identity,cc.definition AS computed,dc.definition AS def FROM ${source}.sys.columns c JOIN ${source}.sys.types ty ON ty.user_type_id=c.user_type_id LEFT JOIN ${source}.sys.computed_columns cc ON cc.object_id=c.object_id AND cc.column_id=c.column_id LEFT JOIN ${source}.sys.default_constraints dc ON dc.object_id=c.default_object_id WHERE c.object_id IN (${tables.map(t=>t.object_id)}) ORDER BY c.column_id`);
+const indexes=await run(`SELECT i.object_id,i.index_id,i.name,i.is_unique,i.is_primary_key,i.is_unique_constraint,c.name AS col,ic.key_ordinal,ic.is_descending_key FROM ${source}.sys.indexes i JOIN ${source}.sys.index_columns ic ON ic.object_id=i.object_id AND ic.index_id=i.index_id JOIN ${source}.sys.columns c ON c.object_id=ic.object_id AND c.column_id=ic.column_id WHERE i.object_id IN (${tables.map(t=>t.object_id)}) AND ic.key_ordinal>0 ORDER BY i.object_id,i.index_id,ic.key_ordinal`);
+const foreign=await run(`SELECT f.name,pt.name AS pt,pc.name AS pc,rt.name AS rt,rc.name AS rc,fc.constraint_column_id AS n FROM ${source}.sys.foreign_keys f JOIN ${source}.sys.foreign_key_columns fc ON fc.constraint_object_id=f.object_id JOIN ${source}.sys.tables pt ON pt.object_id=f.parent_object_id JOIN ${source}.sys.columns pc ON pc.object_id=fc.parent_object_id AND pc.column_id=fc.parent_column_id JOIN ${source}.sys.tables rt ON rt.object_id=f.referenced_object_id JOIN ${source}.sys.columns rc ON rc.object_id=fc.referenced_object_id AND rc.column_id=fc.referenced_column_id WHERE pt.object_id IN (${tables.map(t=>t.object_id)}) ORDER BY f.name,fc.constraint_column_id`);
+const views=await run(`SELECT v.name,m.definition FROM ${source}.sys.views v JOIN ${source}.sys.schemas s ON s.schema_id=v.schema_id JOIN ${source}.sys.sql_modules m ON m.object_id=v.object_id WHERE s.name='svc_demo'`);
+const statements=["SET NOCOUNT ON;SET XACT_ABORT ON;IF DB_NAME()<>N'Studentpage_Integration_20261103' THROW 51000,'Wrong restore target',1;BEGIN TRANSACTION;IF SCHEMA_ID('svc_demo') IS NULL EXEC('CREATE SCHEMA svc_demo');"];
+for(const t of tables){const cs=cols.filter(c=>c.object_id===t.object_id);const definitions=cs.map(c=>{if(c.computed)return q(c.name)+' AS '+c.computed;let type=c.type;if(['varchar','char','binary','varbinary','nvarchar','nchar'].includes(type))type+='('+(c.max_length===-1?'max':c.max_length/(type[0]==='n'?2:1))+')';else if(['decimal','numeric'].includes(type))type+=`(${c.precision},${c.scale})`;else if(['datetime2','time','datetimeoffset'].includes(type))type+=`(${c.scale})`;return `${q(c.name)} ${type}${c.is_identity?' IDENTITY(1,1)':''}${c.is_nullable?' NULL':' NOT NULL'}${c.def?' DEFAULT '+c.def:''}`;});
+statements.push(`CREATE TABLE svc_demo.${q(t.name)}(${definitions});`);
+for(const index of [...new Set(indexes.filter(i=>i.object_id===t.object_id&&(i.is_primary_key||i.is_unique_constraint)).map(i=>i.index_id))]){const ix=indexes.filter(i=>i.object_id===t.object_id&&i.index_id===index);statements.push(`ALTER TABLE svc_demo.${q(t.name)} ADD CONSTRAINT ${q(ix[0].name)} ${ix[0].is_primary_key?'PRIMARY KEY':'UNIQUE'}(${ix.map(i=>q(i.col)+(i.is_descending_key?' DESC':'')).join(',')});`);}
+const names=cs.filter(c=>!c.computed&&c.type!=='timestamp').map(c=>q(c.name)).join(',');if(cs.some(c=>c.is_identity))statements.push(`SET IDENTITY_INSERT svc_demo.${q(t.name)} ON;`);
+statements.push(`INSERT svc_demo.${q(t.name)}(${names}) SELECT ${names} FROM ${source}.svc_demo.${q(t.name)};`);if(cs.some(c=>c.is_identity))statements.push(`SET IDENTITY_INSERT svc_demo.${q(t.name)} OFF;`);
+}
+for(const name of [...new Set(foreign.map(f=>f.name))]){const f=foreign.filter(f=>f.name===name);statements.push(`ALTER TABLE svc_demo.${q(f[0].pt)} ADD CONSTRAINT ${q(name)} FOREIGN KEY(${f.map(f=>q(f.pc))}) REFERENCES svc_demo.${q(f[0].rt)}(${f.map(f=>q(f.rc))});`);}
+for(const t of tables)statements.push(`IF (SELECT COUNT_BIG(*) FROM svc_demo.${q(t.name)})<>(SELECT COUNT_BIG(*) FROM ${source}.svc_demo.${q(t.name)}) THROW 51001,'Copy count mismatch',1;`);
+statements.push('COMMIT TRANSACTION;');await writeFile('.data/research/copy-request-schema.sql',statements.join('\n'));await p.promises.query(statements.join('\n'),[],{timeoutMs:120000});
+for(const v of views.sort((a,b)=>a.name==='vQuyenHieuLuc'?-1:b.name==='vQuyenHieuLuc'?1:0))await p.promises.query(v.definition);
+console.log(`Copied ${tables.length} request tables with rows, PK/FK/defaults and ${views.length} views; source unchanged.`);
+}
+}finally{await p.promises.close()}

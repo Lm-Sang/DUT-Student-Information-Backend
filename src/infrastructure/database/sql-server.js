@@ -52,7 +52,7 @@ async function createSshTunnel() {
     client.forwardOut(
       socket.remoteAddress ?? '127.0.0.1',
       socket.remotePort ?? 0,
-      required(env.database.host, 'DB_HOST'),
+      required(env.database.host, 'DB_HOST_SSH'),
       env.database.port,
       (error, stream) => {
         if (error) {
@@ -83,14 +83,14 @@ async function createSshTunnel() {
 
 async function getDatabaseEndpoint() {
   if (env.database.connectionMode === 'direct') {
-    return { host: required(env.database.host, 'DB_HOST'), port: env.database.port };
+    return { host: required(env.database.host, 'DB_HOST_SSH'), port: env.database.port };
   }
 
   if (env.database.connectionMode !== 'ssh') {
     throw new Error('DB_CONNECTION_MODE must be either "direct" or "ssh".');
   }
 
-  required(env.database.host, 'DB_HOST');
+  required(env.database.host, 'DB_HOST_SSH');
   if (!tunnelPromise) {
     const pending = createSshTunnel();
     tunnelPromise = pending;

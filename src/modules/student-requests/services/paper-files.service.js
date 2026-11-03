@@ -2,18 +2,22 @@ import { createHash } from 'node:crypto';
 import { AppError } from '../../../shared/errors/app-error.js';
 import { canRead, isPaperRequest } from '../domain/request-rules.js';
 import { paperTemplates, renderPaperPdf } from './paper-pdf.renderer.js';
+import { createRequestCatalogRepository } from '../repositories/catalog.repository.js';
 
-export function createPaperFilesService(repository, { renderer = renderPaperPdf, loadProfile=id=>repository.profile(id) } = {}) {
+export function createPaperFilesService(repository, { renderer = renderPaperPdf, loadProfile=id=>repository.profile(id), loadTypes=()=>createRequestCatalogRepository().list({includeInactive:true}) } = {}) {
   return {
     async download(actor, id) {
       const row = await repository.get(id);
-      if (!row || row.Status === 'CANCELLED' || !isPaperRequest(row.TypeCode)
+      if (!row || row.Status === 'CANCELLED'
         || !canRead(actor, { studentId: row.StudentId, department: row.Department, typeCode: row.TypeCode, payload: row.Payload, assignedStaffId: row.AssignedStaffId })) throw new AppError('Không có đơn được phép tải PDF.', 404);
-      const template = paperTemplates.find(t => t.code === row.TypeCode);
+      const catalog = await repository.catalogs();
+      const types = catalog.types ?? await loadTypes();
+      const type = types.find(t => t.code === row.TypeCode);
+      if (!type || !isPaperRequest(row.TypeCode, type)) throw new AppError('Không có mẫu PDF cho nhóm đơn này.',404);
+      const template = paperTemplates.find(t => t.code === type.templateCode);
       if (!template) throw new AppError('Chưa cấu hình biểu mẫu.', 503);
       const profile = await loadProfile(row.StudentId);
       if (!profile?.name || profile.studentNumber !== row.StudentNumber) throw new AppError('Chưa có hồ sơ sinh viên phù hợp để điền biểu mẫu.', 422);
-      const catalog = await repository.catalogs();
       const payload = row.Payload;
       const values = { ...payload, programName: catalog.programs.find(p => p.code === payload.programCode)?.name,
         withdrawalReason: payload.reasonCode === 'LH002' ? 'Chuyển trường' : 'Nguyện vọng cá nhân' };

@@ -15,6 +15,7 @@ export function payloadColumns(typeCode) {
   return typeCode === 'CONFIRMATION' ? documentColumns : typeCode === 'LMS_SUPPORT' ? emailColumns : paperColumns;
 }
 export function payloadFromColumns(row, typeCode = row.TypeCode) {
+  typeCode = row.ValidationProfile || typeCode;
   const out = {};
   for (const [key, column] of Object.entries(payloadColumns(typeCode))) {
     const value = row[column];

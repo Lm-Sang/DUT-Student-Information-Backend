@@ -1,3 +1,4 @@
+import {requestTypes} from '../domain/request-catalog.seed.js';
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {mapSchoolProfile} from '../domain/student-profile.js';
@@ -40,7 +41,7 @@ test('refresh keeps the original school ID and actor link and never switches to 
 });
 test('student paper download uses the fresh profile without recording a specialist print',async()=>{
  const actor={id:'sso:qa-profile',role:'STUDENT'},row={Id:'qa-doc',TypeCode:'DonSV01',Status:'RECEIVED',StudentId:actor.id,StudentNumber:'000000001',Payload:{reasonCode:'LOST_OR_DAMAGED'},AssignedStaffId:'qa',Version:1,CreatedAt:'2026-10-26T00:00:00Z'};
- let loads=0;const repo={get:async()=>row,catalogs:async()=>({programs:[],terms:[]}),recordPrint:async()=>assert.fail('student download must not record specialist printing'),profile:async()=>assert.fail('stale profile must not be used')};
+ let loads=0;const repo={get:async()=>row,catalogs:async()=>({types:requestTypes,programs:[],terms:[]}),recordPrint:async()=>assert.fail('student download must not record specialist printing'),profile:async()=>assert.fail('stale profile must not be used')};
  const loadProfile=async id=>{assert.equal(id,row.StudentId);loads++;return{name:current.CurrentName,studentNumber:'000000001',className:'QA24A',identityNumber:current.CurrentCccd,phone:current.CurrentPhone};};
  const paper=createPaperFilesService(repo,{loadProfile,renderer:async({snapshot})=>{assert.equal(snapshot.profile.phone,current.CurrentPhone);return{bytes:Buffer.from('%PDF-QA')};}});
  await paper.download(actor,row.Id);assert.equal(loads,1);

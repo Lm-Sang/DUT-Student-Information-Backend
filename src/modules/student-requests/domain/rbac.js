@@ -5,12 +5,13 @@ export const functionPermissions=[
  ['requests.complete','Đánh dấu đã xử lý / phản hồi LMS','Hồ sơ'],['requests.cancel','Hủy đơn và phản hồi','Hồ sơ'],
  ['workbook.export','Xuất Excel','Excel'],['workbook.import','Nhập Excel và lưu xử lý','Excel'],
  ['requests.reassign','Bàn giao người phụ trách','Quản trị'],['rbac.roles.manage','Tạo và chỉnh sửa role','Quản trị'],['rbac.staff.manage','Tạo tài khoản và gán role','Quản trị'],
+ ['rbac.permissions.delegate','Ủy quyền cấp quyền ngoài phạm vi cá nhân','Quản trị'],
 ].map(([key,name,group])=>({key,name,group}));
 export const legacyFunctions=functionPermissions.filter(p=>!['Quản trị'].includes(p.group)).map(p=>p.key);
 export const defaultStaffPermissions=['requests.view','requests.receive','requests.print','requests.complete','requests.cancel','workbook.export','workbook.import'];
 export const isDefaultStaffPermission=key=>defaultStaffPermissions.includes(key);
 export const actionPermission=action=>({receive:'requests.receive',print:'requests.print',complete:'requests.complete',result:'requests.complete',cancel:'requests.cancel'}[action]);
-export const hasPermission=(actor,key)=>actor?.role==='ADMIN'||actor?.role==='STAFF'&&(isDefaultStaffPermission(key)||actor.permissions?.includes(key)===true);
+export const hasPermission=(actor,key)=>['ADMIN','STAFF'].includes(actor?.role)&&actor.permissions?.includes(key)===true;
 export function requirePermission(actor,key){if(!hasPermission(actor,key))throw new AppError('Bạn chưa được cấp quyền thực hiện chức năng này.',403);}
 export function requireManagement(actor){if(!['rbac.roles.manage','rbac.staff.manage','requests.reassign'].some(p=>hasPermission(actor,p)))throw new AppError('Bạn chưa có quyền quản trị tài khoản hoặc role.',403);}
 function object(input,allowed){if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>!allowed.includes(k)))throw new AppError('Dữ liệu có trường không hợp lệ.',400);}

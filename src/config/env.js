@@ -80,11 +80,14 @@ export const env = Object.freeze({
   features: Object.freeze({
     adminAuthEnabled: parseBoolean(process.env.ENABLE_ADMIN_AUTH, false),
     requestsDemoEnabled: parseBoolean(process.env.ENABLE_REQUESTS_DEMO, false),
+    requestsApiEnabled: parseBoolean(process.env.ENABLE_REQUESTS_API, true),
+    demoImpersonationEnabled: parseBoolean(process.env.ENABLE_DEMO_IMPERSONATION, false),
   }),
   auth: Object.freeze({
     databasePath: process.env.AUTH_DATABASE_PATH || '.data/auth.sqlite',
     stateTtlMs: 600000,
     handoffTtlMs: 60000,
+    refreshTtlSeconds: parseInteger('AUTH_REFRESH_TTL_SECONDS', process.env.AUTH_REFRESH_TTL_SECONDS, 604800, 300, 2592000),
   }),
   app: Object.freeze({
     name: process.env.APP_NAME ?? 'DUT Student Information Backend',
@@ -134,6 +137,8 @@ export const env = Object.freeze({
   jwt: Object.freeze({
     secret: process.env.JWT_SECRET ?? '',
     expiresIn: process.env.JWT_EXPIRES_IN ?? '1h',
+    shareSsoKey: parseBoolean(process.env.JWT_SHARE_SSO_KEY, true),
+    staffAudience: process.env.JWT_STAFF_AUDIENCE ?? 'dut-student-information-staff',
     issuer: process.env.JWT_ISSUER ?? 'dut-student-information-backend',
     studentAudience:
       process.env.JWT_STUDENT_AUDIENCE ?? 'dut-student-information-student',
@@ -152,7 +157,9 @@ export const env = Object.freeze({
     adminCallbackUrl:
       process.env.MICROSOFT_SSO_ADMIN_CALLBACK_URL ??
       'http://localhost:3003/api/admin/auth/microsoft/callback',
-    jwtSecret: process.env.MICROSOFT_SSO_JWT_SECRET ?? '',
+    jwtSecret: process.env.MICROSOFT_SSO_JWT_SECRET || process.env.MICROSOFT_SSO_SecretKey || '',
+    jwtSecretEncoding: process.env.MICROSOFT_SSO_JWT_SECRET_ENCODING || 'utf8',
+    allowMissingAudience: parseBoolean(process.env.MICROSOFT_SSO_ALLOW_MISSING_AUDIENCE, false),
     jwtIssuer: process.env.MICROSOFT_SSO_JWT_ISSUER || undefined,
     jwtAudience: process.env.MICROSOFT_SSO_JWT_AUDIENCE || undefined,
     studentFrontendCallbackUrl: process.env.STUDENT_SSO_FRONTEND_CALLBACK_URL || '',

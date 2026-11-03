@@ -5,8 +5,10 @@ import { authenticate, authService } from '../../auth/index.js';
 import { env } from '../../../config/env.js';
 import { parseId } from '../dto/requests.dto.js';
 
-export function createRequestsRouter(controller, service, { admin, workbook, school, rbac } = {}) {
+export function createRequestsRouter(controller, service, { admin, workbook, school, rbac, demo = env.features.demoImpersonationEnabled, resolveActor } = {}) {
   const router = Router();
+  router.use((_req,res,next)=>{res.set('Cache-Control','no-store');next();});
+  if (demo) {
   const sessions = new Map();
   router.use((req, res, next) => {
     const address = req.socket.remoteAddress;
@@ -49,11 +51,18 @@ export function createRequestsRouter(controller, service, { admin, workbook, sch
     const token = /^Bearer ([a-f0-9]{64})$/.exec(req.headers.authorization || '')?.[1];
     const session = sessions.get(token);
     if (!session || session.expiresAt < Date.now()) { sessions.delete(token); throw new AppError('Hãy chọn lại nhân vật để mở phiên thử nghiệm.', 401); }
-    if(session.parentToken)authService.verifyToken(session.parentToken,'student');
+    if(session.parentToken)await authService.verifyToken(session.parentToken,'student');
     req.demoActor = await (service.sessionActor??service.actor)(session.actorId);
     next();
   });
   router.delete('/session', (req, res) => { sessions.delete(req.headers.authorization.slice(7)); res.status(204).end(); });
+
+  } else {
+    router.use(async(req,_res,next)=>{
+      if(!resolveActor)throw new AppError('Cần xác thực bằng JWT ứng dụng.',401);
+      req.demoActor=await resolveActor(req);next();
+    });
+  }
   router.get('/me', controller.me);
   router.get('/profile', controller.profile);
   router.get('/catalogs', controller.catalogs);

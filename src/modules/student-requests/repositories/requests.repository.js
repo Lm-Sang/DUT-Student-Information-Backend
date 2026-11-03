@@ -11,7 +11,7 @@ const actorSelect = `SELECT MaHS AS Id,Hoten AS DisplayName,VaiTro AS Role,${dep
 const documentSelect = `SELECT IDCode AS termCode,MaVanBan AS code,ID AS sourceId,TenVanBan AS name,${department('MaDVcap')} AS department,
  ThongTinDinhKem AS guidance,LePhiThuong AS normalFee,LePhiNhanh AS rushFee,CONVERT(bit,CASE WHEN KhongMienPhi=0 THEN 1 ELSE 0 END) AS freeAllowed,
  CONVERT(bit,CASE WHEN KhongMienPhi IS NULL THEN 0 ELSE 1 END) AS feePolicyKnown,SoLuongMien_Ngay AS dailyFreeQuota,KhongCapNeuKhongHoc AS registrationRequired FROM svc_demo.Sys_VanBan`;
-const selectRequest = `SELECT r.ID AS Id,r.STT AS Number,r.MaHS AS StudentId,r.LoaiDon AS TypeCode,${department('r.MaDV')} AS Department,r.TrangThai AS Status,
+const selectRequest = `SELECT ld.MaMauDuLieu AS ValidationProfile,ld.Nhom AS RequestGroup,ld.CachNop AS SubmissionMode,r.ID AS Id,r.STT AS Number,r.MaHS AS StudentId,r.LoaiDon AS TypeCode,${department('r.MaDV')} AS Department,r.TrangThai AS Status,
  r.IDCode AS SubmittedTerm,r.MaCBND AS AssignedStaffId,r.NgayDeNghi AS CreatedAt,r.NgayCapNhat AS UpdatedAt,r.NgayNhanDon AS ReceivedAt,
  r.NgayHoanTat AS CompletedAt,r.TruongPhanHoi AS LastFeedback,r.KetQuaXuLy AS ResultSummary,r.VaiTroNguoiHuy AS CancelledByRole,
  r.NguoiHuy AS CancelledBy,r.LyDoHuy AS CancelReason,r.NgayHuy AS CancelledAt,r.PhienBan AS Version,r.NgayIn AS PrintedAt,
@@ -21,7 +21,7 @@ const selectRequest = `SELECT r.ID AS Id,r.STT AS Number,r.MaHS AS StudentId,r.L
  ${Object.values(emailColumns).map(c=>`e.[${c}]`).join(',')},v.IDCode AS CatalogTerm,v.LePhi AS UnitFee,
  vb.TenVanBan AS DocumentName,vb.ThongTinDinhKem AS Guidance,vb.LePhiThuong AS NormalFee,vb.LePhiNhanh AS RushFee,
  vb.KhongMienPhi,vb.SoLuongMien_Ngay AS DailyFreeQuota,vb.KhongCapNeuKhongHoc AS RegistrationRequired
- FROM svc_demo.DonDeNghi r JOIN svc_demo.TaiKhoan a ON a.MaHS=r.MaHS LEFT JOIN svc_demo.TaiKhoan s ON s.MaHS=r.MaCBND
+ FROM svc_demo.DonDeNghi r LEFT JOIN svc_demo.LoaiDon ld ON ld.MaLoaiDon=r.LoaiDon JOIN svc_demo.TaiKhoan a ON a.MaHS=r.MaHS LEFT JOIN svc_demo.TaiKhoan s ON s.MaHS=r.MaCBND
  LEFT JOIN svc_demo.His_InDon p ON p.ID=r.ID LEFT JOIN svc_demo.DeNghiVanBan v ON v.ID=r.ID
  LEFT JOIN svc_demo.DeNghiEmail e ON e.ID=r.ID LEFT JOIN svc_demo.Sys_VanBan vb ON vb.IDCode=v.IDCode AND vb.MaVanBan=v.MaVanban`;
 function hydrate(row, fields=[]) {
@@ -188,7 +188,7 @@ export function createRequestsRepository({ query=queryLocalDatabase, guard=asser
         ...(row.NgayHenTra?{processedAt:row.NgayXuLy,pickupAt:row.NgayHenTra,pickupLocation:row.NoiTraHS,appointmentPolicy:row.QuyTacHenTra}:{}),
         ...(row.EventType==='REQUESTINFO'?{requiredFields:fields.filter(f=>f.IDLichSu===row.Id&&f.LoaiThayDoi==='YEU_CAU_BO_SUNG').map(f=>f.TenTruong)}:{}),
         ...(row.EventType==='SUPPLEMENT'?{changedFields:fields.filter(f=>f.IDLichSu===row.Id&&f.LoaiThayDoi==='DA_THAY_DOI').map(f=>f.TenTruong)}:{})}}));},
-    revisions:async id=>(await read('SELECT *,LanBoSung AS RevisionNo,NgayLap AS CreatedAt,LoaiDon AS TypeCode FROM svc_demo.LichSuNoiDungDon WHERE IDDon=? ORDER BY LanBoSung',[id])).map(r=>({...r,Payload:payloadFromColumns(r)})),
+    revisions:async id=>(await read('SELECT h.*,h.LanBoSung AS RevisionNo,h.NgayLap AS CreatedAt,h.LoaiDon AS TypeCode,ld.MaMauDuLieu AS ValidationProfile FROM svc_demo.LichSuNoiDungDon h LEFT JOIN svc_demo.LoaiDon ld ON ld.MaLoaiDon=h.LoaiDon WHERE h.IDDon=? ORDER BY h.LanBoSung',[id])).map(r=>({...r,Payload:payloadFromColumns(r)})),
     async receipt(actor,key,hash){const row=(await read('SELECT IDDon,MaBamNoiDung FROM svc_demo.ChongGuiTrung WHERE MaHS=? AND MaThaoTac=?',[actor,key]))[0];if(row&&row.MaBamNoiDung!==hash)throw new AppError('Mã thao tác đã được sử dụng với nội dung khác.',409);return row?.IDDon;},
     async create(d){const rows=await write(b=>`DECLARE @actor nvarchar(40)=${b(d.actorId)},@key nvarchar(100)=${b(d.key)},@hash varchar(64)=${b(d.hash)},@existing uniqueidentifier;
       SELECT @existing=IDDon FROM svc_demo.ChongGuiTrung WITH(UPDLOCK,HOLDLOCK) WHERE MaHS=@actor AND MaThaoTac=@key;

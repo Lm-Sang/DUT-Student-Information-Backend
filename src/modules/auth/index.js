@@ -2,3 +2,21 @@
 export { studentAuthModule } from './student/index.js';
 export { authenticate, requireAuth, requirePermissions } from './middlewares/auth.middleware.js';
 export { authService } from './services/auth.service.js';
+export { closeAuthStore } from './stores/auth.store.js';
+export { createSsoTokenResolver, resolveSsoAccessToken, createLocalPermissionContext } from './middlewares/auth.middleware.js';
+
+import { env } from '../../config/env.js';
+import { authService } from './services/auth.service.js';
+import { createAuthController } from './controllers/auth.controller.js';
+import { createAuthRouter } from './routes/auth.routes.js';
+
+export function createAuthModule({ channel = 'student', service = authService,
+  secureCookies = env.nodeEnv === 'production', frontendOrigin,
+} = {}) {
+  const controller = createAuthController(channel, service, { secureCookies, frontendOrigin });
+  return { basePath: `/api/${channel}/auth`, router: createAuthRouter(channel, controller, service) };
+}
+
+export function createStaffAuthModule(options = {}) {
+  return createAuthModule({ channel: 'staff', frontendOrigin: env.app.staffFrontendUrl ?? env.app.adminFrontendUrl, ...options });
+}

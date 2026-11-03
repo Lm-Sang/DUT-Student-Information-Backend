@@ -24,10 +24,12 @@ export function toAuthUserDto(claims) {
   const { identity, localUserId, roles, permissions, authorizationStatus } = claims;
   return {
     id: identity?.id,
+    username: identity?.username ?? null,
     microsoftId: identity?.microsoftId,
     displayName: identity?.displayName,
     email: identity?.email,
     provider: identity?.provider,
     localUserId, roles, permissions, authorizationStatus,
+    requestActorId: identity?.requestActorId ?? null,
   };
 }
