@@ -2,12 +2,16 @@ import { AppError } from '../../../shared/errors/app-error.js';
 
 /** @returns {{ state: string, accessToken: unknown }} */
 export function parseAuthCallbackQuery(query, expectedState) {
-  // The gateway returns accessToken only. The one-use login attempt stays in an HttpOnly cookie.
+  // Accept gateways that preserve callbackUrl's state as well as those that
+  // return only accessToken. The HttpOnly cookie binds both to this browser.
   if (typeof expectedState !== 'string' || !/^[a-f0-9]{64}$/.test(expectedState)) {
     throw new AppError('Missing login attempt; start a new login', 401);
   }
-  if (!query || Object.keys(query).some(key => key !== 'accessToken')) {
-    throw new AppError('SSO callback accepts accessToken only', 400);
+  if (!query || Object.keys(query).some(key => !['accessToken','state'].includes(key))) {
+    throw new AppError('SSO callback chỉ nhận accessToken và state.', 400);
+  }
+  if (query.state !== undefined && (typeof query.state !== 'string' || query.state !== expectedState)) {
+    throw new AppError('SSO state không khớp lần đăng nhập. Vui lòng đăng nhập lại.', 401);
   }
   return { state: expectedState, accessToken: parseSsoAccessToken(query.accessToken) };
 }

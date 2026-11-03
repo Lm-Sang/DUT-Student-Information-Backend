@@ -125,3 +125,23 @@ test('staff login requires frontend Origin; refresh cookie stays HttpOnly and to
   await assert.rejects(()=>f.service.verifyToken(data.data.accessToken,'staff'),e=>e.statusCode===401);
  }finally{await new Promise(resolve=>server.close(resolve));f.store.close();}
 });
+
+test('SSO HTTP callback accepts preserved state or accessToken-only and rejects mismatch and replay',async()=>{
+ const f=fixture(),app=express();app.use(express.json());
+ app.use('/api/student/auth',createAuthRouter('student',createAuthController('student',f.service,{frontendOrigin:'http://localhost:5173'}),f.service));app.use(errorHandler);
+ const server=createServer(app);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base=`http://127.0.0.1:${server.address().port}/api/student/auth`;
+ const begin=async()=>{const r=await fetch(base+'/microsoft/login',{redirect:'manual'});assert.equal(r.status,302);const callback=new URL(new URL(r.headers.get('location')).searchParams.get('callbackUrl'));return{state:callback.searchParams.get('state'),cookie:r.headers.get('set-cookie').split(';')[0]};};
+ const callback=async(attempt,extra)=>fetch(base+'/microsoft/callback?'+new URLSearchParams({accessToken:ssoToken(),...extra}),{redirect:'manual',headers:attempt?{Cookie:attempt.cookie}:{}});
+ try{
+  for(const withState of [true,false]){
+   const attempt=await begin();const r=await callback(attempt,withState?{state:attempt.state}:{});assert.equal(r.status,303);
+   const redirect=new URL(r.headers.get('location'));assert.match(redirect.hash,/^#code=[a-f0-9]{64}$/);assert(!redirect.href.includes('accessToken'));
+   const binding=r.headers.getSetCookie().find(c=>c.startsWith('dut_sso_student_handoff=')).split(';')[0];
+   const redeem=await fetch(base+'/session',{method:'POST',headers:{Origin:'http://localhost:5173','Content-Type':'application/json',Cookie:binding},body:JSON.stringify({code:redirect.hash.slice(6)})});assert.equal(redeem.status,200);assert.equal((await redeem.json()).data.channel,'student');
+   assert.equal((await callback(attempt,withState?{state:attempt.state}:{})).status,401);
+  }
+  const mismatch=await begin();assert.equal((await callback(mismatch,{state:'0'.repeat(64)})).status,401);
+  assert.equal((await callback(null,{})).status,401);
+  const duplicate=await begin();const r=await fetch(base+'/microsoft/callback?'+new URLSearchParams({accessToken:ssoToken(),state:duplicate.state})+'&state='+duplicate.state,{headers:{Cookie:duplicate.cookie},redirect:'manual'});assert.equal(r.status,401);
+ }finally{await new Promise(resolve=>{server.close(resolve);server.closeAllConnections();});f.store.close();}
+});
