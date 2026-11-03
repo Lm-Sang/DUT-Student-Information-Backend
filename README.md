@@ -181,3 +181,8 @@ Times New Roman trên máy chạy backend. Xem [bộ mẫu và cách kiểm tra 
 - [Nguon khung chuong trinh dao tao chung tren sv.dut.udn.vn](docs/PUBLIC_CURRICULUM_SOURCE.md)
 - [Truy nguon SQL va JSON danh muc/khung CTDT theo khoa](docs/CURRICULUM_DATABASE_TRACE.md)
 - [API thong bao phan trang tu DATA_SV1](docs/ANNOUNCEMENTS_API.md)
+
+## Tích hợp auth và đơn đề nghị
+
+Nhánh `feat/vb-xac-nhan-auth-integration`: xem [kế hoạch, API, DB và báo cáo kiểm thử](docs/INTEGRATION_AUTH_REQUESTS.md).
+Sinh viên dùng SSO; chuyên viên dùng JWT và RBAC từ DB. Chế độ chọn nhân vật demo tắt mặc định.

@@ -98,3 +98,12 @@ CLI không in mật khẩu. Người quản trị cấp role/phạm vi xử lý 
 - Không kiểm chứng trình duyệt với tài khoản SSO thật; không gọi reset mật khẩu trường, không upload R2 hoặc xác nhận nghiệp vụ thật của chứng chỉ/nghỉ học.
 - Không ép nâng dependency major trong lúc merge. `npm install` báo 6 cảnh báo dependency (3 moderate, 3 high); cần xử lý trong đợt dependency riêng trước triển khai.
 - Công cụ restore/copy local trong scripts dành cho DB tích hợp riêng: copy backup vào `.data/Studentpage.bak` rồi chạy `restore-studentpage-local.mjs`, `copy-requests-to-integration.mjs`. Các lệnh có tên DB đích riêng để tránh ghi nhầm; không dùng với DB trường. Giữ `.data/` ngoài Git.
+
+## Mốc hoàn tất
+
+Merge commit `2b8001b` có hai parent `cb2fe22` và `387a542`; hai ref nguồn giữ nguyên.
+Kiểm tra cấu hình cuối: local đã có khóa SSO nhưng **chưa có issuer/audience**;
+`MICROSOFT_SSO_ALLOW_MISSING_AUDIENCE=false`. Do đó đăng nhập thật trả lỗi cấu hình
+cho đến khi có thông số được phía SSO xác nhận. Không tự suy đoán hoặc giảm kiểm tra
+để làm đăng nhập qua. Tài khoản chuyên viên đầu tiên cũng chưa được tạo với mật khẩu
+vận hành; dùng CLI nêu trên sau khi người quản trị cung cấp mật khẩu.
