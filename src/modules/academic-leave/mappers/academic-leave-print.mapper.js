@@ -1,9 +1,12 @@
+import {renderAcademicReturnPrint} from './academic-return-print.mapper.js';
+
 const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 function date(value){if(!value)return '';const [year,month,day]=value.slice(0,10).split('-');return `${day}/${month}/${year}`;}
 function term(value){const match=/^(\d{2})([12])0$/.exec(value);return match?`${match[2]} / ${2000+Number(match[1])}-${2001+Number(match[1])}`:value;}
 export function renderAcademicLeavePrint(row) {
-  const student=row.snapshot.student,extension=row.kind==='extension',returning=row.kind==='return';
-  const title=returning?'ĐƠN ĐỀ NGHỊ TRỞ LẠI HỌC':extension?'ĐƠN ĐỀ NGHỊ GIA HẠN NGỪNG HỌC':'ĐƠN ĐỀ NGHỊ XÉT NGỪNG HỌC';
+  if(row.kind==='return')return renderAcademicReturnPrint(row);
+  const student=row.snapshot.student,extension=row.kind==='extension';
+  const title=extension?'ĐƠN ĐỀ NGHỊ GIA HẠN NGỪNG HỌC':'ĐƠN ĐỀ NGHỊ XÉT NGỪNG HỌC';
   const confirmed=new Date(row.studentConfirmedAt);
   const parts=new Intl.DateTimeFormat('vi-VN',{timeZone:'Asia/Bangkok',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).formatToParts(confirmed);
   const part=type=>parts.find(item=>item.type===type)?.value;
@@ -24,16 +27,15 @@ export function renderAcademicLeavePrint(row) {
   <table><thead><tr><th>TT</th><th>Học kỳ năm học</th><th>Số tín chỉ</th><th>Điểm TBC học tập</th><th>Điểm RL</th></tr></thead><tbody>
   ${row.snapshot.academicRows.map((item,index)=>`<tr><td>${index+1}</td><td>${escape(term(item.semester))}</td><td>${number(item.credits)}</td><td>${number(item.gpa)}</td><td>${number(item.conduct)}</td></tr>`).join('')}
   </tbody></table>
-  ${returning?`<p>Tôi làm đơn này kính đề nghị Nhà trường cho phép tôi <strong>trở lại học</strong> từ ${escape(row.startSemester.label.toLowerCase())}.</p>`:
-    `<p>Tôi làm đơn này kính đề nghị Nhà trường cho phép tôi ${extension?'gia hạn ngừng học':'được ngừng học'}: <strong>${row.semesterCount} học kỳ</strong>,
-    từ ${escape(row.startSemester.label.toLowerCase())}, với lý do: <strong>${escape(row.reasonLabel)}</strong>.</p>`}
-  ${extension||returning?`<p>${returning?'Trở lại học sau thời gian ngừng học theo':'Gia hạn tiếp theo'} đơn đã được duyệt số ${escape(row.snapshot.parentRequestCode??row.parentApplicationId)}.</p>`:''}
+  <p>Tôi làm đơn này kính đề nghị Nhà trường cho phép tôi ${extension?'gia hạn ngừng học':'được ngừng học'}: <strong>${row.semesterCount} học kỳ</strong>,
+    từ ${escape(row.startSemester.label.toLowerCase())}, với lý do: <strong>${escape(row.reasonLabel)}</strong>.</p>
+  ${extension?`<p>Gia hạn tiếp theo đơn đã được duyệt số ${escape(row.snapshot.parentRequestCode??row.parentApplicationId)}.</p>`:''}
   ${row.content?`<p class="content">${escape(row.content)}</p>`:''}
   <div class="signature"><p><em>Đà Nẵng, ngày ${part('day')} tháng ${part('month')} năm ${part('year')}</em></p><p><strong>Kính đơn</strong></p><div class="signature-space"></div><p><strong>${escape(student.fullName)}</strong></p></div>
   <div class="code">${escape(row.requestCode)}, ${part('hour')}:${part('minute')} ${escape(date(row.studentConfirmedAt))}<br>
   Đơn được nộp tại “Hành chính một cửa sinh viên” lúc ……h…… ngày……/……/……</div>
   <section class="receipt"><h2>BIÊN NHẬN</h2>
-  <p>Nhà trường đã nhận đơn đề nghị ${returning?'trở lại học':extension?'gia hạn ngừng học':'xét ngừng học'} của sinh viên ${escape(student.fullName)}
+  <p>Nhà trường đã nhận đơn đề nghị ${extension?'gia hạn ngừng học':'xét ngừng học'} của sinh viên ${escape(student.fullName)}
   (Lớp: ${escape(student.className)}, Số thẻ SV: ${escape(student.studentCode)}) nộp lúc ……h…… ngày……/……/……</p>
   <p>Đề nghị sinh viên theo dõi website “Hệ thống thông tin sinh viên” để biết tiến trình xử lý hồ sơ và đến nhận Quyết định khi hồ sơ được giải quyết.</p>
   <div class="signature"><p><em>Đà Nẵng, ngày …… tháng …… năm ${part('year')}</em></p><p><strong>Chuyên viên nhận hồ sơ</strong><br><em>(Ký và ghi rõ họ tên)</em></p></div></section>

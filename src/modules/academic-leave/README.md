@@ -75,8 +75,13 @@ kết thúc tương ứng. Các ví dụ mã kỳ trên chỉ để minh họa; 
 
 ## PDF và kiểm thử
 
-Bộ sinh PDF dùng `src/infrastructure/pdf/chromium-pdf.js`, đủ ba mẫu đơn và biên
-nhận, giấy A4, dùng snapshot lúc xác nhận. Máy chủ cần Chrome/Edge/Chromium;
+Bộ sinh PDF dùng `src/infrastructure/pdf/chromium-pdf.js`, giấy A4, dùng snapshot
+lúc xác nhận. Ngừng học/gia hạn có bảng học tập và biên nhận. Đơn trở lại học
+dùng mẫu **ĐƠN XIN TRỞ LẠI HỌC TẬP**, tên Trường Đại học Bách khoa - Đại học
+Đà Nẵng; có nơi ký của phụ huynh, người làm đơn và Ban Chủ nhiệm Khoa. Số/ngày
+quyết định ngừng học chưa có trong dữ liệu được để chấm để điền trên bản giấy,
+không thay bằng mã đơn online. Email lấy từ snapshot nếu có, thiếu thì để trống.
+Máy chủ cần Chrome/Edge/Chromium;
 cấu hình `PDF_BROWSER_EXECUTABLE` nếu không tự tìm thấy. Có thể cấu hình
 `LEAVE_PRINT_COOKIE_SECRET` để chia sẻ cookie in giữa các instance.
 
