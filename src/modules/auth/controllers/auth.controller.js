@@ -88,8 +88,7 @@ export function createAuthController(channel, service, {
         res.clearCookie(handoffCookieName, handoffCookieOptions);
         res.clearCookie(refreshCookieName, refreshCookieOptions);
       }
-      // Local logout must not terminate the user's sessions in other DUT apps.
-      return sendSuccess(res, createAuthLogoutDto(null));
+      return sendSuccess(res, createAuthLogoutDto(channel === 'student' ? service.logoutUrl(channel) : null));
     },
   });
 }

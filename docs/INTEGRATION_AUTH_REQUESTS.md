@@ -120,3 +120,26 @@ trả boolean và tên cấu hình thiếu, không trả khóa/tài khoản. 27 
 125 test backend qua lại. Đã kiểm tra hai tab đăng nhập trên trình duyệt.
 Đăng nhập thực tế vẫn cần issuer/audience SSO và tài khoản chuyên viên do quản
 trị đặt mật khẩu. Hướng dẫn tại README của FE; không có mật khẩu mặc định.
+
+## Cập nhật theo mô tả auth flow của người dùng
+
+Đã đọc `mo-ta-auth-flow (1).docx`: login tới `/microsoft/login` với callbackUrl và
+response_mode=query; callback nhận accessToken; logout tới `/microsoft/logout`.
+Theo yêu cầu mới, không bắt buộc cấu hình và không kiểm tra issuer/audience của
+**token SSO nguồn**. Tiếp tục kiểm tra chữ ký HS256 bằng khóa đã cấu hình, hạn token,
+định danh sinh viên và cookie/handoff chống nhầm phiên. JWT ứng dụng vẫn có channel,
+issuer/audience nội bộ do ứng dụng tự đặt để tách sinh viên/chuyên viên, không cần
+người dùng cung cấp thêm issuer/audience SSO. Không đổi hoặc công khai khóa SSO.
+Sinh viên logout sẽ được trả URL đăng xuất SSO; chuyên viên logout chỉ thu hồi phiên local.
+
+Đã tạo tài khoản `chuyenvien.test` trong DB local tích hợp, role
+`local-test-specialist`: 25 quyền gồm 18 phạm vi công việc từ danh mục DB và 7 quyền
+xem/nhận/in/xử lý/hủy/Excel, không quyền quản trị tài khoản/role. Mật khẩu được sinh
+ngẫu nhiên, chỉ lưu hash; không ghi mật khẩu vào source/tài liệu. Script tạo thử
+`scripts/create-staff-test.mjs` không đổi mật khẩu nếu tài khoản đã tồn tại.
+
+Kiểm chứng sau cập nhật: 126 test backend qua, 1 SQL opt-in bỏ qua; 27 test FE qua.
+Tài khoản test đăng nhập qua FE proxy 200, đọc /me/catalogs/requests 200, API quản
+trị role 403, logout 200; SSO login trả redirect302 tới sso.dut.udn.vn. Chưa hoàn tất
+đăng nhập SSO bằng tài khoản sinh viên thật; lần thử tương tác trình duyệt không
+kết nối được nên phần xác nhận mới dựa trên HTTP thực tế và test tự động.

@@ -30,6 +30,20 @@ function fixture() {
 }
 const ssoToken=()=>jwt.sign({unique_name:'123456789@sv.dut.udn.vn',name:'Student'},secret,{algorithm:'HS256',issuer:'test-sso',audience:'test-sso-client',subject:'student-1',expiresIn:3600});
 
+test('legacy SSO needs only a valid signature and expiry; issuer/audience configuration is not required',async()=>{
+ const f=fixture();delete f.config.microsoftSso.jwtIssuer;delete f.config.microsoftSso.jwtAudience;
+ try{
+  const claims={unique_name:'123456789@sv.dut.udn.vn',name:'Student'};
+  const token=jwt.sign(claims,secret,{algorithm:'HS256',subject:'student-1',expiresIn:3600});
+  assert.equal((await f.service.exchangeToken('student',token)).authMethod,'sso');
+  assert.equal((await f.service.loginWithPassword('staff',{username:'reviewer',password})).data.channel,'staff');
+  await assert.rejects(()=>f.service.exchangeToken('student',jwt.sign(claims,'wrong-key',{algorithm:'HS256',expiresIn:3600})),e=>e.statusCode===401);
+  await assert.rejects(()=>f.service.exchangeToken('student',jwt.sign(claims,secret,{algorithm:'HS256',expiresIn:-1})),e=>e.statusCode===401);
+  const staff=await f.service.loginWithPassword('staff',{username:'reviewer',password});
+  await assert.rejects(()=>f.service.exchangeToken('student',staff.data.accessToken),e=>e.statusCode===401);
+ }finally{f.store.close();}
+});
+
 test('shared decoded SSO key signs staff JWT while issuer, audience, type, channel and session separate privileges',async()=>{
  const f=fixture();try{
   const bundle=await f.service.loginWithPassword('staff',{username:'reviewer',password});

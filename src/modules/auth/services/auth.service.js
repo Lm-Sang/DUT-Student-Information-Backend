@@ -45,8 +45,8 @@ export function createAuthService({ config = env, repository = authRepository, s
 
   function ssoKey() {
     const sso = config.microsoftSso;
-    if (!sso.jwtSecret || !sso.jwtIssuer || (!sso.jwtAudience && !sso.allowMissingAudience)) {
-      throw new AppError('Configure SSO key, issuer and audience policy', 503);
+    if (!sso.jwtSecret) {
+      throw new AppError('Configure the SSO signing key', 503);
     }
     const encoding = sso.jwtSecretEncoding ?? 'utf8';
     if (!['utf8', 'base64'].includes(encoding)
@@ -66,12 +66,12 @@ export function createAuthService({ config = env, repository = authRepository, s
     accessToken = parseSsoAccessToken(accessToken);
     try {
       const claims = jwt.verify(accessToken, secret, {
-        algorithms: ['HS256'], issuer: config.microsoftSso.jwtIssuer,
-        ...(config.microsoftSso.jwtAudience ? { audience: config.microsoftSso.jwtAudience } : {}),
+        algorithms: ['HS256'],
         clockTimestamp: seconds(), clockTolerance: 0,
       });
       if (!claims || typeof claims !== 'object' || !Number.isInteger(claims.exp)
-        || (!config.microsoftSso.jwtAudience && claims.aud !== undefined && claims.aud !== null)) throw new Error();
+        || (['access','refresh'].includes(claims.tokenUse) && typeof claims.sid === 'string'
+          && ['student','staff','admin'].includes(claims.channel))) throw new Error();
       const identity = toSsoIdentityDto(claims);
       if (!identity || identity.id.length > 256 || identity.microsoftId.length > 256) throw new Error();
       return { identity, expiresAt: claims.exp * 1000 };
