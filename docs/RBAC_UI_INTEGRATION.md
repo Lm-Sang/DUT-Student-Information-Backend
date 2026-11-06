@@ -65,6 +65,7 @@ Ngày kiểm tra: **06/11/2026**, Node 24, SQL Server local 2019.
 | Cú pháp BE/FE | Đạt |
 | SQL sau test | 54 bảng, không còn fixture chứng chỉ/học vụ; không có CHECK/FK bị tắt/chưa tin cậy |
 | Trình duyệt | Đã đăng nhập specialist và admin DT, mở các module, danh mục, phân công tác vụ và theo dõi tiến độ; khôi phục phiên qua F5 |
+| R2 thật qua script, sau khi người dùng cho phép | CORS localhost:5173, signed PUT, HEAD, đọc file, signed GET và xóa PNG giả đều đạt |
 
 Test SQL mới dùng repository thật, kiểm tra cả bốn danh mục (tạo/sửa và stale
 version), hai loại chứng chỉ, bổ sung, nhiều ảnh tin học, nhận/xác minh/từ chối,
@@ -72,12 +73,15 @@ quyền sở hữu; học vụ có lưu/sửa/hủy nháp, xác nhận, yêu c�
 duyệt/từ chối, gia hạn, trở lại học, lịch sử và PDF thực. Storage trong test là
 Map trong bộ nhớ; bộ kiểm tra ảnh vẫn dùng sharp thật. Không kết nối cloud.
 
-**Chưa xác minh:** SSO thực với tài khoản sinh viên và upload/xem ảnh R2 qua trình
-duyệt. Bộ xét duyệt tự động từ chối lượt chạy test có khả năng ghi R2 do chưa có
-cho phép cụ thể đối với đích cloud. Đã tách test local khỏi cloud và chuẩn bị
-`scripts/smoke-r2-storage.mjs --allow-cloud-fixture`: sau khi được phép, test chỉ
-tải một PNG tổng hợp vào key UUID `integration-tests/rbac/...`, kiểm tra CORS,
-PUT/HEAD/GET và xóa đúng object đó; không sử dụng ảnh/hồ sơ cá nhân.
+**R2 đã kiểm chứng ngày 06/11/2026:** sau khi người dùng cho phép, đã chạy
+`node scripts/smoke-r2-storage.mjs --allow-cloud-fixture` với bucket trong cấu hình
+local. Test tải một PNG tổng hợp vào key UUID `integration-tests/rbac/...`, kiểm tra
+CORS cho localhost:5173, PUT/HEAD/đọc nội dung/signed GET rồi xóa đúng object đó.
+Tất cả đạt; không sử dụng ảnh/hồ sơ cá nhân hoặc sửa object có sẵn.
+
+**Chưa xác minh:** SSO thực với tài khoản sinh viên và thao tác upload/xem ảnh R2
+trực tiếp trong trình duyệt. Test R2 ở trên kiểm tra dịch vụ lưu trữ và phản hồi
+preflight bằng HTTP script; chưa phải luồng giao diện sinh viên xuyên suốt.
 
 Đây là kiểm thử các module có API trong nhánh bạn gửi. Ảnh danh mục 20 đầu việc
 Phòng Đào tạo là tài liệu tham khảo; các việc chưa có API như hoãn thi/thi bổ sung
