@@ -1,5 +1,11 @@
 # Thiết kế SSO và tích hợp Course Registration
 
+> Tài liệu này là định hướng kiến trúc, có đề xuất OAuth Code + PKCE và service
+> token chưa triển khai. Khung đang chạy theo gateway `accessToken` của source
+> Course Registration được mô tả tại [SSO_SCAFFOLD.md](SSO_SCAFFOLD.md).
+> Auth sinh viên là mặc định; auth admin tách riêng và tắt mặc định. Các cấp
+> quyền sẽ được bổ sung sau.
+
 ## 1. Mục tiêu
 
 Tài liệu này mô tả cách DUT Student Information Backend:
@@ -244,6 +250,11 @@ sequenceDiagram
 ```
 
 ## 8. Tổ chức module trong repository hiện tại
+
+Sơ đồ dưới đây là phương án của tài liệu thiết kế ban đầu. Cấu trúc source hiện
+tại và quy ước làm việc nhóm được cập nhật tại [ARCHITECTURE.md](ARCHITECTURE.md).
+Hiện `curriculum` đọc SQL, còn các API GET từ Course Registration nằm trong
+`src/modules/course-registration/`.
 
 ```text
 src/modules/

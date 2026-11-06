@@ -1,1 +1,0 @@
-var e={initialize:()=>{},render:()=>Promise.resolve({svg:``}),parse:()=>Promise.resolve()};export{e as default};

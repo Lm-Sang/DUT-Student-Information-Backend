@@ -1,4 +1,4 @@
-import { connectDatabase, disconnectDatabases } from '../src/config/database.js';
+import { connectDatabase, disconnectDatabases } from '../src/infrastructure/database/sql-server.js';
 
 async function testAccount(accountName) {
   try {

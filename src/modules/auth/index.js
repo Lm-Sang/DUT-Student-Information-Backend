@@ -1,12 +1,28 @@
-import { adminAuthRouter } from './admin-auth.routes.js';
-import { studentAuthRouter } from './student-auth.routes.js';
+// Public API for other features. Keep auth internals inside this module.
+export { studentAuthModule } from './student/index.js';
+export { authenticate, requireAuth, requirePermissions } from './middlewares/auth.middleware.js';
+export { authService } from './services/auth.service.js';
+export { closeAuthStore } from './stores/auth.store.js';
+export { createSsoTokenResolver, resolveSsoAccessToken, createLocalPermissionContext } from './middlewares/auth.middleware.js';
 
-export const studentAuthModule = {
-  basePath: '/api/student/auth',
-  router: studentAuthRouter,
-};
+import { env } from '../../config/env.js';
+import { authService } from './services/auth.service.js';
+import { createAuthController } from './controllers/auth.controller.js';
+import { createAuthRouter } from './routes/auth.routes.js';
 
-export const adminAuthModule = {
-  basePath: '/api/admin/auth',
-  router: adminAuthRouter,
-};
+export function createAuthModule({ channel = 'student', service = authService,
+  secureCookies = env.nodeEnv === 'production', frontendOrigin,
+} = {}) {
+  const controller = createAuthController(channel, service, { secureCookies, frontendOrigin });
+  const router = createAuthRouter(channel, controller, service);
+  if (env.nodeEnv !== 'production') router.get('/configuration', (_req,res) => {
+    const missing = [];
+    if (!env.microsoftSso.jwtSecret) missing.push('MICROSOFT_SSO_JWT_SECRET');
+    res.set('Cache-Control','no-store').json({data:{ready:missing.length===0,missing}});
+  });
+  return { basePath: `/api/${channel}/auth`, router };
+}
+
+export function createStaffAuthModule(options = {}) {
+  return createAuthModule({ channel: 'staff', frontendOrigin: env.app.staffFrontendUrl ?? env.app.adminFrontendUrl, ...options });
+}

@@ -1,1 +1,0 @@
-import e from"./shellscript-C5gFTI_T.js";export{e as default};

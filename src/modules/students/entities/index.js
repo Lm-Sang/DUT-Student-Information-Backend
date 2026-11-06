@@ -1,0 +1,14 @@
+import {DATA_SV1_Ma_DanToc} from './DATA_SV1_Ma_DanToc.entity.js';
+import {DATA_SV1_Ma_DiaPhuongC1} from './DATA_SV1_Ma_DiaPhuongC1.entity.js';
+import {DATA_SV1_NhanThan} from './DATA_SV1_NhanThan.entity.js';
+import {DATA_GVien1_tmConfig} from './DATA_GVien1_tmConfig.entity.js';
+import {DATA_GVien1_tmDiaPhuong} from './DATA_GVien1_tmDiaPhuong.entity.js';
+import {DATA_GVien1_tmHoSoSV} from './DATA_GVien1_tmHoSoSV.entity.js';
+import {DATA_GVien1_tmLop} from './DATA_GVien1_tmLop.entity.js';
+import {DATA_GVien1_tmNganh} from './DATA_GVien1_tmNganh.entity.js';
+import {tmProxDUT_tmDiemkyhoc} from './tmProxDUT_tmDiemkyhoc.entity.js';
+import {tmProxDUT_tmHocvu} from './tmProxDUT_tmHocvu.entity.js';
+import {tmProxDUT_tmHocvuTK} from './tmProxDUT_tmHocvuTK.entity.js';
+import {tmProxDUT_tmHoSoSV} from './tmProxDUT_tmHoSoSV.entity.js';
+import {tmProxDUT_tmNganh} from './tmProxDUT_tmNganh.entity.js';
+export const studentsEntities=[DATA_SV1_Ma_DanToc,DATA_SV1_Ma_DiaPhuongC1,DATA_SV1_NhanThan,DATA_GVien1_tmConfig,DATA_GVien1_tmDiaPhuong,DATA_GVien1_tmHoSoSV,DATA_GVien1_tmLop,DATA_GVien1_tmNganh,tmProxDUT_tmDiemkyhoc,tmProxDUT_tmHocvu,tmProxDUT_tmHocvuTK,tmProxDUT_tmHoSoSV,tmProxDUT_tmNganh];

@@ -34,15 +34,10 @@ src/
 │   │   └── __tests__/
 │   ├── announcements/            # Các tầng + DTO/mapper cho thông báo
 │   ├── curriculum/               # Các tầng + DTO/mapper cho khung CTĐT
-│   ├── certifications/           # Chứng chỉ ngoại ngữ và tin học
-│   │   ├── services/             # Nghiệp vụ hồ sơ và điều phối kiểm tra minh chứng
-│   │   ├── events/               # Phát cập nhật chứng chỉ cho các kết nối SSE
-│   │   └── queues/               # Giới hạn số tác vụ kiểm tra ảnh trong process
 │   ├── course-registration/      # API công khai từ hệ thống đăng ký tín chỉ
 │   ├── timetable/                # API công khai từ hệ thống thời khóa biểu
 │   ├── health/
-│   ├── academic-leave/           # Lập đơn ngừng học/gia hạn, duyệt và nhận giấy
-│   ├── students/                 # Ngữ cảnh DUT, tra CCCD và dữ liệu điền đơn
+│   ├── students/                 # Khung rỗng, chưa có endpoint nghiệp vụ
 │   ├── users/                    # Khung rỗng, chưa có endpoint nghiệp vụ
 │   └── admin/                    # Khung rỗng, khác với auth/admin
 └── shared/
@@ -55,19 +50,16 @@ tests/
 ├── architecture.test.js          # Kiểm tra ranh giới import
 ├── integration/                  # Kiểm tra tích hợp nhiều feature
 └── support/                      # Fixture và HTTP server dùng trong test
+scripts/
+├── test.js                       # Tự tìm test, hỗ trợ chạy riêng feature
+├── check.js                      # Kiểm tra cú pháp src/scripts/tests
+└── ...                           # Công cụ DB, export, smoke test thủ công
 ```
 
 Các feature có test đặt trong `__tests__/`. Mỗi tầng có thư mục riêng, ví dụ
 `controllers`, `services`, `repositories`, `dto`, `mappers`, `routes`. Chỉ tạo tầng
 đang dùng; khi nghiệp vụ lớn hơn, chia tiếp theo nghiệp vụ con như `auth/student`
 và `auth/admin`.
-
-Trong `certifications`, `events/certification-events.js` quản lý đăng ký và phát
-sự kiện; `queues/image-inspection-queue.js` quản lý hàng đợi kiểm tra ảnh dùng chung
-cho ngoại ngữ và tin học. Hai thành phần này thuộc phạm vi module vì có cấu hình,
-giới hạn và lỗi riêng của chứng chỉ. `services/evidence-inspection.service.js`
-điều phối đọc metadata/byte từ storage, kiểm tra ảnh và xóa ảnh không hợp lệ nên
-vẫn thuộc tầng service. Các service dùng hậu tố `.service.js` cho thống nhất.
 
 ## Trách nhiệm trong một feature
 
@@ -147,7 +139,8 @@ Ví dụ nhóm muốn làm API điểm học tập `grades`:
    rồi chạy kiểm tra:
 
    ```bash
-   node --test "src/modules/grades/**/*.test.js"
+   npm run test:feature -- grades
+   npm run check
    npm test
    ```
 
@@ -160,11 +153,12 @@ và mount thư mục để tránh mở endpoint ngoài ý muốn. Auth admin v�
 
 ```bash
 npm test                              # Toàn bộ feature, integration và architecture
-node --test "src/modules/auth/**/*.test.js"
-node --test "src/modules/announcements/**/*.test.js"
-node --test "src/modules/curriculum/**/*.test.js"
-node --test "src/modules/course-registration/**/*.test.js"
-node --test "src/modules/timetable/**/*.test.js"
+npm run test:feature -- auth
+npm run test:feature -- announcements
+npm run test:feature -- curriculum
+npm run test:feature -- course-registration
+npm run test:feature -- timetable
+npm run check                         # Cú pháp tất cả file JavaScript trong source/tool/test
 ```
 
 Runner tự tìm `*.test.js`, nên thêm test mới không phải sửa `package.json`.
@@ -172,7 +166,8 @@ Lệnh chạy riêng feature chỉ chọn test trong thư mục feature đó; tr
 nhánh vẫn chạy toàn bộ để kiểm tra các thành phần dùng chung. Trên PowerShell
 nếu `npm.ps1` bị Execution Policy chặn, dùng `npm.cmd` thay cho `npm`.
 
-Test API mặc định dùng SQL giả và upstream HTTP local.
+Các lệnh `test:db` và `test:curriculum:live` cần môi trường/database thật; chúng
+không thuộc bộ test mặc định. Test API hiện dùng SQL giả và upstream HTTP local.
 
 ## Chia việc cho nhóm
 
@@ -188,13 +183,8 @@ Test API mặc định dùng SQL giả và upstream HTTP local.
 Mỗi người làm nhánh theo feature. Thống nhất request/response trước khi code;
 khi sửa contract dùng chung, phối hợp với người phụ trách các feature bị ảnh
 hưởng và chạy toàn bộ test. Chỉ sửa registry khi thêm/bỏ module, không sửa mỗi
-lần thêm route. Các khung `users`, `admin` chưa có chức năng; nghiệp
+lần thêm route. Các khung `students`, `users`, `admin` chưa có chức năng; nghiệp
 vụ mới như điểm, học phí nên có module riêng thay vì gom hết theo vai trò người dùng.
-
-Module `students` hiện cung cấp ngữ cảnh sinh viên đã xác thực, tra CCCD và bộ dữ
-liệu dùng điền đơn. `certifications` và `academic-leave` dùng qua public entry
-point `students/index.js`; luồng hồ sơ ngừng học, FK gia hạn, snapshot bản in và
-hạn nộp giấy nằm trong `academic-leave`. Xem [API đơn ngừng học](ACADEMIC_LEAVE_API.md).
 
 ## Đường dẫn thay đổi khi refactor
 

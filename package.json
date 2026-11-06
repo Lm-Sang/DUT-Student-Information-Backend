@@ -4,14 +4,45 @@
   "description": "",
   "main": "src/server.js",
   "type": "module",
+  "engines": {
+    "node": ">=24.11.0"
+  },
   "directories": {
     "doc": "docs"
   },
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
-    "check": "node --check src/server.js",
-    "test:db": "node scripts/test-database.js"
+    "dev": "node --watch --watch-path=src --watch-path=assets src/server.js",
+    "certifications:fe": "node certification-web-test/server.js",
+    "auth:db:init": "node src/modules/auth/cli/auth-db.mjs init",
+    "auth:user:create": "node src/modules/auth/cli/auth-db.mjs create",
+    "academic-leave:db:init": "node src/modules/academic-leave/cli/academic-leave-db.mjs",
+    "test": "node scripts/test.js",
+    "test:workspace": "node --test \"src/**/*.test.js\" \"tests/**/*.test.js\"",
+    "check": "node scripts/check.js",
+    "test:feature": "node scripts/test.js --feature",
+    "test:curriculum:live": "node scripts/smoke-curriculum-api.js",
+    "test:db": "node scripts/test-database.js",
+    "test:db:local": "node scripts/test-database-instances.js local",
+    "test:db:all": "node scripts/test-database-instances.js all",
+    "db:demo:rbac": "node scripts/upgrade-request-rbac.js",
+    "db:demo:upgrade": "node scripts/upgrade-request-workflow.js",
+    "test:requests:upgrade": "node scripts/smoke-workflow-upgrade.js",
+    "db:demo:setup": "node scripts/setup-requests-demo.js",
+    "db:demo:sync": "node scripts/sync-requests-demo-catalogs.js",
+    "db:demo:seed": "node scripts/seed-requests-demo.js",
+    "test:requests:live": "node scripts/smoke-requests-demo.js",
+    "test:requests:pdf": "node scripts/smoke-request-pdfs.js",
+    "forms:blank": "node scripts/build-blank-request-forms.js",
+    "forms:layout:references": "node scripts/build-request-layout-reference.js",
+    "forms:layout:check": "node scripts/check-request-layout.js",
+    "test:requests:rbac": "node scripts/smoke-rbac.js",
+    "auth:staff:create": "node src/modules/auth/cli/staff-account.mjs",
+    "db:requests:catalog": "node scripts/upgrade-request-catalog.js",
+    "test:auth:requests": "node scripts/smoke-auth-requests-integration.mjs",
+    "orm:entities:local": "node scripts/generate-typeorm-entities.mjs",
+    "orm:entities:school": "node scripts/generate-school-typeorm-entities.mjs",
+    "test:orm:local": "node scripts/smoke-typeorm.mjs"
   },
   "repository": {
     "type": "git",
@@ -25,15 +56,29 @@
   },
   "homepage": "https://github.com/Lm-Sang/DUT-Student-Information-Backend#readme",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1156.0",
+    "@aws-sdk/s3-request-presigner": "^3.1156.0",
+    "@xmldom/xmldom": "^0.9.12",
     "cors": "^2.8.6",
     "dotenv": "^18.0.5",
     "express": "^5.2.1",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
-    "mssql": "^12.7.3",
-    "ssh2": "^1.17.0"
+    "mssql": "12.7.3",
+    "pdfkit": "^0.20.2",
+    "pizzip": "^3.3.0",
+    "puppeteer-core": "^25.16.0",
+    "reflect-metadata": "0.2.2",
+    "sharp": "^0.35.5",
+    "ssh2": "^1.17.0",
+    "typeorm": "1.1.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "@napi-rs/canvas": "^1.0.13",
+    "nodemon": "^3.1.14",
+    "pdfjs-dist": "^6.4.299"
+  },
+  "optionalDependencies": {
+    "msnodesqlv8": "^6.0.0"
   }
 }

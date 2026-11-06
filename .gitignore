@@ -2,4 +2,10 @@ node_modules/
 .env
 dist/
 coverage/
+.data/
 *.log
+d_dut/
+
+certification-web-test/
+
+# Source, migrations, tests and documentation must stay versioned.

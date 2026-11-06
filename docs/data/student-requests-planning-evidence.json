@@ -1,0 +1,1101 @@
+{
+  "verifiedOn": "2026-10-24",
+  "mode": "SELECT only; no database mutations",
+  "local": [
+    {
+      "databaseName": "sv_dut",
+      "userTables": 0
+    }
+  ],
+  "semester": {
+    "portal": [
+      {
+        "ID": 1,
+        "KyHientai": "2610",
+        "KyDangky": "2610",
+        "KyPhucKhao": "2520",
+        "Kyhocphi": "2520",
+        "KSoat_InDonXetTN": "1",
+        "KSoat_InDonHoanTN": 1
+      }
+    ],
+    "registration": [
+      {
+        "KyHienTai": "2610",
+        "KyDangky": "2610",
+        "IDCode_Text": "Học kỳ 1/2026-2027",
+        "Year_Ref": 2025
+      }
+    ],
+    "otherConfig": [
+      {
+        "ParaGroup": "01",
+        "ParaType": "STRING",
+        "ParaName": "KyHienTai",
+        "ParaValue": "2510",
+        "ParaDesc": "Mã học kỳ hiện tại",
+        "HieuLuc": 1
+      },
+      {
+        "ParaGroup": "01",
+        "ParaType": "STRING",
+        "ParaName": "KyDangky",
+        "ParaValue": "2610",
+        "ParaDesc": "Mã học kỳ đăng ký học",
+        "HieuLuc": 1
+      }
+    ],
+    "catalog": [
+      {
+        "IDCode": "2620",
+        "TenKH": "Học kỳ 2 năm học 2026-2027",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2027-01-04T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2610",
+        "TenKH": "Học kỳ 1 năm học 2026-2027",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2026-08-10T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2521",
+        "TenKH": "Học kỳ Hè năm học 2025-2026",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2026-06-15T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2520",
+        "TenKH": "Học kỳ 2 năm học 2025-2026",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2025-12-29T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2510",
+        "TenKH": "Học kỳ 1 năm học 2025-2026",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2025-08-04T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2421",
+        "TenKH": "Học kỳ Hè năm học 2024-2025",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2025-06-16T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2420",
+        "TenKH": "Học kỳ 2 năm học 2024-2025",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2025-01-06T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2410",
+        "TenKH": "Học kỳ 1 năm học 2024-2025",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2024-07-29T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2321",
+        "TenKH": "Học kỳ hè năm học 2023-2024",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2024-06-17T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2320",
+        "TenKH": "Học kỳ 2 năm học 2023-2024",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2024-01-15T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2310",
+        "TenKH": "Học kỳ 1 năm học 2023-2024",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2023-07-31T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2221",
+        "TenKH": "Học kỳ hè năm học 2022-2023",
+        "Hientai": 0,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2023-06-19T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2220",
+        "TenKH": "Học kỳ 2 năm học 2022-2023",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2023-01-02T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2210",
+        "TenKH": "Học kỳ 1 năm học 2022-2023",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2022-08-01T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2121",
+        "TenKH": "Học kỳ hè năm học 2021-2022",
+        "Hientai": 0,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2022-07-04T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2120",
+        "TenKH": "Học kỳ 2 năm học 2021-2022",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2022-02-07T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2110",
+        "TenKH": "Học kỳ 1 năm học 2021-2022",
+        "Hientai": 0,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": "2021-08-02T00:00:00.000Z",
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2021",
+        "TenKH": "Học kỳ hè năm học 2020-2021",
+        "Hientai": 0,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": null,
+        "IDCodeTo": null,
+        "MaNganh": null
+      }
+    ],
+    "currentFlags": [
+      {
+        "IDCode": "2120",
+        "n": 1
+      },
+      {
+        "IDCode": "2210",
+        "n": 1
+      },
+      {
+        "IDCode": "2220",
+        "n": 1
+      },
+      {
+        "IDCode": "2310",
+        "n": 1
+      },
+      {
+        "IDCode": "2320",
+        "n": 1
+      },
+      {
+        "IDCode": "2321",
+        "n": 1
+      },
+      {
+        "IDCode": "2410",
+        "n": 1
+      },
+      {
+        "IDCode": "2420",
+        "n": 1
+      },
+      {
+        "IDCode": "2421",
+        "n": 1
+      },
+      {
+        "IDCode": "2510",
+        "n": 1
+      },
+      {
+        "IDCode": "2520",
+        "n": 1
+      },
+      {
+        "IDCode": "2521",
+        "n": 1
+      },
+      {
+        "IDCode": "2610",
+        "n": 1
+      },
+      {
+        "IDCode": "2620",
+        "n": 1
+      }
+    ],
+    "staleProxyCatalog": [
+      {
+        "IDCode": "2020",
+        "TenKH": "Học kỳ 2 năm học 2020-2021",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": null,
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "2010",
+        "TenKH": "Học kỳ 1 năm học 2020-2021",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": null,
+        "IDCodeTo": null,
+        "MaNganh": null
+      },
+      {
+        "IDCode": "1921",
+        "TenKH": "Học kỳ hè năm học 2019-2020",
+        "Hientai": 1,
+        "Ngay1": null,
+        "Ngay2": null,
+        "NgayDau": null,
+        "IDCodeTo": null,
+        "MaNganh": null
+      }
+    ]
+  },
+  "secondProgram": {
+    "catalogCounts": [
+      {
+        "CapDT": "CD01",
+        "Huy": 0,
+        "Lock": 0,
+        "recordCount": 43
+      },
+      {
+        "CapDT": "CD01",
+        "Huy": 1,
+        "Lock": 0,
+        "recordCount": 6
+      },
+      {
+        "CapDT": "CD01",
+        "Huy": 1,
+        "Lock": 1,
+        "recordCount": 2
+      },
+      {
+        "CapDT": "CD02",
+        "Huy": 0,
+        "Lock": 0,
+        "recordCount": 18
+      },
+      {
+        "CapDT": "CD03",
+        "Huy": 0,
+        "Lock": 0,
+        "recordCount": 14
+      }
+    ],
+    "catalogExamples": [
+      {
+        "ID": 1,
+        "MaNganhTQ": "101_CHETAOMAY",
+        "CapDT": "CD01",
+        "TenNganhTQ": "ĐH_Công nghệ Chế tạo máy",
+        "Huy": 0,
+        "Lock": 0,
+        "KhoiNganh": "V",
+        "KyHieu": "7510202"
+      },
+      {
+        "ID": 2,
+        "MaNganhTQ": "101_CODIENTU",
+        "CapDT": "CD01",
+        "TenNganhTQ": "ĐH_Kỹ thuật Cơ điện tử",
+        "Huy": 0,
+        "Lock": 0,
+        "KhoiNganh": "V",
+        "KyHieu": "7520114"
+      },
+      {
+        "ID": 3,
+        "MaNganhTQ": "101_CODIENTU_CLC",
+        "CapDT": "CD01",
+        "TenNganhTQ": "ĐH_Kỹ thuật Cơ điện tử - CLC",
+        "Huy": 1,
+        "Lock": 0,
+        "KhoiNganh": "V",
+        "KyHieu": "7520114"
+      },
+      {
+        "ID": 4,
+        "MaNganhTQ": "102_CNTT_DAITRA",
+        "CapDT": "CD01",
+        "TenNganhTQ": "ĐH_Công nghệ Thông tin",
+        "Huy": 0,
+        "Lock": 0,
+        "KhoiNganh": "V",
+        "KyHieu": "7480201"
+      },
+      {
+        "ID": 5,
+        "MaNganhTQ": "102_CNTT_CLC-DACTHU",
+        "CapDT": "CD01",
+        "TenNganhTQ": "ĐH_Công nghệ Thông tin - CLC Đặc thù",
+        "Huy": 1,
+        "Lock": 0,
+        "KhoiNganh": "V",
+        "KyHieu": "7480201"
+      },
+      {
+        "ID": 6,
+        "MaNganhTQ": "102_CNTT_CLC-N",
+        "CapDT": "CD01",
+        "TenNganhTQ": "ĐH_Công nghệ Thông tin - CLC Nhật",
+        "Huy": 0,
+        "Lock": 0,
+        "KhoiNganh": "V",
+        "KyHieu": "7480201"
+      },
+      {
+        "ID": 7,
+        "MaNganhTQ": "103_KTCOKHI_DAITRA",
+        "CapDT": "CD01",
+        "TenNganhTQ": "ĐH_Kỹ thuật Cơ khí động lực",
+        "Huy": 0,
+        "Lock": 0,
+        "KhoiNganh": "V",
+        "KyHieu": "7520103"
+      }
+    ],
+    "requestKeyMatch": [
+      {
+        "n": 210,
+        "programMatched": 210,
+        "termMatched": 210
+      }
+    ],
+    "curriculumParentCoverage": [
+      {
+        "n": 1837,
+        "parentMatched": 511,
+        "missingParent": 1298
+      }
+    ],
+    "studentFields": [
+      {
+        "total": 54217,
+        "hasProgram2": 0,
+        "hasTerm2": 0
+      }
+    ]
+  },
+  "staff": {
+    "groupCatalog": [
+      {
+        "MaNhom": "DT",
+        "TenNhom": "Giáo vụ đào tạo",
+        "Giaovu": 1
+      },
+      {
+        "MaNhom": "DT0",
+        "TenNhom": "CV. ĐTạo G1",
+        "Giaovu": null
+      },
+      {
+        "MaNhom": "DT1",
+        "TenNhom": "CV. ĐTạo - Điểm",
+        "Giaovu": 1
+      },
+      {
+        "MaNhom": "DT2",
+        "TenNhom": "CV. ĐTạo - Học vụ",
+        "Giaovu": 1
+      },
+      {
+        "MaNhom": "DT3",
+        "TenNhom": "CV. ĐTạo - Điểm, hoc vụ kỳ",
+        "Giaovu": 1
+      },
+      {
+        "MaNhom": "DTP",
+        "TenNhom": "CV. ĐTạo G0",
+        "Giaovu": null
+      },
+      {
+        "MaNhom": "GK",
+        "TenNhom": "Giáo vụ khoa",
+        "Giaovu": 2
+      },
+      {
+        "MaNhom": "GV",
+        "TenNhom": "Giảng viên",
+        "Giaovu": null
+      },
+      {
+        "MaNhom": "KT",
+        "TenNhom": "Kế toán",
+        "Giaovu": null
+      },
+      {
+        "MaNhom": "QL",
+        "TenNhom": "Cán bộ quản lý",
+        "Giaovu": null
+      },
+      {
+        "MaNhom": "SV",
+        "TenNhom": "Công tác sinh viên",
+        "Giaovu": 1
+      },
+      {
+        "MaNhom": "SV1",
+        "TenNhom": "Công tác SV",
+        "Giaovu": 2
+      }
+    ],
+    "webGroupCatalog": [
+      {
+        "MaNhom": "AD",
+        "TenNhom": "Admin_TuongDuong",
+        "Giaovu": null,
+        "AllKhoa": 1
+      },
+      {
+        "MaNhom": "CS",
+        "TenNhom": "C.viên phụ trách cơ sở vật chất",
+        "Giaovu": null,
+        "AllKhoa": 1
+      },
+      {
+        "MaNhom": "CT",
+        "TenNhom": "CTSV - Chuyên viên 1",
+        "Giaovu": null,
+        "AllKhoa": 1
+      },
+      {
+        "MaNhom": "DT",
+        "TenNhom": "Giáo vụ PDT",
+        "Giaovu": null,
+        "AllKhoa": 1
+      },
+      {
+        "MaNhom": "GK",
+        "TenNhom": "Giáo vụ khoa",
+        "Giaovu": null,
+        "AllKhoa": 0
+      },
+      {
+        "MaNhom": "GV",
+        "TenNhom": "Giảng viên",
+        "Giaovu": null,
+        "AllKhoa": 0
+      },
+      {
+        "MaNhom": "HC",
+        "TenNhom": "HCTH - Chuyên viên 1",
+        "Giaovu": null,
+        "AllKhoa": 1
+      },
+      {
+        "MaNhom": "HT",
+        "TenNhom": "Ban Giám hiệu",
+        "Giaovu": null,
+        "AllKhoa": 1
+      },
+      {
+        "MaNhom": "IT",
+        "TenNhom": "IT_Tester",
+        "Giaovu": null,
+        "AllKhoa": 1
+      },
+      {
+        "MaNhom": "K1",
+        "TenNhom": "KT&ĐBCL - Nhóm 1",
+        "Giaovu": null,
+        "AllKhoa": 1
+      },
+      {
+        "MaNhom": "K2",
+        "TenNhom": "KT&ĐBCL - Nhóm 2",
+        "Giaovu": null,
+        "AllKhoa": 1
+      },
+      {
+        "MaNhom": "PTCT",
+        "TenNhom": "Phụ trách chương trình",
+        "Giaovu": null,
+        "AllKhoa": 0
+      },
+      {
+        "MaNhom": "QL",
+        "TenNhom": "Cán bộ quản lý - Khoa",
+        "Giaovu": null,
+        "AllKhoa": 0
+      },
+      {
+        "MaNhom": "QL-CSVC",
+        "TenNhom": "Cán bộ quản lý - Trường - CSVC",
+        "Giaovu": null,
+        "AllKhoa": 1
+      },
+      {
+        "MaNhom": "QT",
+        "TenNhom": "Cán bộ quản lý - Trường",
+        "Giaovu": null,
+        "AllKhoa": 1
+      },
+      {
+        "MaNhom": "TB_DBCL",
+        "TenNhom": "Trường bạn - Trưởng Phòng KT&ĐBCLGD",
+        "Giaovu": null,
+        "AllKhoa": 0
+      },
+      {
+        "MaNhom": "TB_GV",
+        "TenNhom": "Trường bạn - Giảng viên",
+        "Giaovu": null,
+        "AllKhoa": 0
+      },
+      {
+        "MaNhom": "TB_TK",
+        "TenNhom": "Trường bạn - Trưởng khoa",
+        "Giaovu": null,
+        "AllKhoa": 0
+      },
+      {
+        "MaNhom": "TB_TPDT",
+        "TenNhom": "Trường bạn - Trưởng Phòng Đào tạo",
+        "Giaovu": null,
+        "AllKhoa": 0
+      },
+      {
+        "MaNhom": "TC",
+        "TenNhom": "CBVC Kế hoạch - Tài chính",
+        "Giaovu": null,
+        "AllKhoa": 1
+      },
+      {
+        "MaNhom": "TK",
+        "TenNhom": "Trưởng khoa-BK",
+        "Giaovu": null,
+        "AllKhoa": 0
+      },
+      {
+        "MaNhom": "TT",
+        "TenNhom": "CBVC Công nghệ thông tin",
+        "Giaovu": null,
+        "AllKhoa": 1
+      }
+    ],
+    "accountCoverage": [
+      {
+        "staffCount": 1667,
+        "hasTaiKhoan": 46,
+        "hasMaBP": 1667
+      }
+    ],
+    "departmentMatch": [
+      {
+        "total": 1667,
+        "staffDepartmentMatch": 1667
+      }
+    ],
+    "groupMatch": [
+      {
+        "total": 1667,
+        "groupMatch": 722,
+        "webGroupMatch": 1382
+      }
+    ],
+    "requestPermissions": [
+      {
+        "MaLoaiDon": "DonSV01",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": 20
+      },
+      {
+        "MaLoaiDon": "DonSV01",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": 2
+      },
+      {
+        "MaLoaiDon": "DonSV03",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": 15
+      },
+      {
+        "MaLoaiDon": "DonSV03",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": 5
+      },
+      {
+        "MaLoaiDon": "DonSV03",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": 2
+      },
+      {
+        "MaLoaiDon": "DonSV04",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": 15
+      },
+      {
+        "MaLoaiDon": "DonSV04",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": 5
+      },
+      {
+        "MaLoaiDon": "DonSV04",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": 2
+      },
+      {
+        "MaLoaiDon": "DonSV05",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": 20
+      },
+      {
+        "MaLoaiDon": "DonSV05",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": 2
+      },
+      {
+        "MaLoaiDon": "DonSV06",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": 15
+      },
+      {
+        "MaLoaiDon": "DonSV06",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": 2
+      },
+      {
+        "MaLoaiDon": "DonSV06",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": 5
+      },
+      {
+        "MaLoaiDon": "DonSV07",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": 16
+      },
+      {
+        "MaLoaiDon": "DonSV07",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": 4
+      },
+      {
+        "MaLoaiDon": "DonSV07",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": 2
+      }
+    ],
+    "departments": [
+      {
+        "MaDV": "114",
+        "MaBP": "100",
+        "TenDV": "P. Tổ chức - Hành chính",
+        "LuuTru": null,
+        "IsDaotao": 1,
+        "NotCV": null
+      },
+      {
+        "MaDV": "115",
+        "MaBP": "100",
+        "TenDV": "P. Đào tạo và BĐCL",
+        "LuuTru": null,
+        "IsDaotao": 2,
+        "NotCV": null
+      },
+      {
+        "MaDV": "120",
+        "MaBP": "100",
+        "TenDV": "P. Công tác sinh viên",
+        "LuuTru": null,
+        "IsDaotao": 1,
+        "NotCV": null
+      }
+    ],
+    "limitations": [
+      "tmHosoGV.Account SELECT denied",
+      "DATA_SV1_Login inaccessible",
+      "SQL module definitions not readable"
+    ]
+  },
+  "studentState": {
+    "flagsDistribution": [
+      {
+        "Tinhtrang1": null,
+        "LoaiLuu": 0,
+        "recordCount": 45290
+      },
+      {
+        "Tinhtrang1": null,
+        "LoaiLuu": null,
+        "recordCount": 6857
+      },
+      {
+        "Tinhtrang1": 0,
+        "LoaiLuu": 0,
+        "recordCount": 1641
+      },
+      {
+        "Tinhtrang1": null,
+        "LoaiLuu": 1,
+        "recordCount": 247
+      },
+      {
+        "Tinhtrang1": 1,
+        "LoaiLuu": 0,
+        "recordCount": 180
+      },
+      {
+        "Tinhtrang1": 1,
+        "LoaiLuu": 1,
+        "recordCount": 1
+      },
+      {
+        "Tinhtrang1": null,
+        "LoaiLuu": 3,
+        "recordCount": 1
+      }
+    ],
+    "academicSummary": [
+      {
+        "total": 109414,
+        "markedLatest": 0
+      }
+    ],
+    "latestAcademicTermCodes": [
+      {
+        "IDCode": "212",
+        "records": 6608,
+        "stopped": 0,
+        "withdrawn": 0,
+        "warningFlag1": 0
+      },
+      {
+        "IDCode": "211",
+        "records": 15579,
+        "stopped": 0,
+        "withdrawn": 0,
+        "warningFlag1": 0
+      },
+      {
+        "IDCode": "202",
+        "records": 14240,
+        "stopped": 0,
+        "withdrawn": 199,
+        "warningFlag1": 0
+      },
+      {
+        "IDCode": "201",
+        "records": 14221,
+        "stopped": 0,
+        "withdrawn": 0,
+        "warningFlag1": 0
+      },
+      {
+        "IDCode": "192",
+        "records": 10885,
+        "stopped": 5,
+        "withdrawn": 1,
+        "warningFlag1": 0
+      },
+      {
+        "IDCode": "191",
+        "records": 10889,
+        "stopped": 17,
+        "withdrawn": 15,
+        "warningFlag1": 0
+      },
+      {
+        "IDCode": "183",
+        "records": 138,
+        "stopped": 0,
+        "withdrawn": 0,
+        "warningFlag1": 0
+      },
+      {
+        "IDCode": "182",
+        "records": 7734,
+        "stopped": 4,
+        "withdrawn": 1,
+        "warningFlag1": 0
+      }
+    ],
+    "studentMaxTermSamples": [
+      {
+        "IDCodeMax": "3121",
+        "records": 7129
+      },
+      {
+        "IDCodeMax": "3110",
+        "records": 177
+      },
+      {
+        "IDCodeMax": "3021",
+        "records": 2501
+      },
+      {
+        "IDCodeMax": "3010",
+        "records": 65
+      },
+      {
+        "IDCodeMax": "2921",
+        "records": 2613
+      },
+      {
+        "IDCodeMax": "2910",
+        "records": 2098
+      },
+      {
+        "IDCodeMax": "2821",
+        "records": 1011
+      },
+      {
+        "IDCodeMax": "2820",
+        "records": 1
+      }
+    ],
+    "portalMaxTermSamples": [
+      {
+        "IDCodeMax": "3121",
+        "records": 3517
+      },
+      {
+        "IDCodeMax": "2921",
+        "records": 4147
+      },
+      {
+        "IDCodeMax": "2920",
+        "records": 25
+      },
+      {
+        "IDCodeMax": "2910",
+        "records": 12
+      },
+      {
+        "IDCodeMax": "2821",
+        "records": 3
+      },
+      {
+        "IDCodeMax": "2820",
+        "records": 2967
+      },
+      {
+        "IDCodeMax": "2721",
+        "records": 15
+      },
+      {
+        "IDCodeMax": "2720",
+        "records": 56
+      }
+    ],
+    "mainStudentProgram2Coverage": [
+      {
+        "total": 19882,
+        "program2": 0,
+        "term2": 0
+      }
+    ]
+  },
+  "withdrawal": {
+    "reasonCodes": [
+      {
+        "Ma": "LH",
+        "Ten": "Lý do thôi học",
+        "LoaiCV": null
+      },
+      {
+        "Ma": "LH001",
+        "Ten": "Nguyện vọng cá nhân",
+        "LoaiCV": null
+      },
+      {
+        "Ma": "LH002",
+        "Ten": "Chuyển trường",
+        "LoaiCV": null
+      },
+      {
+        "Ma": "TT",
+        "Ten": "Trình độ lý luận chính trị",
+        "LoaiCV": null
+      }
+    ],
+    "legacyDistribution": [
+      {
+        "DRD01": "LH009",
+        "n": 7
+      },
+      {
+        "DRD01": "LH006",
+        "n": 1
+      },
+      {
+        "DRD01": "LH010",
+        "n": 16
+      },
+      {
+        "DRD01": "LH007",
+        "n": 8
+      },
+      {
+        "DRD01": "LH001",
+        "n": 774
+      },
+      {
+        "DRD01": "LH003",
+        "n": 1
+      },
+      {
+        "DRD01": "LH002",
+        "n": 192
+      },
+      {
+        "DRD01": "LH005",
+        "n": 21
+      },
+      {
+        "DRD01": "Lydo",
+        "n": 1
+      },
+      {
+        "DRD01": "LH008",
+        "n": 6
+      }
+    ]
+  },
+  "graduation": {
+    "legacyRoundCatalog": [
+      {
+        "MaDot": "212",
+        "TenDotTotNghiep": "Đợt xét tốt nghiệp giữa HK2/20-21",
+        "TimeBD": null,
+        "TimeKT": null,
+        "HienTai": null
+      },
+      {
+        "MaDot": "211",
+        "TenDotTotNghiep": "Đợt xét tốt nghiệp cuối HK1/20-21",
+        "TimeBD": "2021-01-26T00:00:00.000Z",
+        "TimeKT": "2021-02-02T23:59:00.000Z",
+        "HienTai": 1
+      }
+    ],
+    "legacySchedule": [
+      {
+        "Dot": 5,
+        "HanNopHoSo": "2019-08-13T00:00:00.000Z",
+        "NgayDuKienHopHD": "2019-08-19T00:00:00.000Z",
+        "NgayDuKienCoHoSo": "2019-08-29T00:00:00.000Z"
+      },
+      {
+        "Dot": 4,
+        "HanNopHoSo": "2019-06-10T00:00:00.000Z",
+        "NgayDuKienHopHD": "2019-06-30T00:00:00.000Z",
+        "NgayDuKienCoHoSo": "2019-07-13T00:00:00.000Z"
+      },
+      {
+        "Dot": 3,
+        "HanNopHoSo": null,
+        "NgayDuKienHopHD": null,
+        "NgayDuKienCoHoSo": null
+      },
+      {
+        "Dot": 2,
+        "HanNopHoSo": null,
+        "NgayDuKienHopHD": null,
+        "NgayDuKienCoHoSo": null
+      },
+      {
+        "Dot": 1,
+        "HanNopHoSo": null,
+        "NgayDuKienHopHD": null,
+        "NgayDuKienCoHoSo": null
+      }
+    ]
+  },
+  "legacyFormTermMatch": [
+    {
+      "LoaiDon": "DonSV05",
+      "n": 1947,
+      "termMatched": 1947
+    },
+    {
+      "LoaiDon": "DonSV03",
+      "n": 14309,
+      "termMatched": 14309
+    }
+  ]
+}

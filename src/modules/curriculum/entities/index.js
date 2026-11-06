@@ -1,0 +1,10 @@
+import {DATA_GVien1_tmHocPhan} from './DATA_GVien1_tmHocPhan.entity.js';
+import {DATA_GVien1_tmKehoach} from './DATA_GVien1_tmKehoach.entity.js';
+import {DATA_GVien1_tmNganhQG} from './DATA_GVien1_tmNganhQG.entity.js';
+import {DHBK_CDS_DonVi} from './DHBK_CDS_DonVi.entity.js';
+import {DHBK_CDS_tmHocPhan} from './DHBK_CDS_tmHocPhan.entity.js';
+import {DHBK_CDS_TmKhungCT} from './DHBK_CDS_TmKhungCT.entity.js';
+import {DHBK_CDS_TmNganh} from './DHBK_CDS_TmNganh.entity.js';
+import {DATA_SV2_tmHocPhan} from './DATA_SV2_tmHocPhan.entity.js';
+import {DATA_SV2_tmHocphanDK} from './DATA_SV2_tmHocphanDK.entity.js';
+export const curriculumEntities=[DATA_GVien1_tmHocPhan,DATA_GVien1_tmKehoach,DATA_GVien1_tmNganhQG,DHBK_CDS_DonVi,DHBK_CDS_tmHocPhan,DHBK_CDS_TmKhungCT,DHBK_CDS_TmNganh,DATA_SV2_tmHocPhan,DATA_SV2_tmHocphanDK];

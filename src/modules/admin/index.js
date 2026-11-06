@@ -1,4 +1,4 @@
-import { adminRouter } from './admin.routes.js';
+import { adminRouter } from './routes/admin.routes.js';
 
 export default {
   basePath: '/api/admin',

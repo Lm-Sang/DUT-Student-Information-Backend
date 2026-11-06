@@ -1,7 +1,0 @@
-node_modules/
-.env
-dist/
-coverage/
-.data/
-*.log
-d_dut/

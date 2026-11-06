@@ -1,0 +1,55 @@
+import defaultAdminModule from './admin/index.js';
+import defaultAcademicLeaveModule from './academic-leave/index.js';
+import defaultAnnouncementsModule from './announcements/index.js';
+import defaultCertificationsModule, { itCertificationsModule as defaultItCertificationsModule } from './certifications/index.js';
+import { studentAuthModule as defaultStudentAuthModule, createStaffAuthModule } from './auth/index.js';
+import defaultCourseRegistrationModule from './course-registration/index.js';
+import defaultCurriculumModule from './curriculum/index.js';
+import defaultHealthModule from './health/index.js';
+import defaultStudentsModule from './students/index.js';
+import defaultRequestsModule, { createRequestsApiModule } from './student-requests/index.js';
+import defaultTimetableModule from './timetable/index.js';
+import defaultUsersModule from './users/index.js';
+
+// The only place that registers business features. Admin SSO stays opt-in:
+// server.js loads its entry point only when ENABLE_ADMIN_AUTH is enabled.
+// Pass null to disable a module, or a test double to replace it in createApp().
+export function createModules({
+  healthModule = defaultHealthModule,
+  studentAuthModule = defaultStudentAuthModule,
+  staffAuthModule = createStaffAuthModule(),
+  studentServicesModule = createRequestsApiModule({channel:'student'}),
+  staffServicesModule = createRequestsApiModule({channel:'staff'}),
+  studentsModule = defaultStudentsModule,
+  adminModule = defaultAdminModule,
+  usersModule = defaultUsersModule,
+  courseRegistrationModule = defaultCourseRegistrationModule,
+  timetableModule = defaultTimetableModule,
+  curriculumModule = defaultCurriculumModule,
+  announcementsModule = defaultAnnouncementsModule,
+  requestsModule = defaultRequestsModule,
+  certificationsModule = defaultCertificationsModule,
+  itCertificationsModule = defaultItCertificationsModule,
+  academicLeaveModule = defaultAcademicLeaveModule,
+  adminAuthModule,
+} = {}) {
+  return [
+    healthModule,
+    studentAuthModule,
+    staffAuthModule,
+    studentServicesModule,
+    staffServicesModule,
+    studentsModule,
+    adminModule,
+    usersModule,
+    courseRegistrationModule,
+    timetableModule,
+    curriculumModule,
+    announcementsModule,
+    requestsModule,
+    certificationsModule,
+    itCertificationsModule,
+    academicLeaveModule,
+    adminAuthModule,
+  ].filter(Boolean);
+}
