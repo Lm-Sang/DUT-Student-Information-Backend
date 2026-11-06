@@ -5,7 +5,7 @@ import { parseList, parseReview } from '../../../src/common/certifications/dto/c
 import { list as leaveList, review as leaveReview } from '../../../src/common/academic-leave/dto/academic-leave.request.dto.js';
 
 // The local test frontend is optional and is not a backend runtime dependency.
-const webRoot = new URL('../../../certification-web-test/public/', import.meta.url);
+const webRoot = new URL('../../../../DUT-Student-Information-Frontend/public/modules/hoc-vu/', import.meta.url);
 const options = { skip: !existsSync(new URL('workflow.js', webRoot)) };
 
 test('local frontend filters and offered review actions satisfy the real backend DTO contracts', options, async () => {

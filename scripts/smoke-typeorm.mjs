@@ -5,29 +5,29 @@ import {getLocalDataSource,queryLocalDatabase as query,disconnectLocalDatabase,e
 import {localDatabaseGuardSql,assertLocalDemoTarget} from '../src/infrastructure/database/local-write-guard.js';
 import {createRequestsRepository} from '../src/common/student-requests/repositories/requests.repository.js';
 import {createRequestsService} from '../src/common/student-requests/services/requests.service.js';
-import {createRbacRepository} from '../src/common/student-requests/repositories/rbac.repository.js';
-import {createRbacService} from '../src/common/student-requests/services/rbac.service.js';
+
+
 import {createCertificationsRepository} from '../src/common/certifications/repositories/certifications.repository.js';
 import {createItCertificationsRepository} from '../src/common/certifications/repositories/it-certifications.repository.js';
 import {createAcademicLeaveRepository} from '../src/common/academic-leave/repositories/academic-leave.repository.js';
 
 assertLocalDemoTarget();
-const studentId='sv:'+randomUUID(),staffId='cv:'+randomUUID(),role='orm:'+randomUUID();
-const studentCode=String(Math.floor(Math.random()*900_000_000)+100_000_000),roles=[role];
+const studentId='sv:'+randomUUID(),staffId='cv:'+randomUUID(),accountId=randomUUID();
+const studentCode=String(Math.floor(Math.random()*900_000_000)+100_000_000);
 const write=(sql,params=[])=>query(localDatabaseGuardSql+sql,params);
 try{
  const source=await getLocalDataSource();assert.equal(source.entityMetadatas.length,localEntities.length);
  assert.equal(source.options.synchronize,false);assert.equal(source.options.migrationsRun,false);
- const permissions=(await source.getRepository(entitySchema('svc_demo.QuyenRBAC')).find()).map(p=>p.MaQuyen);
+
  await source.transaction(async manager=>{
   await manager.getRepository(entitySchema('svc_demo.TaiKhoan')).insert([
    {MaHS:studentId,Hoten:'ORM fixture student',VaiTro:'STUDENT',SoThe:studentCode,NguonDanhTinh:'DEMO',HieuLuc:true},
-   {MaHS:staffId,Hoten:'ORM fixture staff',VaiTro:'STAFF',MaDV:'120',NguonDanhTinh:'LOCAL',HieuLuc:true},
+   {MaHS:staffId,Hoten:'ORM fixture staff',VaiTro:'STAFF',MaDV:'115',NguonDanhTinh:'LOCAL',HieuLuc:true},
   ]);
   await manager.getRepository(entitySchema('svc_demo.NhanThan')).insert({MaHS:studentId,Hoten:'ORM fixture student',SoThe:studentCode,Lop:'ORMTEST',NgaySinh:new Date('2004-01-01Z'),SoCCCD:'000000000001',DienThoai:'0000000000',DuLieuThuNghiem:true});
-  await manager.getRepository(entitySchema('svc_demo.VaiTroRBAC')).insert({MaRole:role,TenRole:'ORM fixture role',MoTa:'Test only',NguoiTao:staffId,HieuLuc:true});
-  await manager.getRepository(entitySchema('svc_demo.VaiTroQuyen')).insert(permissions.map(MaQuyen=>({MaRole:role,MaQuyen})));
-  await manager.getRepository(entitySchema('svc_demo.TaiKhoanVaiTro')).insert({MaHS:staffId,MaRole:role,NguoiGan:staffId});
+  await manager.getRepository(entitySchema('auth.LocalAccounts')).insert({Id:accountId,Username:'orm-fixture-'+accountId,DisplayName:'ORM fixture staff',PasswordHash:'fixture-only-no-login',Channel:'admin',IsActive:true});
+  await manager.getRepository(entitySchema('auth.AccountProfiles')).insert({AccountId:accountId,StaffAccountId:staffId,AccessLevel:'specialist',FieldCode:'DT',Revision:1});
+  await manager.getRepository(entitySchema('auth.AccountTasks')).insert({AccountId:accountId,TaskId:4,FieldCode:'DT'});
  });
  const repository=createRequestsRepository(),service=createRequestsService(repository);
  const student=await service.sessionActor(studentId),staff=await service.sessionActor(staffId),catalog=await service.catalogs();
@@ -64,18 +64,14 @@ try{
  const withdrawalPdf=await service.download(student,withdrawal.id);assert(withdrawalPdf.bytes.subarray(0,4).equals(Buffer.from('%PDF')));pdfCount++;
  withdrawal=await command(staff,withdrawal,'receive');withdrawal=await command(staff,withdrawal,'complete');assert.equal(withdrawal.status,'COMPLETED');
  assert.equal((await service.list(student)).length,created.length);
- const rbac=createRbacService(createRbacRepository(),repository);
- const newRole=await rbac.save(staff,null,{name:'ORM saved fixture role',description:'Test only',active:true,permissions:['requests.view']});roles.push(newRole.id);
- assert.equal((await rbac.history(staff,newRole.id)).length,1);
  const certification=await createCertificationsRepository().catalog();assert(Array.isArray(certification.languages));
  assert(Array.isArray(await createItCertificationsRepository().catalog()));
  const leave=createAcademicLeaveRepository(),leaveActor={role:'student',source:'auth',reference:'orm:'+studentId,studentCode,name:'ORM fixture student'};
  const draft=await leave.save(leaveActor,{kind:'leave',reasonCode:'medical',startSemesterCode:catalog.currentTerm,semesterCount:1,content:'ORM transaction test'});
  assert(draft.id);assert.equal((await leave.get(leaveActor,draft.id)).studentCode,studentCode);
  await leave.cancel(leaveActor,draft.id,draft.rowVersion);
- console.log(JSON.stringify({localMappings:localEntities.length,schoolMappings:schoolEntities.length,petitionPdfs:pdfCount,confirmationTypes:catalog.documents.length,requests:created.length,workflow:true,rbac:true,certifications:true,academicLeave:true}));
+ console.log(JSON.stringify({localMappings:localEntities.length,schoolMappings:schoolEntities.length,petitionPdfs:pdfCount,confirmationTypes:catalog.documents.length,requests:created.length,workflow:true,canonicalAuthTask4:true,certifications:true,academicLeave:true}));
 }finally{
- const roleMarkers=roles.map(()=>'?').join(',');
  await write(`SET XACT_ABORT ON;BEGIN TRANSACTION;
   DELETE academic_leave.ApplicationHistory WHERE ApplicationId IN(SELECT Id FROM academic_leave.Applications WHERE ActorReference=?);
   DELETE academic_leave.Applications WHERE ActorReference=?;
@@ -90,9 +86,8 @@ try{
   DELETE svc_demo.DonDeNghi WHERE MaHS=?;
   DELETE svc_demo.LichSuRBAC WHERE MaNguoiThucHien=?;
   DELETE svc_demo.TaiKhoanVaiTro WHERE MaHS=?;
-  DELETE svc_demo.PhienBanVaiTroQuyen WHERE MaRole IN(${roleMarkers});DELETE svc_demo.PhienBanVaiTro WHERE MaRole IN(${roleMarkers});
-  DELETE svc_demo.VaiTroQuyen WHERE MaRole IN(${roleMarkers});DELETE svc_demo.VaiTroRBAC WHERE MaRole IN(${roleMarkers});
+  DELETE auth.AccountTasks WHERE AccountId='${accountId}';DELETE auth.AccountProfiles WHERE AccountId='${accountId}';DELETE auth.LocalAccounts WHERE Id='${accountId}';
   DELETE svc_demo.NhanThan WHERE MaHS=?;DELETE svc_demo.TaiKhoan WHERE MaHS IN(?,?);COMMIT;`,
-  ['orm:'+studentId,'orm:'+studentId,studentId,studentId,studentId,studentId,staffId,studentId,studentId,studentId,studentId,studentId,staffId,staffId,...roles,...roles,...roles,...roles,studentId,studentId,staffId]);
+  ['orm:'+studentId,'orm:'+studentId,studentId,studentId,studentId,studentId,staffId,studentId,studentId,studentId,studentId,studentId,staffId,staffId,studentId,studentId,staffId]);
  await disconnectLocalDatabase();
 }

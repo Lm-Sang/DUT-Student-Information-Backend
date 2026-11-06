@@ -17,6 +17,9 @@ test('local migration is guarded before any query and converts legacy leave mean
   assert.match(sql, /sys\.extended_properties[\s\S]*ReviewWorkflowVersion/);
   assert.match(sql, /WHEN ''approved'' THEN ''received'' ELSE ''processing''/);
   assert.match(sql, /workflow_upgraded/);
+  assert.match(sql, /CK_AcademicLeave_StageV3/);
+  assert.match(sql, /deadline_upgraded/);
+  assert.match(sql, /SET QUOTED_IDENTIFIER ON/);
   assert.doesNotMatch(sql, /DROP TABLE|DELETE FROM|DATA_SV1|DATA_GVien1/i);
 });
 

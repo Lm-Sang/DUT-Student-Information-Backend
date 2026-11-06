@@ -1,6 +1,13 @@
 -- Local workflow upgrade. Apply with db:review-workflow:upgrade while deploying the matching backend.
 -- Preserves final certificate results; converts old leave online approvals to waiting for paper.
 SET NOCOUNT ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET ARITHABORT ON;
+SET NUMERIC_ROUNDABORT OFF;
 SET XACT_ABORT ON;
 IF DB_NAME() NOT IN(N'sv_dut',N'Studentpage_Integration_20261103')
   THROW 51000,'Local application database required',1;
@@ -39,7 +46,7 @@ BEGIN TRY
     SELECT @dropLeave=@dropLeave+N'ALTER TABLE academic_leave.Applications DROP CONSTRAINT '+QUOTENAME(name)+N';'
     FROM sys.check_constraints WHERE parent_object_id=OBJECT_ID(N'academic_leave.Applications')
       AND name IN(N'CK_AcademicLeave_Status',N'CK_AcademicLeave_Approval',N'CK_AcademicLeave_Paper',
-        N'CK_AcademicLeave_IntakeV3',N'CK_AcademicLeave_PaperV3');
+        N'CK_AcademicLeave_IntakeV3',N'CK_AcademicLeave_PaperV3',N'CK_AcademicLeave_StageV3');
     IF @dropLeave<>N'' EXEC(@dropLeave);
 
     IF NOT EXISTS(SELECT 1 FROM sys.extended_properties WHERE class=1
@@ -55,6 +62,22 @@ BEGIN TRY
       EXEC(N'UPDATE academic_leave.Applications SET ReceivedAt=ReviewedAt,
         Status=CASE Status WHEN ''approved'' THEN ''received'' ELSE ''processing'' END
         WHERE Status IN(''approved'',''paper_received'')');
+      EXEC(N'INSERT academic_leave.ApplicationHistory(ApplicationId,Action,ActorSource,ActorReference,ActorName,Status,DataJson)
+        SELECT Id,''workflow_upgraded'',''migration'',''review-workflow-v3'',NULL,
+          CASE Status WHEN ''verified'' THEN ''approved'' ELSE ''rejected'' END,
+          (SELECT Status AS previousStatus FOR JSON PATH,WITHOUT_ARRAY_WRAPPER)
+        FROM academic_leave.Applications WHERE Status IN(''verified'',''failed'');
+        UPDATE academic_leave.Applications SET Status=CASE Status WHEN ''verified'' THEN ''approved'' ELSE ''rejected'' END
+        WHERE Status IN(''verified'',''failed'');');
+      -- Earlier local versions already stored ReceivedAt, but used a two-day
+      -- paper deadline. Keep the intake timestamp and audit the previous deadline.
+      EXEC(N'INSERT academic_leave.ApplicationHistory(ApplicationId,Action,ActorSource,ActorReference,ActorName,Status,DataJson)
+        SELECT Id,''deadline_upgraded'',''migration'',''review-workflow-v3'',NULL,Status,
+          (SELECT PaperDeadlineAt AS previousPaperDeadlineAt FOR JSON PATH,INCLUDE_NULL_VALUES,WITHOUT_ARRAY_WRAPPER)
+        FROM academic_leave.Applications WHERE ReceivedAt IS NOT NULL
+          AND (PaperDeadlineAt IS NULL OR PaperDeadlineAt<>DATEADD(day,3,ReceivedAt));
+        UPDATE academic_leave.Applications SET PaperDeadlineAt=DATEADD(day,3,ReceivedAt)
+        WHERE ReceivedAt IS NOT NULL AND (PaperDeadlineAt IS NULL OR PaperDeadlineAt<>DATEADD(day,3,ReceivedAt));');
       EXEC sys.sp_addextendedproperty @name=N'ReviewWorkflowVersion',@value=3,
         @level0type=N'SCHEMA',@level0name=N'academic_leave',@level1type=N'TABLE',@level1name=N'Applications';
     END;
@@ -69,6 +92,9 @@ BEGIN TRY
       (PaperReceivedAt IS NULL AND PaperReceivedBy IS NULL AND Status NOT IN(''processing'',''approved''))
       OR (PaperReceivedAt IS NOT NULL AND PaperReceivedBy IS NOT NULL AND ReceivedAt IS NOT NULL
         AND PaperReceivedAt>=ReceivedAt AND Status IN(''processing'',''approved'',''rejected'')))');
+    IF EXISTS(SELECT 1 FROM sys.check_constraints WHERE parent_object_id=OBJECT_ID(N'academic_leave.Applications')
+      AND name=N'CK_AcademicLeave_WorkflowV2')
+      ALTER TABLE academic_leave.Applications WITH CHECK CHECK CONSTRAINT CK_AcademicLeave_WorkflowV2;
     -- No PaperReceivedAt<=PaperDeadlineAt cutoff: late paper leaves the waiting state only on explicit receipt.
   END;
   COMMIT TRANSACTION;
