@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { connectDatabase, disconnectDatabases } from '../src/infrastructure/database/sql-server.js';
 import { queryLocalDatabase, disconnectLocalDatabase } from '../src/infrastructure/database/local-sql-server.js';
 import { assertLocalDemoTarget, localDatabaseGuardSql } from '../src/infrastructure/database/local-write-guard.js';
-import { normalizeDocuments } from '../src/modules/student-requests/domain/document-rules.js';
+import { normalizeDocuments } from '../src/common/student-requests/rules/document-rules.js';
 
 try {
   assertLocalDemoTarget();

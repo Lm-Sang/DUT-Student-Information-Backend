@@ -8,6 +8,6 @@ export function javascriptFiles(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) return javascriptFiles(path);
-    return entry.isFile() && entry.name.endsWith('.js') ? [path] : [];
+    return entry.isFile() && /\.(?:js|mjs)$/.test(entry.name) ? [path] : [];
   }).sort();
 }

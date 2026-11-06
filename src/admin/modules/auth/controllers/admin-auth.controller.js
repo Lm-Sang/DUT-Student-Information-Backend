@@ -1,0 +1,7 @@
+import { env } from '../../../../config/env.js';
+import { createAuthController } from '../../../../common/auth/controllers/auth.controller.js';
+import { authService } from '../../../../common/auth/services/auth.service.js';
+
+export const adminAuthController = createAuthController('admin', authService, {
+  secureCookies: env.nodeEnv === 'production',
+});

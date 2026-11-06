@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { createApp } from '../../src/app.js';
-import { createCourseRegistrationModule } from '../../src/modules/course-registration/index.js';
-import { createTimetableModule } from '../../src/modules/timetable/index.js';
+import { createCourseRegistrationModule } from '../../src/public/modules/course-registration/index.js';
+import { createTimetableModule } from '../../src/public/modules/timetable/index.js';
 
 export function createPublicApp(clientOptions) {
   return createApp({

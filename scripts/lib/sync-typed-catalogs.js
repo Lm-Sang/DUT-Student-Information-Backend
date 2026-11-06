@@ -1,6 +1,6 @@
 import { queryLocalDatabase } from '../../src/infrastructure/database/local-sql-server.js';
 import { assertLocalDemoTarget, localDatabaseGuardSql } from '../../src/infrastructure/database/local-write-guard.js';
-import { departmentToDatabase } from '../../src/modules/student-requests/domain/request-fields.js';
+import { departmentToDatabase } from '../../src/common/student-requests/rules/request-fields.js';
 
 export async function syncTypedCatalogs({terms,programs,documents,supportSystems,currentTerm,source}) {
   assertLocalDemoTarget();const params=[];const sql=[];

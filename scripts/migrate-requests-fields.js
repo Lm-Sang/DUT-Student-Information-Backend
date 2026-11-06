@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { queryLocalDatabase as query, disconnectLocalDatabase } from '../src/infrastructure/database/local-sql-server.js';
 import { assertLocalDemoTarget, localDatabaseGuardSql } from '../src/infrastructure/database/local-write-guard.js';
-import { allPayloadColumns, paperColumns } from '../src/modules/student-requests/domain/request-fields.js';
+import { allPayloadColumns, paperColumns } from '../src/common/student-requests/rules/request-fields.js';
 import { tables, payloadType } from './lib/requests-schema.js';
 
 const quote = text => "N'" + text.replaceAll("'", "''") + "'";

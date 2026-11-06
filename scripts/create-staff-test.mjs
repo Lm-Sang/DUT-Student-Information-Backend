@@ -2,7 +2,7 @@
 import{randomUUID,randomBytes}from'node:crypto';
 import{queryLocalDatabase as q,disconnectLocalDatabase}from'../src/infrastructure/database/local-sql-server.js';
 import{assertLocalDemoTarget,localDatabaseGuardSql}from'../src/infrastructure/database/local-write-guard.js';
-import{hashPassword}from'../src/modules/auth/services/password.service.js';
+import{hashPassword}from'../src/common/auth/services/password.service.js';
 const username='chuyenvien.test';
 try{
  assertLocalDemoTarget();
