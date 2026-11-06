@@ -2,7 +2,7 @@
 import {randomUUID,randomBytes} from 'node:crypto';import assert from 'node:assert/strict';
 process.env.AUTH_DATABASE_PATH=':memory:';
 process.env.MICROSOFT_SSO_JWT_SECRET=randomBytes(48).toString('base64');process.env.MICROSOFT_SSO_JWT_SECRET_ENCODING='base64';process.env.MICROSOFT_SSO_JWT_ISSUER='integration-smoke-sso';process.env.MICROSOFT_SSO_JWT_AUDIENCE='integration-smoke-client';process.env.JWT_SHARE_SSO_KEY='true';process.env.ENABLE_REQUESTS_DEMO='false';process.env.ENABLE_DEMO_IMPERSONATION='false';
-const [{createApp},{queryLocalDatabase:q,disconnectAllDatabases},{hashPassword},{closeAuthStore}]=await Promise.all([import('../src/app.js'),import('../src/infrastructure/database/index.js'),import('../src/modules/auth/services/password.service.js'),import('../src/modules/auth/index.js')]);
+const [{createApp},{queryLocalDatabase:q,disconnectAllDatabases},{hashPassword},{closeAuthStore}]=await Promise.all([import('../src/app.js'),import('../src/infrastructure/database/index.js'),import('../src/common/auth/services/password.service.js'),import('../src/common/auth/index.js')]);
 const {env}=await import('../src/config/env.js');
 const {localDatabaseGuardSql,assertLocalDemoTarget}=await import('../src/infrastructure/database/local-write-guard.js');assertLocalDemoTarget();
 const id='cv:'+randomUUID(),role='test:'+randomUUID(),username='http-'+randomUUID(),password=randomBytes(24).toString('base64url');let server;

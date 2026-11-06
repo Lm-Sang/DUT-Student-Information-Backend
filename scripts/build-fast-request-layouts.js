@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import PizZip from 'pizzip';
-import { fillPaperDocx, docxStem } from '../src/modules/student-requests/services/paper-docx.templates.js';
+import { fillPaperDocx, docxStem } from '../src/common/student-requests/services/paper-docx.templates.js';
 import { convertWordToPdf } from '../src/infrastructure/documents/word-pdf.js';
 
 const base = resolve('.data/research/fast-layouts'), references = resolve(base, 'references');

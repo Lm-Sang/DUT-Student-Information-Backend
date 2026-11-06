@@ -1,8 +1,8 @@
 import { queryLocalDatabase as query, disconnectLocalDatabase } from '../src/infrastructure/database/local-sql-server.js';
 import { assertLocalDemoTarget, localDatabaseGuardSql } from '../src/infrastructure/database/local-write-guard.js';
-import { requestTypes } from '../src/modules/student-requests/domain/request-catalog.seed.js';
-import { formFields } from '../src/modules/student-requests/dto/requests.dto.js';
-import { departmentToDatabase } from '../src/modules/student-requests/domain/request-fields.js';
+import { requestTypes } from '../src/common/student-requests/rules/request-catalog.seed.js';
+import { formFields } from '../src/common/student-requests/dto/requests.dto.js';
+import { departmentToDatabase } from '../src/common/student-requests/rules/request-fields.js';
 
 try {
   assertLocalDemoTarget();

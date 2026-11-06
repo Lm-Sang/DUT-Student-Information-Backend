@@ -1,7 +1,7 @@
 import {mkdir,writeFile} from 'node:fs/promises';
 import {queryLocalDatabase as query,disconnectLocalDatabase} from '../src/infrastructure/database/local-sql-server.js';
 import {assertLocalDemoTarget,localDatabaseGuardSql as guard} from '../src/infrastructure/database/local-write-guard.js';
-import {effectivePermissionsViewSql} from '../src/modules/student-requests/repositories/rbac-views.js';
+import {effectivePermissionsViewSql} from '../src/common/student-requests/repositories/rbac-views.js';
 
 assertLocalDemoTarget();
 try{

@@ -16,7 +16,7 @@ test('all mapped local tables and views preserve SQL names without connecting or
 });
 test('features and maintenance scripts never open native SQL connections outside TypeORM infrastructure',()=>{
  const violations=[];
- for(const folder of ['src/modules','scripts'])for(const file of javascriptFiles(join(projectRoot,folder))){
+ for(const folder of ['src/student','src/admin','src/common','src/public','scripts'])for(const file of javascriptFiles(join(projectRoot,folder))){
   if(file.includes('__tests__'))continue;
   const text=readFileSync(file,'utf8');if(/(?:from\s*|import\s*\(|require\s*\()\s*['"](?:mssql|msnodesqlv8)(?:\/[^'"]*)?['"]/.test(text))violations.push(file);
  }

@@ -1,8 +1,8 @@
 // Private source values stay in ignored .data; never commit the generated fixtures.
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { paperTemplates } from '../src/modules/student-requests/services/paper-pdf.renderer.js';
-import { fillPaperDocx } from '../src/modules/student-requests/services/paper-docx.templates.js';
+import { paperTemplates } from '../src/common/student-requests/services/paper-pdf.renderer.js';
+import { fillPaperDocx } from '../src/common/student-requests/services/paper-docx.templates.js';
 import { convertWordToPdf } from '../src/infrastructure/documents/word-pdf.js';
 
 const sourceRoot = resolve(process.argv[2] || '../bieu-mau-de-nghi-in');

@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { createApp } from '../../src/app.js';
-import { createCourseRegistrationModule } from '../../src/modules/course-registration/index.js';
-import { createTimetableModule } from '../../src/modules/timetable/index.js';
+import { createCourseRegistrationModule } from '../../src/public/modules/course-registration/index.js';
+import { createTimetableModule } from '../../src/public/modules/timetable/index.js';
 import { listen } from '../support/public-api.js';
 
 test('course registration and timetable can be replaced or disabled independently', async (t) => {

@@ -17,7 +17,7 @@ try {
  WHERE s.name IN('auth','svc_demo','academic_leave','certification') ORDER BY fk.name,f.constraint_column_id`)).first;
  const tables=Map.groupBy(columns,c=>c.schema+'.'+c.table);
  for(const [schema,feature]of Object.entries(owners)) {
-  const dir=new URL(`../src/modules/${feature}/entities/`,import.meta.url);await mkdir(dir,{recursive:true});
+  const dir=new URL(`../src/common/${feature}/entities/`,import.meta.url);await mkdir(dir,{recursive:true});
   const names=[];
   for(const [table,cols]of tables){
    if(cols[0].schema!==schema)continue;

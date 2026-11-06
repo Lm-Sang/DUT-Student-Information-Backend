@@ -2,11 +2,11 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {queryLocalDatabase as query,disconnectLocalDatabase} from '../src/infrastructure/database/local-sql-server.js';
 import {assertLocalDemoTarget,localDatabaseGuardSql as guard} from '../src/infrastructure/database/local-write-guard.js';
-import {createRequestsRepository} from '../src/modules/student-requests/repositories/requests.repository.js';
-import {createRequestCatalogRepository} from '../src/modules/student-requests/repositories/catalog.repository.js';
-import {workCatalog} from '../src/modules/student-requests/domain/work-permissions.js';
-import {functionPermissions,legacyFunctions} from '../src/modules/student-requests/domain/rbac.js';
-import {effectivePermissionsViewSql} from '../src/modules/student-requests/repositories/rbac-views.js';
+import {createRequestsRepository} from '../src/common/student-requests/repositories/requests.repository.js';
+import {createRequestCatalogRepository} from '../src/common/student-requests/repositories/catalog.repository.js';
+import {workCatalog} from '../src/common/student-requests/rules/work-permissions.js';
+import {functionPermissions,legacyFunctions} from '../src/common/student-requests/rules/rbac.js';
+import {effectivePermissionsViewSql} from '../src/common/student-requests/repositories/rbac-views.js';
 
 assertLocalDemoTarget();
 try{

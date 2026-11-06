@@ -7,7 +7,7 @@ Nhánh `feat/typeorm-migration`, ngày 03/11/2026. Sử dụng JavaScript ESM v�
 - Toàn bộ kết nối và truy vấn SQL Server của backend, CLI bảo trì và các script kiểm thử đi qua TypeORM DataSource/QueryRunner.
 - 48 bảng và 2 view local được ánh xạ đầy đủ: schema `auth` (6), `svc_demo` (29 bảng và 2 view), `certification` (11), `academic_leave` (2).
 - 23 bảng nguồn được ánh xạ theo metadata trong 5 DB trường. Các cột bị từ chối quyền đọc và các cột mật khẩu được đặt `select: false`; cột nguồn không cho insert/update.
-- Entity nằm theo feature: `auth/entities`, `student-requests/entities`, `certifications/entities`, `academic-leave/entities`, `students/entities`, `announcements/entities`, `curriculum/entities`.
+- Entity nằm trong `src/common/<module>/entities` cho auth, student-requests, certifications, academic-leave, students; thông báo và CTĐT thuộc `src/public/modules/<module>/entities`. Xem [layout hiện tại](REFACTOR_LAYOUT.md).
 - Giữ nguyên tên schema/bảng/cột, khóa chính, kiểu dữ liệu, composite key và quan hệ khóa ngoại. Không đổi schema, không tạo bản sao bảng nghiệp vụ, không tự đồng bộ hoặc chạy migration khi khởi động.
 
 Các module Course Registration/TKB gọi HTTP bên ngoài tiếp tục là HTTP adapter. Kho state/handoff/refresh SSO bằng SQLite tiếp tục dùng các thao tác nguyên tử của `node:sqlite`; đây là kho phiên, không phải lớp SQL Server nghiệp vụ.
@@ -62,7 +62,7 @@ Review diff trước khi commit. Generator trường ghi lại quyền đọc c�
 
 - `npm.cmd test`: 146 kiểm thử, 144 đạt, 2 SQL opt-in bỏ qua.
 - `npm.cmd run check`: cú pháp 307 file JavaScript đạt; các CLI `.mjs` mới đã được chạy/kiểm tra riêng.
-- `$env:AUTH_DB_TEST='1'; node --test src/modules/auth/__tests__/auth-sql.test.js src/modules/auth/__tests__/password-management-sql.test.js`: cả 2 đạt với tài khoản/role tạm được tự xóa.
+- `$env:AUTH_DB_TEST='1'; node --test tests/common/auth/auth-sql.test.js tests/common/auth/password-management-sql.test.js`: test SQL opt-in, dùng tài khoản/role tạm được tự xóa. Kết quả lịch sử trước refactor: cả 2 đạt.
 - `npm.cmd run test:orm:local`: Entity CRUD thực, 6 PDF đề nghị, 11 loại xác nhận, 20 đơn, tiếp nhận/xử lý/hủy, LMS, RBAC và lịch sử role, đọc catalog chứng chỉ, tạo/hủy đơn ngừng học. Chỉ dùng dữ liệu tạm local và xóa theo ID sau chạy.
 - `npm.cmd run test:auth:requests`: HTTP JWT thật, phân biệt channel, danh mục DB, chặn quyền thiếu và thu hồi quyền tức thì; khóa test chỉ tồn tại trong process, kho phiên in-memory.
 - Đã kiểm tra SELECT không lấy dữ liệu trên 23 Entity nguồn và xác nhận driver local/SSH không lẫn nhau. Không có câu lệnh ghi nguồn nào được chạy.

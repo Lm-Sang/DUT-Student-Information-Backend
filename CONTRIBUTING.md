@@ -1,27 +1,20 @@
-# Làm việc theo feature
+# Quy ước đóng góp
 
-Đọc [kiến trúc và cách thêm feature](docs/ARCHITECTURE.md) trước khi sửa source.
-Quy ước từng tầng nằm trong [DTO, mapper, service và repository](docs/LAYERS.md).
+Đọc [quy tắc agent](AGENTS.md), [kiến trúc](docs/ARCHITECTURE.md) và
+[trách nhiệm các tầng](docs/LAYERS.md) trước khi thay đổi source.
 
-Dùng [file trao đổi feature](FEATURE_WORK.md) để điền yêu cầu function và test,
-chốt cách làm với Codex, rồi xóa từng mục theo dõi sau khi xác nhận hoàn tất.
-Giữ code và file test; khi hết việc và các kiểm tra đạt thì chốt done feature.
-
-1. Chia nhiệm vụ theo nghiệp vụ, tạo nhánh như `feat/announcements-search` hoặc
-   `fix/curriculum-validation`.
-2. Sửa code và test trong `src/modules/<feature>/`. Parse input trong `dto/`,
-   chuyển dữ liệu trong `mappers/`, nghiệp vụ trong `services/`, truy vấn trong
-   `repositories/`. API dùng giữa các feature
-   phải export qua `index.js`; không import repository của feature khác.
-3. Khi thêm route, ghi rõ request/response, quyền truy cập và lỗi dự kiến trong
-   tài liệu API. Khi thêm biến môi trường, cập nhật `.env.example`.
-4. Chạy `node --test "src/modules/<feature>/**/*.test.js"`, rồi `npm test`
-   trước khi mở pull request. PowerShell có thể dùng `npm.cmd`.
-5. Trong pull request, mô tả hành vi thay đổi, feature bị ảnh hưởng và kết quả
-   kiểm tra. Nếu sửa `shared`, `infrastructure`, `config` hoặc contract dùng
-   chung, báo cho người phụ trách các feature liên quan.
-
-Giữ response qua `shared/utils/response.js`, lỗi nghiệp vụ qua `AppError`, truy
-vấn có tham số trong repository. Không commit `.env`, khóa SSH hoặc file phiên
-SQLite trong `.data/`. Các khung `students`, `users`, `admin` hiện chưa có API
-nghiệp vụ; tránh mặc định hiểu rằng chúng đã có xác thực hoặc phân quyền.
+1. Chọn khu vực student/admin/public rồi chọn module. Common chứa phần thực sự
+   dùng chung; không import ngược từ common lên frontend.
+2. Giữ các folder theo trách nhiệm khi có nhu cầu. Đặt tên controller/service/repository
+   theo công việc khi một module có nhiều file; không tạo khung rỗng.
+3. Giữ test ngoài source: tests/<khu-vực>/<module> hoặc tests/integration cho nhiều khu vực.
+   CLI ở scripts/auth hoặc scripts/database, không đặt trong module.
+4. Thêm endpoint phải ghi rõ request/response, channel xác thực, quyền và lỗi dự kiến.
+   Không bỏ kiểm tra quyền cấp hồ sơ khi đã có middleware.
+5. Khác module dùng facade index.js. Không để code nghiệp vụ import bootstrap/app/server.
+6. Đổi entity path phải cập nhật generator và registry; không đổi tên bảng/cột hay
+   chạy migration thật để kiểm tra refactor.
+7. Chạy npm run test:feature -- <module>, npm run check và npm test.
+   PowerShell có thể dùng npm.cmd.
+8. PR ghi rõ thay đổi hành vi, URL tương thích và kết quả kiểm tra.
+   Không commit secret hoặc thay đổi đang có của người khác ngoài phạm vi công việc.

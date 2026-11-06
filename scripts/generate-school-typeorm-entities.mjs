@@ -10,6 +10,7 @@ const sources=[
  ['primary',env.curriculum.requirementsDatabase,['tmHocphanDK','tmHocPhan']],
 ];
 const groups={students:[],announcements:[],curriculum:[]};
+const entityDirectory = feature => `../src/${feature === 'students' ? 'common' : 'public/modules'}/${feature}/entities/`;
 try{
  for(const[account,database,tables]of sources){
   const source=await connectDatabase(account,database),request=source.request();
@@ -31,11 +32,11 @@ try{
     if(['datetime2','datetimeoffset','time'].includes(c.type))col.precision=c.scale;
     definition.columns[c.column]=col;
    }
-   const dir=new URL(`../src/modules/${feature}/entities/`,import.meta.url);await mkdir(dir,{recursive:true});
+   const dir=new URL(entityDirectory(feature),import.meta.url);await mkdir(dir,{recursive:true});
    await writeFile(new URL(`${name}.entity.js`,dir),`import {EntitySchema} from 'typeorm';\n// School metadata mapping. SELECT only; the DataSource also rejects all writes.\nexport const ${name}=new EntitySchema(${JSON.stringify(definition,null,2)});\n`);
    groups[feature].push(name);
   }
  }
- for(const[feature,names]of Object.entries(groups))await writeFile(new URL(`../src/modules/${feature}/entities/index.js`,import.meta.url),names.map(n=>`import {${n}} from './${n}.entity.js';`).join('\n')+`\nexport const ${feature}Entities=[${names.join(',')}];\n`);
+ for(const[feature,names]of Object.entries(groups))await writeFile(new URL(entityDirectory(feature)+'index.js',import.meta.url),names.map(n=>`import {${n}} from './${n}.entity.js';`).join('\n')+`\nexport const ${feature}Entities=[${names.join(',')}];\n`);
  console.log(JSON.stringify(Object.fromEntries(Object.entries(groups).map(([feature,names])=>[feature,names.length]))));
 }finally{await disconnectDatabases();}

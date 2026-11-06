@@ -2,8 +2,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { createHash, randomBytes } from 'node:crypto';
 import { queryLocalDatabase, disconnectLocalDatabase } from '../src/infrastructure/database/local-sql-server.js';
 import { assertLocalDemoTarget, localDatabaseGuardSql } from '../src/infrastructure/database/local-write-guard.js';
-import { requestTypes } from '../src/modules/student-requests/domain/request-rules.js';
-import { departmentToDatabase } from '../src/modules/student-requests/domain/request-fields.js';
+import { requestTypes } from '../src/common/student-requests/rules/request-rules.js';
+import { departmentToDatabase } from '../src/common/student-requests/rules/request-fields.js';
 
 assertLocalDemoTarget();
 try {

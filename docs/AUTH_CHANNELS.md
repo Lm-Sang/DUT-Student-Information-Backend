@@ -1,70 +1,53 @@
-# Token sinh viên và chuyên viên
+# Xác thực cho hai frontend
 
-Cập nhật 02/11/2026.
+Tài liệu này mô tả code hiện tại sau refactor cấu trúc.
+Hai khu vực source là student và admin; các channel token bên trong vẫn giữ nguyên.
 
-| Nhánh | Đăng nhập | Bearer gửi API | Cookie khôi phục phiên |
+| Channel | Đăng nhập | Bearer API | API sử dụng |
 | --- | --- | --- | --- |
-| Sinh viên | DUT SSO | Nguyên accessToken do SSO cấp | Chuỗi ngẫu nhiên HttpOnly, không phải JWT |
-| Chuyên viên/admin | Tài khoản, mật khẩu local | JWT ứng dụng, `typ: at+jwt`, audience admin | JWT refresh HttpOnly |
+| student | DUT SSO qua /api/student/auth | JWT ứng dụng audience student | API sinh viên |
+| staff | Mật khẩu local qua /api/staff/auth | JWT ứng dụng audience staff | Đơn sinh viên phía chuyên viên |
+| admin | Mật khẩu local qua /api/admin/auth, opt-in | JWT ứng dụng audience admin | Duyệt chứng chỉ, ngừng học và quản lý danh mục |
 
-Sinh viên không đăng nhập mật khẩu qua `/api/student/auth/login` (trả 403).
-Token SSO không dùng được cho API chuyên viên. JWT admin không dùng được cho
-API sinh viên. Role/permission từ claim SSO không trở thành quyền admin.
+Chuyên viên và quản trị viên cùng làm việc trong frontend admin. Việc đặt source vào
+admin không đổi audience hoặc chuyển tài khoản giữa các nguồn dữ liệu.
+Không gửi token staff tới endpoint hiện yêu cầu admin hoặc ngược lại.
 
-Luồng web sinh viên giữ state/cookie và code một lần để nhận token qua body JSON:
+## Sinh viên
 
-1. Điều hướng tới `GET /api/student/auth/microsoft/login`.
-2. Gateway trả token về callback backend; backend xác minh chữ ký HS256,
-   issuer, audience theo cấu hình và `exp`, rồi chuyển code về callback FE.
-3. FE xóa fragment và gọi `POST /api/student/auth/session` với `{code}`,
-   `credentials: include` và Origin đã cấu hình.
-4. `data.accessToken` và alias `data.token` đều bằng token SSO ban đầu;
-   `data.tokenSource = "sso"`. Không ký access JWT hoặc refresh JWT sinh viên.
-5. Dùng `Authorization: Bearer <SSO accessToken>` cho các API sinh viên.
-   API chuyển tiếp tới DUT sử dụng đúng token đó. Backend vẫn kiểm tra chữ ký,
-   thời hạn và việc thu hồi tại ứng dụng trước khi xử lý.
+1. Bắt đầu qua GET /api/student/auth/microsoft/login.
+2. Callback backend kiểm tra state một lần và token SSO.
+3. Backend chuyển code một lần về FE; FE đổi code qua POST /api/student/auth/session
+   với cookie binding và Origin đúng cấu hình.
+4. FE nhận JWT ứng dụng channel student để gọi backend.
+5. Token DUT SSO được mã hóa trong phiên trên server. Adapter gọi DUT lấy lại token
+   qua getSsoAccessToken, kiểm tra hạn SSO trước khi chuyển tiếp.
+6. Refresh xoay JWT refresh trong cookie HttpOnly. Logout thu hồi phiên ứng dụng.
 
-`POST /api/student/auth/refresh` chỉ khôi phục token SSO đang còn hạn bằng cookie
-HttpOnly đã xoay; không gia hạn `exp` của token và không tạo token SSO mới.
-Cookie và thời hạn khôi phục được giới hạn theo `exp` SSO. Token quá hạn yêu cầu
-đăng nhập SSO lại. Cookie refresh sinh viên của phiên bản trước được tự chuyển
-sang cookie ngẫu nhiên khi khôi phục; Bearer JWT sinh viên cũ không được chấp nhận.
-FE giữ Bearer trong bộ nhớ, không đặt token vào sessionStorage/localStorage/URL.
+JWT ứng dụng và token DUT SSO là hai token khác nhau. Refresh ứng dụng không tạo hoặc
+gia hạn token SSO; khi SSO hết hạn, thao tác cần gọi DUT yêu cầu đăng nhập lại.
 
-Bearer SSO hợp lệ có thể gọi trực tiếp API sinh viên mà không cần được đổi thành
-JWT ứng dụng trước. `GET /api/student/auth/me` cũng xác thực cùng token đó.
+## Chuyên viên/admin
 
-Middleware tái sử dụng claim đã xác minh để lấy MSSV trực tiếp từ claim MSSV hoặc
-UPN dạng `MSSV@sv1.dut.udn.vn`. Domain được giới hạn bằng
-`MICROSOFT_SSO_STUDENT_EMAIL_DOMAINS`; không suy MSSV từ email của domain bất kỳ.
-Thiếu các định dạng đó mới gọi profile DUT. Kết quả fallback được giữ tối đa
-60 giây, giới hạn theo hạn token, gộp các request đồng thời và giới hạn số entry.
-Chữ ký/thời hạn/thu hồi token vẫn được kiểm tra ở mọi request trước khi dùng cache.
-Họ tên/lớp/CCCD/ngày sinh/điện thoại còn thiếu được đọc từ DB theo MSSV đã xác thực.
+- Staff kiểm tra tài khoản và quyền từ các bảng local svc_demo.
+- Admin cũ kiểm tra auth.LocalAccounts và được mount khi ENABLE_ADMIN_AUTH=true.
+- Kiểm tra phiên tái đọc trạng thái/version tài khoản để phát hiện thu hồi.
+- Duyệt chứng chỉ cần certifications:review; quản lý danh mục cần certifications:catalog:manage.
+- Duyệt ngừng học cần academic-leave:review.
+- Đơn sinh viên kiểm tra thêm role/phạm vi xử lý từ SQL cho mỗi request.
 
-`POST /api/student/auth/logout` xóa phiên web và thu hồi token SSO tại backend này
-đến khi token hết hạn. Lần đăng nhập mới qua state/code hợp lệ có thể dùng lại
-token nếu gateway trả cùng token. Việc thu hồi ở đây không tác động các ứng dụng
-DUT khác. Khi cùng một token được dùng ở nhiều tab, các tab đó dùng chung trạng
-thái thu hồi của token tại ứng dụng.
+Cấu trúc mới giữ nguyên tên/path cookie, Origin, audience, refresh rotation, state,
+handoff và điều kiện thu hồi. Hợp nhất staff/admin là migration xác thực riêng;
+không thực hiện bằng cách chấp nhận tùy ý nhiều audience.
 
-Chuyên viên giữ luồng `/api/admin/auth/login`, `/refresh`, `/me`, `/logout`.
-Tài khoản được kiểm tra trạng thái và quyền local; JWT ứng dụng chỉ được ký cho
-channel admin và phương thức password. Hết hạn access JWT có thể xoay refresh;
-khóa tài khoản/đổi version/đăng xuất vô hiệu phiên theo cơ chế hiện có.
+## Nơi đọc code
 
-Giao diện test:
+- [Module auth sinh viên](../src/student/modules/auth/index.js)
+- [Auth chuyên viên](../src/admin/modules/auth/staff-auth.module.js)
+- [Auth admin cũ](../src/admin/modules/auth/index.js)
+- [Cơ chế auth dùng chung](../src/common/auth/index.js)
+- [Service xác thực](../src/common/auth/services/auth.service.js)
+- [Actor đơn sinh viên](../src/common/student-requests/middlewares/request-actor.js)
 
-- Sinh viên: `http://localhost:5173/` và `/academic-leave.html`.
-- Chuyên viên: `http://localhost:5174/` và `/academic-leave.html`.
-- Mỗi trang dùng chung cơ chế phiên trong `certification-web-test/public/web-auth.js`.
-- `/local-api/auth/token` cũ chuyển về lỗi đăng nhập để bắt đầu luồng state/code mới.
-
-Kiểm thử tự động dùng SSO gateway và tài khoản giả lập; không đăng nhập Microsoft
-thật hoặc thay đổi dữ liệu người dùng:
-
-```powershell
-node --test tests/integration/student-sso-token.test.js
-$env:AUTH_BROWSER_TEST='1'
-node --test tests/integration/auth-browser.test.js
-```
+Kiểm thử offline: npm run test:feature -- auth và npm test.
+Test SQL thật yêu cầu cờ riêng; không nằm trong kiểm tra refactor mặc định.

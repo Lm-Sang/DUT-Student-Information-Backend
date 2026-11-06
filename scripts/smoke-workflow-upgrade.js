@@ -4,8 +4,8 @@ import {randomUUID} from 'node:crypto';
 import {queryLocalDatabase as query,disconnectLocalDatabase} from '../src/infrastructure/database/local-sql-server.js';
 import {localDatabaseGuardSql,assertLocalDemoTarget} from '../src/infrastructure/database/local-write-guard.js';
 import {cleanupRequests} from './lib/cleanup-requests.js';
-import {makeWorkbook,readWorkbook} from '../src/modules/student-requests/services/request-workbook.js';
-import {createRequestsRepository} from '../src/modules/student-requests/repositories/requests.repository.js';
+import {makeWorkbook,readWorkbook} from '../src/admin/modules/student-requests/services/request-workbook.js';
+import {createRequestsRepository} from '../src/common/student-requests/repositories/requests.repository.js';
 const base='http://127.0.0.1:3003/api/demo/student-requests',suffix=randomUUID().slice(0,8),people=['s','a','b'].map(x=>'qa-wf-'+suffix+'-'+x),ids=[];
 let checks=0;
 async function call(path,token,body,method=body?'POST':'GET',expected=200){const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});const json=await r.json();assert.equal(r.status,expected,path+': '+JSON.stringify(json));checks++;return json.data;}

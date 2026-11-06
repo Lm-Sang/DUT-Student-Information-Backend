@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createApp } from '../../src/app.js';
-import { createTimetableModule } from '../../src/modules/timetable/index.js';
+import { createTimetableModule } from '../../src/public/modules/timetable/index.js';
 import { fixture, listen } from '../support/public-api.js';
 
 test('invalid queries and path traversal are rejected before contacting upstream', async (t) => {
