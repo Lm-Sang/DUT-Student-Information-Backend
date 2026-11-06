@@ -15,6 +15,27 @@ function parseBoolean(value, fallback = false) {
   return value.toLowerCase() === 'true';
 }
 
+function parseInteger(name, value, fallback, min, max) {
+  const number = Number(value ?? fallback);
+  if (!Number.isInteger(number) || number < min || number > max) {
+    throw new Error(`${name} must be an integer between ${min} and ${max}.`);
+  }
+  return number;
+}
+
+function parseBaseUrl(name, value) {
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`${name} must be an absolute HTTP(S) URL.`);
+  }
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
+    throw new Error(`${name} must be an HTTP(S) URL without credentials, query or fragment.`);
+  }
+  return url.href.replace(/\/$/, '');
+}
+
 function parseList(value) {
   return (value ?? '')
     .split(',')
@@ -50,17 +71,31 @@ const corsOrigins = Object.freeze(
   [...new Set([
     ...parseList(process.env.CORS_STUDENT_ORIGINS ?? studentFrontendUrl),
     ...parseList(process.env.CORS_ADMIN_ORIGINS ?? adminFrontendUrl),
+    ...(process.env.STAFF_FRONTEND_URL ? [parseOrigin('STAFF_FRONTEND_URL', process.env.STAFF_FRONTEND_URL)] : []),
   ])].map((origin, index) => parseOrigin(`CORS_ORIGINS[${index}]`, origin)),
 );
 
 export const env = Object.freeze({
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: parsePort('PORT', process.env.PORT, 3003),
+  features: Object.freeze({
+    adminAuthEnabled: parseBoolean(process.env.ENABLE_ADMIN_AUTH, false),
+    requestsDemoEnabled: parseBoolean(process.env.ENABLE_REQUESTS_DEMO, false),
+    requestsApiEnabled: parseBoolean(process.env.ENABLE_REQUESTS_API, true),
+    demoImpersonationEnabled: parseBoolean(process.env.ENABLE_DEMO_IMPERSONATION, false),
+  }),
+  auth: Object.freeze({
+    databasePath: process.env.AUTH_DATABASE_PATH || '.data/auth.sqlite',
+    stateTtlMs: 600000,
+    handoffTtlMs: 60000,
+    refreshTtlSeconds: parseInteger('AUTH_REFRESH_TTL_SECONDS', process.env.AUTH_REFRESH_TTL_SECONDS, 604800, 300, 2592000),
+  }),
   app: Object.freeze({
     name: process.env.APP_NAME ?? 'DUT Student Information Backend',
     url: process.env.APP_URL ?? 'http://localhost:3003',
     studentFrontendUrl,
     adminFrontendUrl,
+    staffFrontendUrl: parseOrigin('STAFF_FRONTEND_URL', process.env.STAFF_FRONTEND_URL ?? adminFrontendUrl),
     corsOrigins,
   }),
   database: Object.freeze({
@@ -83,6 +118,17 @@ export const env = Object.freeze({
       defaultDatabase: process.env.DB_SECONDARY_DEFAULT_DATABASE ?? '',
     }),
   }),
+  // Independent SQL Server instance using the Windows identity of this process.
+  // Does not change the existing DB_*/SSH_* settings for school databases.
+  localDatabase: Object.freeze({
+    host: process.env.LOCAL_DB_HOST ?? 'localhost',
+    port: parsePort('LOCAL_DB_PORT', process.env.LOCAL_DB_PORT, 1433),
+    name: process.env.LOCAL_DB_NAME ?? 'sv_dut',
+    driver: process.env.LOCAL_DB_ODBC_DRIVER ?? 'ODBC Driver 17 for SQL Server',
+    encrypt: parseBoolean(process.env.LOCAL_DB_ENCRYPT, false),
+    trustServerCertificate: parseBoolean(process.env.LOCAL_DB_TRUST_SERVER_CERTIFICATE, true),
+    queryTimeoutMs: parseInteger('LOCAL_DB_QUERY_TIMEOUT_MS', process.env.LOCAL_DB_QUERY_TIMEOUT_MS, 30000, 1000, 300000),
+  }),
   ssh: Object.freeze({
     host: process.env.SSH_HOST ?? '',
     port: parsePort('SSH_PORT', process.env.SSH_PORT, 22),
@@ -93,6 +139,8 @@ export const env = Object.freeze({
   jwt: Object.freeze({
     secret: process.env.JWT_SECRET ?? '',
     expiresIn: process.env.JWT_EXPIRES_IN ?? '1h',
+    shareSsoKey: parseBoolean(process.env.JWT_SHARE_SSO_KEY, true),
+    staffAudience: process.env.JWT_STAFF_AUDIENCE ?? 'dut-student-information-staff',
     issuer: process.env.JWT_ISSUER ?? 'dut-student-information-backend',
     studentAudience:
       process.env.JWT_STUDENT_AUDIENCE ?? 'dut-student-information-student',
@@ -101,7 +149,7 @@ export const env = Object.freeze({
   }),
   microsoftSso: Object.freeze({
     baseUrl:
-      process.env.MICROSOFT_SSO_BASE_URL ?? 'https://sso.dev.dut.navia.io.vn',
+      process.env.MICROSOFT_SSO_BASE_URL ?? 'https://sso.dut.udn.vn',
     loginPath: process.env.MICROSOFT_SSO_LOGIN_PATH ?? '/microsoft/login',
     logoutPath: process.env.MICROSOFT_SSO_LOGOUT_PATH ?? '/microsoft/logout',
     mePath: process.env.MICROSOFT_SSO_ME_PATH ?? '/api/microsoft/me',
@@ -111,6 +159,33 @@ export const env = Object.freeze({
     adminCallbackUrl:
       process.env.MICROSOFT_SSO_ADMIN_CALLBACK_URL ??
       'http://localhost:3003/api/admin/auth/microsoft/callback',
-    jwtSecret: process.env.MICROSOFT_SSO_JWT_SECRET ?? '',
+    jwtSecret: process.env.MICROSOFT_SSO_JWT_SECRET || process.env.MICROSOFT_SSO_SecretKey || '',
+    jwtSecretEncoding: process.env.MICROSOFT_SSO_JWT_SECRET_ENCODING || 'utf8',
+    allowMissingAudience: parseBoolean(process.env.MICROSOFT_SSO_ALLOW_MISSING_AUDIENCE, false),
+    jwtIssuer: process.env.MICROSOFT_SSO_JWT_ISSUER || undefined,
+    jwtAudience: process.env.MICROSOFT_SSO_JWT_AUDIENCE || undefined,
+    studentFrontendCallbackUrl: process.env.STUDENT_SSO_FRONTEND_CALLBACK_URL || '',
+    adminFrontendCallbackUrl: process.env.ADMIN_SSO_FRONTEND_CALLBACK_URL || '',
+  }),
+  curriculum: Object.freeze({
+    primaryDatabase: process.env.CURRICULUM_PRIMARY_DATABASE || 'DHBK_CDS',
+    metadataDatabase: process.env.CURRICULUM_METADATA_DATABASE || 'DATA_GVien1',
+    requirementsDatabase: process.env.CURRICULUM_REQUIREMENTS_DATABASE || 'DATA_SV2',
+  }),
+  publicApis: Object.freeze({
+    sources: Object.freeze({
+      'course-registration': parseBaseUrl(
+        'COURSE_REGISTRATION_API_BASE_URL',
+        process.env.COURSE_REGISTRATION_API_BASE_URL ?? 'https://dangkytinchi.dut.udn.vn',
+      ),
+      tkb: parseBaseUrl(
+        'TKB_API_BASE_URL',
+        process.env.TKB_API_BASE_URL ?? 'https://timetable.dut.udn.vn',
+      ),
+    }),
+    timeoutMs: parseInteger('PUBLIC_API_TIMEOUT_MS', process.env.PUBLIC_API_TIMEOUT_MS, 8000, 100, 60000),
+    maxResponseBytes: parseInteger(
+      'PUBLIC_API_MAX_RESPONSE_BYTES', process.env.PUBLIC_API_MAX_RESPONSE_BYTES, 5242880, 1024, 20971520,
+    ),
   }),
 });

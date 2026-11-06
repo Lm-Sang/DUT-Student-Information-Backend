@@ -1,4 +1,4 @@
-import { healthRouter } from './health.routes.js';
+import { healthRouter } from './routes/health.routes.js';
 
 export default {
   basePath: '/api/health',

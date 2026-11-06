@@ -1,0 +1,15 @@
+{
+  "code": "DonSV06",
+  "version": "2026-10-25.3",
+  "slug": "thoi-hoc",
+  "title": "ĐƠN ĐỀ NGHỊ XÉT THÔI HỌC",
+  "kind": "WITHDRAWAL",
+  "source": [
+    "thôi học.docx"
+  ],
+  "body": "Tôi làm đơn này kính đề nghị Nhà trường giải quyết cho tôi thôi học, với lý do: {withdrawalReason}. {reasonDetail}",
+  "commitment": "Tôi trình CCCD của tôi để Nhà trường đối chiếu với bản photo công chứng; tôi nộp bản photo công chứng CCCD của tôi kèm theo đơn này.",
+  "receipt": "đơn đề nghị giải quyết thôi học",
+  "receiptInstruction": "Đề nghị sinh viên theo dõi website “Hệ thống thông tin sinh viên” để biết tiến trình xử lý hồ sơ và đến nhận Quyết định khi hồ sơ được giải quyết.",
+  "engine": "PDFKIT_COMPILED_LAYOUT"
+}

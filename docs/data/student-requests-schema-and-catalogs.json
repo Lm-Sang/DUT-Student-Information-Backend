@@ -1,0 +1,2807 @@
+{
+  "inspectedOn": "2026-10-24",
+  "source": "School SQL Server; read-only metadata, catalogues and aggregate queries with configured secondary account",
+  "privacy": "No student/staff records, request free text, passwords, phone numbers or addresses are included. Credential column names appear only as schema metadata.",
+  "tables": [
+    {
+      "database": "DATA_SV1",
+      "schema": "dbo",
+      "name": "LoaiDon",
+      "columns": [
+        {
+          "name": "STT",
+          "type": "int",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "KyHieuDon",
+          "type": "nvarchar(10)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LoaiDon",
+          "type": "nvarchar(250)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "HieuLuc",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DonThoiHoc",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "ChoSVDoc",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LoaiCombo",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "TaiChinh",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NoiNhanGiaoHS",
+          "type": "nvarchar(500)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "CaoHoc",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    },
+    {
+      "database": "DATA_SV1",
+      "schema": "dbo",
+      "name": "His_InDon",
+      "columns": [
+        {
+          "name": "ID",
+          "type": "int",
+          "nullable": false,
+          "identity": true
+        },
+        {
+          "name": "IDCode",
+          "type": "nvarchar(4)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaHS",
+          "type": "nvarchar(9)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LoaiDon",
+          "type": "nvarchar(10)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayInDon",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "IP",
+          "type": "nvarchar(max)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MAC",
+          "type": "nvarchar(12)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayNhanDon",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayXuLy",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NoiDungXL",
+          "type": "nvarchar(50)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaCB",
+          "type": "nvarchar(10)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DRD01",
+          "type": "nvarchar(30)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DRD02",
+          "type": "nvarchar(30)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "CHK01",
+          "type": "nvarchar(10)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "CHK02",
+          "type": "nvarchar(10)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LD01",
+          "type": "nvarchar(max)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LD02",
+          "type": "nvarchar(max)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "Huy",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "TongHPHoan",
+          "type": "float",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "ListLopHoan",
+          "type": "nvarchar(300)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "HoanBienCo",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "XacNhanHP",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "HanHP",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DuyetHoan",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "HanHP_Duyet",
+          "type": "date",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDThoi_So",
+          "type": "nvarchar(50)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDThoi_Ngay",
+          "type": "date",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDThoi_Note",
+          "type": "nvarchar(500)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDThoi_DongY",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "BuocThoi",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "PhuHuynhDN",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaCBND",
+          "type": "nvarchar(10)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDThoi_BanIn",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    },
+    {
+      "database": "DATA_SV1",
+      "schema": "dbo",
+      "name": "DeNghiEmail",
+      "columns": [
+        {
+          "name": "ID",
+          "type": "int",
+          "nullable": false,
+          "identity": true
+        },
+        {
+          "name": "IDCode",
+          "type": "nvarchar(4)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaHS",
+          "type": "nvarchar(9)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaEmail",
+          "type": "nvarchar(1)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayDeNghi",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "KDinh",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "TTbosung",
+          "type": "nvarchar(355)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "TruongPhanHoi",
+          "type": "nvarchar(355)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayXuLy",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NguoiXuLy",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MatKhauEmail",
+          "type": "nvarchar(50)",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    },
+    {
+      "database": "DATA_SV1",
+      "schema": "dbo",
+      "name": "DeNghiVanBan",
+      "columns": [
+        {
+          "name": "ID",
+          "type": "int",
+          "nullable": false,
+          "identity": true
+        },
+        {
+          "name": "IDCode",
+          "type": "nvarchar(4)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "STT",
+          "type": "int",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaHS",
+          "type": "nvarchar(9)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayDeNghi",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaVanban",
+          "type": "nvarchar(2)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LoaiDN",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "KyHieu",
+          "type": "nvarchar(20)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LePhi",
+          "type": "int",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "SoLuong",
+          "type": "int",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "ThanhTien",
+          "type": "float",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DaXL",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayXuLy",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NguoiXuLy",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "Huy",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayHuy",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NguoiHuy",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "SLIn",
+          "type": "int",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "Khan",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "SVLap",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "KDinh",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "TTbosung",
+          "type": "nvarchar(255)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "Reply",
+          "type": "nvarchar(255)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DaNhan",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "Datinh",
+          "type": "int",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MienPhi",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "nguoitraHS",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "ngaytraHS",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    },
+    {
+      "database": "DATA_SV1",
+      "schema": "dbo",
+      "name": "NhanThan",
+      "columns": [
+        {
+          "name": "MaHS",
+          "type": "char(9)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "SoThe",
+          "type": "char(12)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "Hoten",
+          "type": "nvarchar(50)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "Lop",
+          "type": "nvarchar(20)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LMS_PW0",
+          "type": "nvarchar(20)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MKemail",
+          "type": "nvarchar(50)",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    },
+    {
+      "database": "DATA_SV1",
+      "schema": "dbo",
+      "name": "SVMenu",
+      "columns": [
+        {
+          "name": "CanLogin",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "AnMenu",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "TenPage",
+          "type": "nvarchar(500)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NoiDungMenu",
+          "type": "nvarchar(500)",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    },
+    {
+      "database": "DATA_GVien1",
+      "schema": "dbo",
+      "name": "Sys_Email",
+      "columns": [
+        {
+          "name": "ID",
+          "type": "int",
+          "nullable": false,
+          "identity": true
+        },
+        {
+          "name": "MaEmail",
+          "type": "nvarchar(1)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "TenDenghi",
+          "type": "nvarchar(200)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "HieuLuc",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    },
+    {
+      "database": "DATA_GVien1",
+      "schema": "dbo",
+      "name": "Sys_VanBan",
+      "columns": [
+        {
+          "name": "ID",
+          "type": "int",
+          "nullable": false,
+          "identity": true
+        },
+        {
+          "name": "IDCode",
+          "type": "nvarchar(4)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaVanBan",
+          "type": "nvarchar(2)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "TenVanBan",
+          "type": "nvarchar(200)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LePhiThuong",
+          "type": "int",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LePhiNhanh",
+          "type": "int",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "HieuLuc",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "KhongMienPhi",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "SoLuongMien_Ngay",
+          "type": "int",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NhomVB",
+          "type": "nvarchar(1)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "KhongCapNeuKhongHoc",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "ThongTinDinhKem",
+          "type": "nvarchar(500)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaDVcap",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "Caohoc",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "Nhanluc",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    },
+    {
+      "database": "DATA_GVien1",
+      "schema": "dbo",
+      "name": "SV_QuyenXN",
+      "columns": [
+        {
+          "name": "ID",
+          "type": "int",
+          "nullable": false,
+          "identity": true
+        },
+        {
+          "name": "MaHS",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaLoaiDon",
+          "type": "nvarchar(20)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayPQ",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QuyenNhanDon",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QuyenXuLy",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    },
+    {
+      "database": "DATA_GVien1",
+      "schema": "dbo",
+      "name": "tmQuyenXNVB",
+      "columns": [
+        {
+          "name": "ID",
+          "type": "int",
+          "nullable": false,
+          "identity": true
+        },
+        {
+          "name": "IDCode",
+          "type": "nvarchar(4)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaND",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaVBXN",
+          "type": "nvarchar(50)",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    },
+    {
+      "database": "DATA_GVien1",
+      "schema": "dbo",
+      "name": "tmHosoGV",
+      "columns": [
+        {
+          "name": "MaHS",
+          "type": "nvarchar(5)",
+          "nullable": false,
+          "identity": false
+        },
+        {
+          "name": "Hoten",
+          "type": "nvarchar(255)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "TaiKhoan",
+          "type": "nvarchar(20)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "Nhom",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaCBVC",
+          "type": "nvarchar(50)",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    },
+    {
+      "database": "DATA_GVien1",
+      "schema": "dbo",
+      "name": "tmDonVi",
+      "columns": [
+        {
+          "name": "MaDV",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaBP",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "TenDV",
+          "type": "nvarchar(255)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LuuTru",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    },
+    {
+      "database": "DATA_GVien1",
+      "schema": "dbo",
+      "name": "CBDeNghiEmail",
+      "columns": [
+        {
+          "name": "ID",
+          "type": "int",
+          "nullable": false,
+          "identity": true
+        },
+        {
+          "name": "IDCode",
+          "type": "nvarchar(4)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaHS",
+          "type": "nvarchar(9)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MaEmail",
+          "type": "nvarchar(1)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayDeNghi",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "KDinh",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "TTbosung",
+          "type": "nvarchar(355)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "TruongPhanHoi",
+          "type": "nvarchar(355)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayXuLy",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NguoiXuLy",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "MatKhauEmail",
+          "type": "nvarchar(50)",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    },
+    {
+      "database": "DATA_GVien1",
+      "schema": "dbo",
+      "name": "tmNgungTroLaiHoc",
+      "columns": [
+        {
+          "name": "ID",
+          "type": "int",
+          "nullable": false,
+          "identity": true
+        },
+        {
+          "name": "MaDeNghi",
+          "type": "nvarchar(12)",
+          "nullable": false,
+          "identity": false
+        },
+        {
+          "name": "MaSV",
+          "type": "nvarchar(9)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LyDoNgung",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "SoKyNgung",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgungTuKy",
+          "type": "nvarchar(4)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "XacNhanNgung",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDNgung_So",
+          "type": "nvarchar(50)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDNgung_Ngay",
+          "type": "date",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDNgung_BanIn",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LyDoGiaHan1",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "SoKyGiaHan1",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "XacNhanGiaHan1",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDGiaHan_So1",
+          "type": "nvarchar(50)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDGiaHan_Ngay1",
+          "type": "date",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDGiaHan_BanIn1",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "LyDoGiaHan2",
+          "type": "nvarchar(5)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "SoKyGiaHan2",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "XacNhanGiaHan2",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDGiaHan_So2",
+          "type": "nvarchar(50)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDGiaHan_Ngay2",
+          "type": "date",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDGiaHan_BanIn2",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "KyTroLai",
+          "type": "nvarchar(4)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "XacNhanTroLai",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDTroLai_So",
+          "type": "nvarchar(50)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDTroLai_Ngay",
+          "type": "date",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "QDTroLai_BanIn",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NhanDonNgung",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NguoiNDNgung",
+          "type": "nvarchar(10)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NhanDonTroLai",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NguoiNDTLai",
+          "type": "nvarchar(10)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NhanDonGH",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NguoiNDGH",
+          "type": "nvarchar(10)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DuyetNgung",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayDuyetNgung",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DuyetNgungNote",
+          "type": "nvarchar(500)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NguoiDuyetNgung",
+          "type": "nvarchar(10)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DuyetHoan",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayDuyetHoan",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DuyetHoanNote",
+          "type": "nvarchar(500)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NguoiDuyetHoan",
+          "type": "nvarchar(10)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DuyetTroLai",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NgayDuyetTroLai",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DuyetTroLaiNote",
+          "type": "nvarchar(500)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "NguoiDuyetTroLai",
+          "type": "nvarchar(10)",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "BuocNgung",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "PhuHuynhDN",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "PhuHuynhDNGH",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "Lock",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DuyetCong_SoKy",
+          "type": "tinyint",
+          "nullable": true,
+          "identity": false
+        },
+        {
+          "name": "DuyetCong_Date",
+          "type": "datetime",
+          "nullable": true,
+          "identity": false
+        }
+      ]
+    }
+  ],
+  "catalogues": {
+    "requestTypes": [
+      {
+        "STT": 1,
+        "KyHieuDon": "DonSV01",
+        "LoaiDon": "Đề nghị cấp lại thẻ sinh viên",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": 1,
+        "LoaiCombo": 1,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 2,
+        "KyHieuDon": "HOANHP",
+        "LoaiDon": "Đề nghị xét hoãn đóng học phí",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": null,
+        "LoaiCombo": 0,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 3,
+        "KyHieuDon": "DonSV03",
+        "LoaiDon": "Đề nghị xét công nhận tốt nghiệp",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": 1,
+        "LoaiCombo": 1,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 4,
+        "KyHieuDon": "DonSV04",
+        "LoaiDon": "Đề nghị xét hoãn tốt nghiệp",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": 1,
+        "LoaiCombo": 1,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 5,
+        "KyHieuDon": "DonSV05",
+        "LoaiDon": "Đề nghị xét học bổng khuyến học",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": 1,
+        "LoaiCombo": 1,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 6,
+        "KyHieuDon": "DonSV07",
+        "LoaiDon": "Đề nghị xét học chương trình 2",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": 1,
+        "LoaiCombo": 1,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 7,
+        "KyHieuDon": "DonSV06",
+        "LoaiDon": "Đề nghị giải quyết thủ tục thôi học",
+        "HieuLuc": 1,
+        "DonThoiHoc": 1,
+        "ChoSVDoc": 1,
+        "LoaiCombo": 1,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 8,
+        "KyHieuDon": "BHTTPHI",
+        "LoaiDon": "Thu phí bảo hiểm thân thể",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": null,
+        "LoaiCombo": 0,
+        "TaiChinh": 1,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa, Phòng KHTC",
+        "CaoHoc": null
+      },
+      {
+        "STT": 9,
+        "KyHieuDon": "BHYTPHI",
+        "LoaiDon": "Thu phí bảo hiểm y tế",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": null,
+        "LoaiCombo": 0,
+        "TaiChinh": 1,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa, Phòng KHTC",
+        "CaoHoc": null
+      },
+      {
+        "STT": 10,
+        "KyHieuDon": "NHPHI",
+        "LoaiDon": "Thu phí nhập học",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": null,
+        "LoaiCombo": 0,
+        "TaiChinh": 1,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa, Phòng KHTC",
+        "CaoHoc": null
+      },
+      {
+        "STT": 11,
+        "KyHieuDon": "NNPHI",
+        "LoaiDon": "Thu phí thi ngoại ngữ",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": null,
+        "LoaiCombo": 0,
+        "TaiChinh": 1,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa, Phòng KHTC",
+        "CaoHoc": null
+      },
+      {
+        "STT": 12,
+        "KyHieuDon": "NHHOSO",
+        "LoaiDon": "Nhận hồ sơ nhập học",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": null,
+        "LoaiCombo": 0,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 13,
+        "KyHieuDon": "NHGIAYCN",
+        "LoaiDon": "Nhận Giấy chứng nhận nhập học",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": null,
+        "LoaiCombo": 0,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 14,
+        "KyHieuDon": "TROLAIHT",
+        "LoaiDon": "Đơn đề nghị trở lại học tập",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": null,
+        "LoaiCombo": 0,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 15,
+        "KyHieuDon": "GIAHAN",
+        "LoaiDon": "Đơn đề nghị gia hạn ngừng học",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": null,
+        "LoaiCombo": 0,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 16,
+        "KyHieuDon": "NGUNGHOC",
+        "LoaiDon": "Đơn đề nghị ngừng học",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": null,
+        "LoaiCombo": 0,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 17,
+        "KyHieuDon": "PHUCKHAO",
+        "LoaiDon": "Đơn đề nghị phúc khảo",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": null,
+        "LoaiCombo": 0,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 18,
+        "KyHieuDon": "BOSUNG",
+        "LoaiDon": "Đơn đề nghị thi bổ sung",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": null,
+        "LoaiCombo": 0,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      },
+      {
+        "STT": 19,
+        "KyHieuDon": "HOANTHI",
+        "LoaiDon": "Đơn đề nghị hoãn thi",
+        "HieuLuc": 1,
+        "DonThoiHoc": null,
+        "ChoSVDoc": null,
+        "LoaiCombo": 0,
+        "TaiChinh": null,
+        "NoiNhanGiaoHS": "Khu Hành chính một cửa",
+        "CaoHoc": null
+      }
+    ],
+    "supportTypes": [
+      {
+        "ID": 1,
+        "MaEmail": "1",
+        "TenDenghi": "Tài khoản Office365 Trường cấp",
+        "HieuLuc": 1
+      },
+      {
+        "ID": 2,
+        "MaEmail": "2",
+        "TenDenghi": "Tài khoản email Trường cấp (*)",
+        "HieuLuc": 0
+      },
+      {
+        "ID": 3,
+        "MaEmail": "3",
+        "TenDenghi": "Tài khoản DUT-LMS",
+        "HieuLuc": 1
+      }
+    ],
+    "latestDocumentTerm": "2610",
+    "documentTypes": [
+      {
+        "IDCode": "2610",
+        "MaVanBan": "01",
+        "TenVanBan": "Xác nhận sinh viên",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 1,
+        "NhomVB": "A",
+        "ThongTinDinhKem": "Cần nhập lý do đề nghị giấy xác nhận",
+        "MaDVcap": "120",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "02",
+        "TenVanBan": "Xác nhận SV vay tiền",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 1,
+        "NhomVB": "B",
+        "ThongTinDinhKem": "",
+        "MaDVcap": "120",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "03",
+        "TenVanBan": "Kết quả rèn luyện",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 1,
+        "NhomVB": "C",
+        "ThongTinDinhKem": null,
+        "MaDVcap": "120",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "04",
+        "TenVanBan": "Bảng điểm học kỳ",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 1,
+        "NhomVB": "D",
+        "ThongTinDinhKem": "Ghi rõ Học kỳ xin cấp bảng điểm, VD: HK 1/20224-2025",
+        "MaDVcap": "115",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "05",
+        "TenVanBan": "Bảng điểm năm học",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 1,
+        "NhomVB": "D",
+        "ThongTinDinhKem": "Ghi rõ năm học nào, ví dụ: năm học 2024-2025",
+        "MaDVcap": "115",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "06",
+        "TenVanBan": "Bảng điểm quá trình",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 1,
+        "NhomVB": "D",
+        "ThongTinDinhKem": "Bảng điểm tất cả các kỳ",
+        "MaDVcap": "115",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "08",
+        "TenVanBan": "Bảng điểm học kỳ (tiếng Anh)",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 1,
+        "NhomVB": null,
+        "ThongTinDinhKem": "Cần ghi rõ học kỳ cần xin cấp bảng điểm",
+        "MaDVcap": "115",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "09",
+        "TenVanBan": "Bảng điểm năm học (tiếng Anh)",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 1,
+        "NhomVB": null,
+        "ThongTinDinhKem": "Ghi rõ năm học nào",
+        "MaDVcap": "115",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "10",
+        "TenVanBan": "Bảng điểm quá trình (tiếng Anh)",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 1,
+        "NhomVB": null,
+        "ThongTinDinhKem": "tất cả các kỳ",
+        "MaDVcap": "115",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "12",
+        "TenVanBan": "Kết quả rèn luyện SV đã tốt nghiệp",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 0,
+        "NhomVB": null,
+        "ThongTinDinhKem": "",
+        "MaDVcap": "120",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "13",
+        "TenVanBan": "Xác nhận hoãn NVQS",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 1,
+        "NhomVB": "F",
+        "ThongTinDinhKem": "Chỉ cấp nếu sinh viên đã đăng ký học, nhập lý do đăng ký",
+        "MaDVcap": "120",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "14",
+        "TenVanBan": "Xác nhận học viên",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 0,
+        "NhomVB": "C",
+        "ThongTinDinhKem": "",
+        "MaDVcap": "",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "14",
+        "TenVanBan": "Xác nhận học viên",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 0,
+        "NhomVB": "C",
+        "ThongTinDinhKem": "",
+        "MaDVcap": "",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "15",
+        "TenVanBan": "Bảng điểm học viên",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 0,
+        "NhomVB": "C",
+        "ThongTinDinhKem": "Ghi rõ năm học nào",
+        "MaDVcap": "",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "16",
+        "TenVanBan": "Bảng điểm tốt nghiệp học viên",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 0,
+        "NhomVB": null,
+        "ThongTinDinhKem": "",
+        "MaDVcap": "",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "18",
+        "TenVanBan": "SV học quá KHĐT chuẩn - Xác nhận hoãn NVQS",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 1,
+        "NhomVB": null,
+        "ThongTinDinhKem": "VD: kế hoạch ĐT chuẩn 8 học kỳ, SV đang học HK thứ 9",
+        "MaDVcap": "120",
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "19",
+        "TenVanBan": "Xác nhận SV (dành cho SV Lào)",
+        "LePhiThuong": null,
+        "LePhiNhanh": null,
+        "HieuLuc": 0,
+        "NhomVB": null,
+        "ThongTinDinhKem": null,
+        "MaDVcap": null,
+        "Caohoc": null,
+        "Nhanluc": null
+      },
+      {
+        "IDCode": "2610",
+        "MaVanBan": "20",
+        "TenVanBan": "Xác nhận hoãn NVQS (P.CTSV)",
+        "LePhiThuong": 0,
+        "LePhiNhanh": 0,
+        "HieuLuc": 0,
+        "NhomVB": null,
+        "ThongTinDinhKem": "",
+        "MaDVcap": "120",
+        "Caohoc": null,
+        "Nhanluc": null
+      }
+    ]
+  },
+  "aggregateEvidence": {
+    "formUsage": [
+      {
+        "LoaiDon": "DonSV01",
+        "typeName": "Đề nghị cấp lại thẻ sinh viên",
+        "requestCount": "7370"
+      },
+      {
+        "LoaiDon": "DonSV03",
+        "typeName": "Đề nghị xét công nhận tốt nghiệp",
+        "requestCount": "14309"
+      },
+      {
+        "LoaiDon": "DonSV04",
+        "typeName": "Đề nghị xét hoãn tốt nghiệp",
+        "requestCount": "267"
+      },
+      {
+        "LoaiDon": "DonSV05",
+        "typeName": "Đề nghị xét học bổng khuyến học",
+        "requestCount": "1947"
+      },
+      {
+        "LoaiDon": "DonSV06",
+        "typeName": "Đề nghị giải quyết thủ tục thôi học",
+        "requestCount": "1027"
+      },
+      {
+        "LoaiDon": "DonSV07",
+        "typeName": "Đề nghị xét học chương trình 2",
+        "requestCount": "210"
+      },
+      {
+        "LoaiDon": "HOANHP",
+        "typeName": "Đề nghị xét hoãn đóng học phí",
+        "requestCount": "1229"
+      }
+    ],
+    "supportUsage": [
+      {
+        "MaEmail": "0",
+        "requestCount": "1",
+        "datedProcessingCount": 0
+      },
+      {
+        "MaEmail": "1",
+        "requestCount": "37697",
+        "datedProcessingCount": 33577
+      },
+      {
+        "MaEmail": "2",
+        "requestCount": "5422",
+        "datedProcessingCount": 5422
+      },
+      {
+        "MaEmail": "3",
+        "requestCount": "28701",
+        "datedProcessingCount": 12957
+      }
+    ],
+    "formFieldUsage": [
+      {
+        "LoaiDon": "DonSV01",
+        "total": "7370",
+        "DRD01Used": 0,
+        "DRD02Used": 0,
+        "CHK01Used": 7370,
+        "CHK02Used": 0,
+        "LD01Used": 137,
+        "LD02Used": 3126,
+        "ld02SemesterCodeCount": 0
+      },
+      {
+        "LoaiDon": "DonSV03",
+        "total": "14309",
+        "DRD01Used": 14309,
+        "DRD02Used": 0,
+        "CHK01Used": 0,
+        "CHK02Used": 0,
+        "LD01Used": 0,
+        "LD02Used": 6466,
+        "ld02SemesterCodeCount": 0
+      },
+      {
+        "LoaiDon": "DonSV04",
+        "total": "267",
+        "DRD01Used": 0,
+        "DRD02Used": 0,
+        "CHK01Used": 0,
+        "CHK02Used": 0,
+        "LD01Used": 0,
+        "LD02Used": 181,
+        "ld02SemesterCodeCount": 0
+      },
+      {
+        "LoaiDon": "DonSV05",
+        "total": "1947",
+        "DRD01Used": 1947,
+        "DRD02Used": 0,
+        "CHK01Used": 0,
+        "CHK02Used": 0,
+        "LD01Used": 1947,
+        "LD02Used": 1119,
+        "ld02SemesterCodeCount": 0
+      },
+      {
+        "LoaiDon": "DonSV06",
+        "total": "1027",
+        "DRD01Used": 1027,
+        "DRD02Used": 0,
+        "CHK01Used": 0,
+        "CHK02Used": 0,
+        "LD01Used": 0,
+        "LD02Used": 0,
+        "ld02SemesterCodeCount": 0
+      },
+      {
+        "LoaiDon": "DonSV07",
+        "total": "210",
+        "DRD01Used": 210,
+        "DRD02Used": 210,
+        "CHK01Used": 0,
+        "CHK02Used": 0,
+        "LD01Used": 0,
+        "LD02Used": 175,
+        "ld02SemesterCodeCount": 0
+      },
+      {
+        "LoaiDon": "HOANHP",
+        "total": "1229",
+        "DRD01Used": 0,
+        "DRD02Used": 0,
+        "CHK01Used": 0,
+        "CHK02Used": 0,
+        "LD01Used": 1222,
+        "LD02Used": 268,
+        "ld02SemesterCodeCount": 0
+      }
+    ],
+    "cardChoices": [
+      {
+        "choiceCode": "LD0",
+        "total": "7245",
+        "ld01Used": 12,
+        "ld02Used": 3047
+      },
+      {
+        "choiceCode": "LD1",
+        "total": "125",
+        "ld01Used": 125,
+        "ld02Used": 79
+      }
+    ],
+    "formPermissions": [
+      {
+        "MaLoaiDon": "BHTTPHI",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "16",
+        "staffCount": 16
+      },
+      {
+        "MaLoaiDon": "BHTTPHI",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "5",
+        "staffCount": 5
+      },
+      {
+        "MaLoaiDon": "BHYTPHI",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "16",
+        "staffCount": 16
+      },
+      {
+        "MaLoaiDon": "BHYTPHI",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "5",
+        "staffCount": 5
+      },
+      {
+        "MaLoaiDon": "BOSUNG",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "15",
+        "staffCount": 15
+      },
+      {
+        "MaLoaiDon": "BOSUNG",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": "5",
+        "staffCount": 5
+      },
+      {
+        "MaLoaiDon": "BOSUNG",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "2",
+        "staffCount": 2
+      },
+      {
+        "MaLoaiDon": "DonSV01",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "20",
+        "staffCount": 20
+      },
+      {
+        "MaLoaiDon": "DonSV01",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "2",
+        "staffCount": 2
+      },
+      {
+        "MaLoaiDon": "DonSV02",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "1",
+        "staffCount": 1
+      },
+      {
+        "MaLoaiDon": "DonSV03",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "15",
+        "staffCount": 15
+      },
+      {
+        "MaLoaiDon": "DonSV03",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": "5",
+        "staffCount": 5
+      },
+      {
+        "MaLoaiDon": "DonSV03",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "2",
+        "staffCount": 2
+      },
+      {
+        "MaLoaiDon": "DonSV04",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "15",
+        "staffCount": 15
+      },
+      {
+        "MaLoaiDon": "DonSV04",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": "5",
+        "staffCount": 5
+      },
+      {
+        "MaLoaiDon": "DonSV04",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "2",
+        "staffCount": 2
+      },
+      {
+        "MaLoaiDon": "DonSV05",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "20",
+        "staffCount": 20
+      },
+      {
+        "MaLoaiDon": "DonSV05",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "2",
+        "staffCount": 2
+      },
+      {
+        "MaLoaiDon": "DonSV06",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "15",
+        "staffCount": 15
+      },
+      {
+        "MaLoaiDon": "DonSV06",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": "2",
+        "staffCount": 2
+      },
+      {
+        "MaLoaiDon": "DonSV06",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "5",
+        "staffCount": 5
+      },
+      {
+        "MaLoaiDon": "DonSV07",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "16",
+        "staffCount": 16
+      },
+      {
+        "MaLoaiDon": "DonSV07",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": "4",
+        "staffCount": 4
+      },
+      {
+        "MaLoaiDon": "DonSV07",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "2",
+        "staffCount": 2
+      },
+      {
+        "MaLoaiDon": "GIAHAN",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "15",
+        "staffCount": 15
+      },
+      {
+        "MaLoaiDon": "GIAHAN",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": "3",
+        "staffCount": 3
+      },
+      {
+        "MaLoaiDon": "GIAHAN",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "4",
+        "staffCount": 4
+      },
+      {
+        "MaLoaiDon": "HOANHP",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "18",
+        "staffCount": 18
+      },
+      {
+        "MaLoaiDon": "HOANHP",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": "1",
+        "staffCount": 1
+      },
+      {
+        "MaLoaiDon": "HOANHP",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "2",
+        "staffCount": 2
+      },
+      {
+        "MaLoaiDon": "HOANTHI",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "15",
+        "staffCount": 15
+      },
+      {
+        "MaLoaiDon": "HOANTHI",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": "5",
+        "staffCount": 5
+      },
+      {
+        "MaLoaiDon": "HOANTHI",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "2",
+        "staffCount": 2
+      },
+      {
+        "MaLoaiDon": "NGUNGHOC",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "15",
+        "staffCount": 15
+      },
+      {
+        "MaLoaiDon": "NGUNGHOC",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": "3",
+        "staffCount": 3
+      },
+      {
+        "MaLoaiDon": "NGUNGHOC",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "4",
+        "staffCount": 4
+      },
+      {
+        "MaLoaiDon": "NHGIAYCN",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "21",
+        "staffCount": 21
+      },
+      {
+        "MaLoaiDon": "NHGIAYCN",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "1",
+        "staffCount": 1
+      },
+      {
+        "MaLoaiDon": "NHHOSO",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "18",
+        "staffCount": 18
+      },
+      {
+        "MaLoaiDon": "NHHOSO",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": "2",
+        "staffCount": 2
+      },
+      {
+        "MaLoaiDon": "NHHOSO",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "2",
+        "staffCount": 2
+      },
+      {
+        "MaLoaiDon": "NHPHI",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "20",
+        "staffCount": 20
+      },
+      {
+        "MaLoaiDon": "NHPHI",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "2",
+        "staffCount": 2
+      },
+      {
+        "MaLoaiDon": "NNPHI",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "16",
+        "staffCount": 16
+      },
+      {
+        "MaLoaiDon": "NNPHI",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "5",
+        "staffCount": 5
+      },
+      {
+        "MaLoaiDon": "PHUCKHAO",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "13",
+        "staffCount": 13
+      },
+      {
+        "MaLoaiDon": "PHUCKHAO",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": "6",
+        "staffCount": 6
+      },
+      {
+        "MaLoaiDon": "PHUCKHAO",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "3",
+        "staffCount": 3
+      },
+      {
+        "MaLoaiDon": "TROLAIHT",
+        "QuyenNhanDon": 0,
+        "QuyenXuLy": 0,
+        "assignments": "15",
+        "staffCount": 15
+      },
+      {
+        "MaLoaiDon": "TROLAIHT",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 0,
+        "assignments": "3",
+        "staffCount": 3
+      },
+      {
+        "MaLoaiDon": "TROLAIHT",
+        "QuyenNhanDon": 1,
+        "QuyenXuLy": 1,
+        "assignments": "4",
+        "staffCount": 4
+      }
+    ],
+    "documentPermissions": [
+      {
+        "IDCode": "2610",
+        "MaVBXN": "01",
+        "assignments": "8",
+        "staffCount": 8
+      },
+      {
+        "IDCode": "2610",
+        "MaVBXN": "02",
+        "assignments": "8",
+        "staffCount": 8
+      },
+      {
+        "IDCode": "2610",
+        "MaVBXN": "03",
+        "assignments": "8",
+        "staffCount": 8
+      },
+      {
+        "IDCode": "2610",
+        "MaVBXN": "04",
+        "assignments": "16",
+        "staffCount": 16
+      },
+      {
+        "IDCode": "2610",
+        "MaVBXN": "05",
+        "assignments": "16",
+        "staffCount": 16
+      },
+      {
+        "IDCode": "2610",
+        "MaVBXN": "06",
+        "assignments": "16",
+        "staffCount": 16
+      },
+      {
+        "IDCode": "2610",
+        "MaVBXN": "08",
+        "assignments": "15",
+        "staffCount": 15
+      },
+      {
+        "IDCode": "2610",
+        "MaVBXN": "09",
+        "assignments": "15",
+        "staffCount": 15
+      },
+      {
+        "IDCode": "2610",
+        "MaVBXN": "10",
+        "assignments": "15",
+        "staffCount": 15
+      },
+      {
+        "IDCode": "2610",
+        "MaVBXN": "12",
+        "assignments": "6",
+        "staffCount": 6
+      },
+      {
+        "IDCode": "2610",
+        "MaVBXN": "13",
+        "assignments": "8",
+        "staffCount": 8
+      },
+      {
+        "IDCode": "2610",
+        "MaVBXN": "18",
+        "assignments": "8",
+        "staffCount": 8
+      },
+      {
+        "IDCode": "2610",
+        "MaVBXN": "20",
+        "assignments": "8",
+        "staffCount": 8
+      }
+    ],
+    "actorLinks": [
+      {
+        "table": "His_InDon",
+        "field": "MaCB",
+        "distinctActors": 6,
+        "staffIdMatches": 6,
+        "staffLoginMatches": 0,
+        "advisorStaffIdMatches": 1,
+        "advisorLoginMatches": 0
+      },
+      {
+        "table": "His_InDon",
+        "field": "MaCBND",
+        "distinctActors": 12,
+        "staffIdMatches": 12,
+        "staffLoginMatches": 0,
+        "advisorStaffIdMatches": 1,
+        "advisorLoginMatches": 0
+      },
+      {
+        "table": "DeNghiEmail",
+        "field": "NguoiXuLy",
+        "distinctActors": 8,
+        "staffIdMatches": 8,
+        "staffLoginMatches": 0,
+        "advisorStaffIdMatches": 1,
+        "advisorLoginMatches": 0
+      },
+      {
+        "table": "DeNghiVanBan",
+        "field": "NguoiXuLy",
+        "distinctActors": 12,
+        "staffIdMatches": 12,
+        "staffLoginMatches": 0,
+        "advisorStaffIdMatches": 0,
+        "advisorLoginMatches": 0
+      },
+      {
+        "table": "DeNghiVanBan",
+        "field": "nguoitraHS",
+        "distinctActors": 24,
+        "staffIdMatches": 24,
+        "staffLoginMatches": 0,
+        "advisorStaffIdMatches": 1,
+        "advisorLoginMatches": 0
+      },
+      {
+        "table": "DeNghiVanBan",
+        "field": "NguoiHuy",
+        "distinctActors": 4,
+        "staffIdMatches": 4,
+        "staffLoginMatches": 0,
+        "advisorStaffIdMatches": 0,
+        "advisorLoginMatches": 0
+      }
+    ],
+    "permissionLinks": [
+      {
+        "source": "SV_QuyenXN.MaHS",
+        "assignments": "415",
+        "staffIdMatches": 415
+      },
+      {
+        "source": "tmQuyenXNVB.MaND",
+        "assignments": "849",
+        "staffIdMatches": 849
+      }
+    ],
+    "issuerUnits": [
+      {
+        "MaDVcap": "115",
+        "TenDV": "P. Đào tạo và BĐCL"
+      },
+      {
+        "MaDVcap": "120",
+        "TenDV": "P. Công tác sinh viên"
+      }
+    ],
+    "studentRegistryLinks": [
+      {
+        "source": "His_InDon",
+        "requests": "26359",
+        "matchedStudent": 26351
+      },
+      {
+        "source": "DeNghiEmail",
+        "requests": "71821",
+        "matchedStudent": 71249
+      },
+      {
+        "source": "DeNghiVanBan",
+        "requests": "60901",
+        "matchedStudent": 60897
+      }
+    ],
+    "portalAccountStudentLinks": [
+      {
+        "source": "His_InDon",
+        "requests": "26359",
+        "matchedStudent": 5328
+      },
+      {
+        "source": "DeNghiEmail",
+        "requests": "71821",
+        "matchedStudent": 30482
+      },
+      {
+        "source": "DeNghiVanBan",
+        "requests": "60901",
+        "matchedStudent": 50593
+      }
+    ]
+  },
+  "metadataEvidence": {
+    "foreignKeys": {
+      "DATA_SV1": [],
+      "DATA_GVien1": []
+    },
+    "visibleSqlModules": [
+      {
+        "sqlModules": 83,
+        "readableDefinitions": 0
+      }
+    ],
+    "formMetadataCandidates": [
+      [
+        {
+          "Tab": "tmGiadinh_GV",
+          "fieldCount": "12"
+        },
+        {
+          "Tab": "tmhosogv",
+          "fieldCount": "72"
+        },
+        {
+          "Tab": "tmhososv",
+          "fieldCount": "49"
+        },
+        {
+          "Tab": "udeGiadinh",
+          "fieldCount": "12"
+        },
+        {
+          "Tab": "udeKhenthuong",
+          "fieldCount": "7"
+        },
+        {
+          "Tab": "udeKhenthuong_GV",
+          "fieldCount": "7"
+        },
+        {
+          "Tab": "udeKyluat",
+          "fieldCount": "8"
+        },
+        {
+          "Tab": "udeKyluat_GV",
+          "fieldCount": "8"
+        },
+        {
+          "Tab": "udeNgoaingu",
+          "fieldCount": "8"
+        },
+        {
+          "Tab": "udeNgoaingu_GV",
+          "fieldCount": "8"
+        },
+        {
+          "Tab": "udeQTCT_GV",
+          "fieldCount": "9"
+        },
+        {
+          "Tab": "udeQTHT",
+          "fieldCount": "8"
+        },
+        {
+          "Tab": "udeQTHT_GV",
+          "fieldCount": "8"
+        }
+      ],
+      [
+        {
+          "TabName": "udeGiadinh",
+          "TenGoi": "Quan hệ gia đình"
+        },
+        {
+          "TabName": "udeGiadinh_GV",
+          "TenGoi": "Quan hệ gia đình"
+        },
+        {
+          "TabName": "udeKhenthuong",
+          "TenGoi": "Khen thưởng"
+        },
+        {
+          "TabName": "udeKhenthuong_GV",
+          "TenGoi": "Khen thưởng"
+        },
+        {
+          "TabName": "udeKyluat",
+          "TenGoi": "Kỷ luật"
+        },
+        {
+          "TabName": "udeKyluat_GV",
+          "TenGoi": "Kỷ luật"
+        },
+        {
+          "TabName": "udeNgoaingu",
+          "TenGoi": "Ngoại ngữ"
+        },
+        {
+          "TabName": "udeNgoaingu_GV",
+          "TenGoi": "Ngoại ngữ"
+        },
+        {
+          "TabName": "udeQTCT_GV",
+          "TenGoi": "Quá trình công tác"
+        },
+        {
+          "TabName": "udeQTHT",
+          "TenGoi": "Quá trình học tập"
+        },
+        {
+          "TabName": "udeQTHT_GV",
+          "TenGoi": "Quá trình học tập"
+        }
+      ],
+      [
+        {
+          "matchingRequestFields": "0"
+        }
+      ]
+    ],
+    "catalogDuplicates": [
+      {
+        "IDCode": "2610",
+        "MaVanBan": "14",
+        "copies": "2"
+      }
+    ],
+    "indexes": [
+      {
+        "tableName": "DeNghiVanBan",
+        "indexName": "IX_DNVB_IDCode_Huy_KDinh",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "IDCode",
+        "ordinal": 1
+      },
+      {
+        "tableName": "DeNghiVanBan",
+        "indexName": "IX_DNVB_IDCode_Huy_KDinh",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "Huy",
+        "ordinal": 2
+      },
+      {
+        "tableName": "DeNghiVanBan",
+        "indexName": "IX_DNVB_IDCode_Huy_KDinh",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "KDinh",
+        "ordinal": 3
+      },
+      {
+        "tableName": "DeNghiVanBan",
+        "indexName": "IX_DNVB_IDCode_DaXL_Reply",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "IDCode",
+        "ordinal": 1
+      },
+      {
+        "tableName": "DeNghiVanBan",
+        "indexName": "IX_DNVB_IDCode_DaXL_Reply",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "DaXL",
+        "ordinal": 2
+      },
+      {
+        "tableName": "DeNghiVanBan",
+        "indexName": "IX_DNVB_IDCode_DaXL_Reply",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "Reply",
+        "ordinal": 3
+      },
+      {
+        "tableName": "DeNghiVanBan",
+        "indexName": "IX_DNVB_IDCode_Reply_DaXL_STT",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "IDCode",
+        "ordinal": 1
+      },
+      {
+        "tableName": "DeNghiVanBan",
+        "indexName": "IX_DNVB_IDCode_Reply_DaXL_STT",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "Reply",
+        "ordinal": 2
+      },
+      {
+        "tableName": "DeNghiVanBan",
+        "indexName": "IX_DNVB_IDCode_Reply_DaXL_STT",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "DaXL",
+        "ordinal": 3
+      },
+      {
+        "tableName": "DeNghiVanBan",
+        "indexName": "IX_DNVB_IDCode_Reply_DaXL_STT",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "STT",
+        "ordinal": 4
+      },
+      {
+        "tableName": "His_InDon",
+        "indexName": "PK_His_InDon",
+        "primaryKey": true,
+        "isUnique": true,
+        "columnName": "ID",
+        "ordinal": 1
+      },
+      {
+        "tableName": "His_InDon",
+        "indexName": "IX_His_InDon_Paging",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "IDCode",
+        "ordinal": 1
+      },
+      {
+        "tableName": "His_InDon",
+        "indexName": "IX_His_InDon_Paging",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "NgayInDon",
+        "ordinal": 2
+      },
+      {
+        "tableName": "His_InDon",
+        "indexName": "IX_His_InDon_Paging",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "NgayNhanDon",
+        "ordinal": 3
+      },
+      {
+        "tableName": "His_InDon",
+        "indexName": "IX_His_InDon_Paging",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "NgayXuLy",
+        "ordinal": 4
+      },
+      {
+        "tableName": "His_InDon",
+        "indexName": "IX_His_InDon_DonSV06",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "LoaiDon",
+        "ordinal": 1
+      },
+      {
+        "tableName": "His_InDon",
+        "indexName": "IX_His_InDon_DonSV06",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "MaHS",
+        "ordinal": 2
+      },
+      {
+        "tableName": "LoaiDon",
+        "indexName": "IX_LoaiDon_KyHieuDon",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "KyHieuDon",
+        "ordinal": 1
+      },
+      {
+        "tableName": "SV_QuyenXN",
+        "indexName": "PK_SV_QuyenXN",
+        "primaryKey": true,
+        "isUnique": true,
+        "columnName": "ID",
+        "ordinal": 1
+      },
+      {
+        "tableName": "Sys_VanBan",
+        "indexName": "IX_SysVanBan_MaVanBan",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "MaVanBan",
+        "ordinal": 1
+      },
+      {
+        "tableName": "tmHosoGV",
+        "indexName": "IX_tmHosoGV_MaHS_SoTK",
+        "primaryKey": false,
+        "isUnique": false,
+        "columnName": "MaHS",
+        "ordinal": 1
+      },
+      {
+        "tableName": "tmQuyenXNVB",
+        "indexName": "PK_tmQuyenXNVB",
+        "primaryKey": true,
+        "isUnique": true,
+        "columnName": "ID",
+        "ordinal": 1
+      }
+    ],
+    "requestMenu": [
+      {
+        "TenPage": "PageLapDonXN.aspx",
+        "NoiDungMenu": "Cấp văn bản xác nhận",
+        "CanLogin": 1,
+        "AnMenu": 0
+      },
+      {
+        "TenPage": "PageLapDonDN.aspx",
+        "NoiDungMenu": "Xét học bổng khuyến khích học tập",
+        "CanLogin": 1,
+        "AnMenu": 0
+      },
+      {
+        "TenPage": "PageLapDonDN.aspx",
+        "NoiDungMenu": "Cấp lại thẻ sinh viên",
+        "CanLogin": 1,
+        "AnMenu": 0
+      },
+      {
+        "TenPage": "PageLapDonDN.aspx",
+        "NoiDungMenu": "Xét tốt nghiệp, hoãn tốt nghiệp",
+        "CanLogin": 1,
+        "AnMenu": 0
+      },
+      {
+        "TenPage": "PageLapDonDN.aspx",
+        "NoiDungMenu": "Xét học chương trình 2 tại Trường",
+        "CanLogin": 1,
+        "AnMenu": 0
+      },
+      {
+        "TenPage": "PageLapDonDN.aspx",
+        "NoiDungMenu": "Giải quyết thủ tục thôi học",
+        "CanLogin": 1,
+        "AnMenu": 0
+      }
+    ],
+    "supportMenu": [
+      {
+        "TenPage": "PageDLMS.aspx",
+        "NoiDungMenu": "Hỗ trợ tài khoản Email, LMS",
+        "CanLogin": 1,
+        "AnMenu": 0
+      }
+    ]
+  },
+  "unresolved": [
+    "Meaning of LD0/LD1 labels is inferred, not verified from legacy Web Forms code.",
+    "No request form field-definition table was identified in visible metadata; SQL module definitions are not readable.",
+    "DRD01/DRD02/CHK01/CHK02/LD01/LD02 semantics differ by request type; application code is needed to finalize contracts.",
+    "Actual LMS password source in the screenshot was not verified and no credential values were read."
+  ]
+}
