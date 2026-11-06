@@ -6,7 +6,7 @@ import {createRequestsRepository} from '../src/common/student-requests/repositor
 import {createRequestCatalogRepository} from '../src/common/student-requests/repositories/catalog.repository.js';
 import {workCatalog} from '../src/common/student-requests/rules/work-permissions.js';
 import {functionPermissions,legacyFunctions} from '../src/common/student-requests/rules/rbac.js';
-import {effectivePermissionsViewSql} from '../src/common/student-requests/repositories/rbac-views.js';
+import {effectivePermissionsViewSql,organizationPermissionsViewSql} from '../src/common/student-requests/repositories/rbac-views.js';
 
 assertLocalDemoTarget();
 try{
@@ -18,7 +18,7 @@ try{
   `IF OBJECT_ID('svc_demo.VaiTroRBAC','U') IS NULL CREATE TABLE svc_demo.VaiTroRBAC(MaRole varchar(64) PRIMARY KEY,TenRole nvarchar(150) NOT NULL UNIQUE,MoTa nvarchar(1000) NOT NULL,HieuLuc bit NOT NULL DEFAULT 1,PhienBan int NOT NULL DEFAULT 1,NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),NgayCapNhat datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),NguoiTao nvarchar(40) NOT NULL REFERENCES svc_demo.TaiKhoan(MaHS));`,
   `IF OBJECT_ID('svc_demo.VaiTroQuyen','U') IS NULL CREATE TABLE svc_demo.VaiTroQuyen(MaRole varchar(64) NOT NULL REFERENCES svc_demo.VaiTroRBAC(MaRole),MaQuyen varchar(100) NOT NULL REFERENCES svc_demo.QuyenRBAC(MaQuyen),PRIMARY KEY(MaRole,MaQuyen));`,
   `IF OBJECT_ID('svc_demo.TaiKhoanVaiTro','U') IS NULL CREATE TABLE svc_demo.TaiKhoanVaiTro(MaHS nvarchar(40) NOT NULL REFERENCES svc_demo.TaiKhoan(MaHS),MaRole varchar(64) NOT NULL REFERENCES svc_demo.VaiTroRBAC(MaRole),NguoiGan nvarchar(40) NOT NULL REFERENCES svc_demo.TaiKhoan(MaHS),NgayGan datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),PRIMARY KEY(MaHS,MaRole));`,
-  `IF OBJECT_ID('svc_demo.DangNhapChuyenVien','U') IS NULL CREATE TABLE svc_demo.DangNhapChuyenVien(MaHS nvarchar(40) PRIMARY KEY REFERENCES svc_demo.TaiKhoan(MaHS),TenDangNhap varchar(64) NOT NULL UNIQUE,MatKhauBam varchar(200) NOT NULL,NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME());`,
+  `IF OBJECT_ID('svc_demo.DangNhapChuyenVien','U') IS NULL CREATE TABLE svc_demo.DangNhapChuyenVien(MaHS nvarchar(40) PRIMARY KEY REFERENCES svc_demo.TaiKhoan(MaHS),TenDangNhap nvarchar(64) NOT NULL UNIQUE,MatKhauBam varchar(200) NOT NULL,NgayTao datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME());`,
   `IF OBJECT_ID('svc_demo.PhienBanVaiTro','U') IS NULL CREATE TABLE svc_demo.PhienBanVaiTro(MaRole varchar(64) NOT NULL REFERENCES svc_demo.VaiTroRBAC(MaRole),PhienBan int NOT NULL,TenRole nvarchar(150) NOT NULL,MoTa nvarchar(1000) NOT NULL,HieuLuc bit NOT NULL,NguoiSua nvarchar(40) NOT NULL REFERENCES svc_demo.TaiKhoan(MaHS),NgayLuu datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME(),PRIMARY KEY(MaRole,PhienBan));`,
   `IF OBJECT_ID('svc_demo.PhienBanVaiTroQuyen','U') IS NULL CREATE TABLE svc_demo.PhienBanVaiTroQuyen(MaRole varchar(64) NOT NULL,PhienBan int NOT NULL,MaQuyen varchar(100) NOT NULL REFERENCES svc_demo.QuyenRBAC(MaQuyen),PRIMARY KEY(MaRole,PhienBan,MaQuyen),FOREIGN KEY(MaRole,PhienBan) REFERENCES svc_demo.PhienBanVaiTro(MaRole,PhienBan));`,
   `IF OBJECT_ID('svc_demo.LichSuRBAC','U') IS NULL CREATE TABLE svc_demo.LichSuRBAC(ID bigint IDENTITY PRIMARY KEY,MaNguoiThucHien nvarchar(40) NOT NULL REFERENCES svc_demo.TaiKhoan(MaHS),ThaoTac varchar(30) NOT NULL,MaRole varchar(64) NULL,MaTaiKhoan nvarchar(40) NULL,MoTa nvarchar(2000) NOT NULL,NgayLap datetime2(3) NOT NULL DEFAULT SYSUTCDATETIME());`,
@@ -27,7 +27,8 @@ try{
  const [catalog,types]=await Promise.all([createRequestsRepository().catalogs(),createRequestCatalogRepository().list()]),term=catalog.settings.find(s=>s.SettingKey==='currentTerm').SettingValue;
  const permissions=[...functionPermissions,...workCatalog(types,catalog.documents.filter(d=>d.termCode===term)).map(w=>({key:'work:'+w.key,name:w.name,group:'Phạm vi loại đơn'}))];
  for(const p of permissions)await query(guard+`IF NOT EXISTS(SELECT 1 FROM svc_demo.QuyenRBAC WHERE MaQuyen=?) INSERT svc_demo.QuyenRBAC VALUES(?,?,?);`,[p.key,p.key,p.name,p.group]);
- const view=effectivePermissionsViewSql;
+ const scoped=(await query("SELECT OBJECT_ID(N'auth.AccountProfiles',N'U') AS id")).first[0]?.id;
+ const view=scoped?organizationPermissionsViewSql:effectivePermissionsViewSql;
  await query(guard+`EXEC(N'${view.replaceAll("'","''")}');`);
  const workView=`CREATE OR ALTER VIEW svc_demo.vQuyenXuLy AS SELECT MaHS,SUBSTRING(MaQuyen,6,60) AS MaCongViec,CONVERT(bit,1) AS QuyenNhanDon,CONVERT(bit,1) AS QuyenXuLy FROM svc_demo.vQuyenHieuLuc WHERE MaQuyen LIKE 'work:%'`;
  await query(guard+`EXEC(N'${workView.replaceAll("'","''")}');`);

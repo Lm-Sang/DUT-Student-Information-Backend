@@ -75,6 +75,14 @@ export function createAuthStore({ filename = ':memory:', now = Date.now, maxEntr
       return row && row.expires_at > now() ? JSON.parse(row.payload) : null;
     },
     delete(key) { database().prepare('DELETE FROM auth_entries WHERE key = ?').run(key); },
+    revokeSsoToken(key, expiresAt) {
+      transaction(connection => {
+        cleanup(connection);
+        if (!connection.prepare('SELECT 1 FROM auth_entries WHERE key = ?').get(key)) capacity(connection, 'auth_entries');
+        connection.prepare(`INSERT INTO auth_entries(key, expires_at, payload) VALUES (?, ?, 'true')
+          ON CONFLICT(key) DO UPDATE SET expires_at = MAX(expires_at, excluded.expires_at)`).run(key, expiresAt);
+      });
+    },
     createSession(session, refreshHash) {
       transaction(connection => {
         cleanup(connection);
@@ -91,16 +99,23 @@ export function createAuthStore({ filename = ':memory:', now = Date.now, maxEntr
     },
     rotateRefresh(hash, nextHash, channel, sessionId) {
       return transaction(connection => {
+        cleanup(connection);
         const row = connection.prepare(`SELECT r.used, s.id, s.channel, s.expires_at, s.revoked, s.payload
           FROM auth_refresh_tokens r JOIN auth_sessions s ON s.id = r.session_id WHERE r.hash = ?`).get(hash);
         if (!row || row.id !== sessionId || row.channel !== channel || row.revoked || row.expires_at <= now()) return null;
         if (row.used) {
+          const grace = connection.prepare('SELECT 1 FROM auth_entries WHERE key = ? AND expires_at > ?')
+            .get(`refresh-grace:${hash}`, now());
+          if (grace) return 'retry';
           connection.prepare("UPDATE auth_sessions SET revoked = 1, payload = '{}' WHERE id = ?").run(row.id);
           return null;
         }
         capacity(connection, 'auth_refresh_tokens');
+        capacity(connection, 'auth_entries');
         connection.prepare('UPDATE auth_refresh_tokens SET used = 1 WHERE hash = ?').run(hash);
         connection.prepare('INSERT INTO auth_refresh_tokens(hash, session_id) VALUES (?, ?)').run(nextHash, row.id);
+        connection.prepare("INSERT INTO auth_entries(key, expires_at, payload) VALUES (?, ?, 'true')")
+          .run(`refresh-grace:${hash}`, now() + 5000);
         return JSON.parse(row.payload);
       });
     },

@@ -139,7 +139,7 @@ export const env = Object.freeze({
   jwt: Object.freeze({
     secret: process.env.JWT_SECRET ?? '',
     expiresIn: process.env.JWT_EXPIRES_IN ?? '1h',
-    shareSsoKey: parseBoolean(process.env.JWT_SHARE_SSO_KEY, true),
+    shareSsoKey: parseBoolean(process.env.JWT_SHARE_SSO_KEY, false),
     staffAudience: process.env.JWT_STAFF_AUDIENCE ?? 'dut-student-information-staff',
     issuer: process.env.JWT_ISSUER ?? 'dut-student-information-backend',
     studentAudience:

@@ -27,7 +27,8 @@ export function createAuthController(channel, service, {
   }
 
   function sendSession(res, result) {
-    res.cookie(refreshCookieName, result.refreshToken, { ...refreshCookieOptions, maxAge: result.maxAge });
+    if (result.refreshToken) res.cookie(refreshCookieName, result.refreshToken, { ...refreshCookieOptions, maxAge: result.maxAge });
+    else res.clearCookie(refreshCookieName, refreshCookieOptions);
     return sendSuccess(res, result.data);
   }
 
@@ -40,7 +41,7 @@ export function createAuthController(channel, service, {
     async callback(req, res) {
       const expected = readCookie(req, cookieName);
       res.clearCookie(cookieName, cookieOptions);
-      const { state, accessToken } = parseAuthCallbackQuery(req.query, expected);
+      const { state, accessToken } = parseAuthCallbackQuery(req.query, expected, req.params.state);
       service.consumeState(channel, state);
       const pending = await service.exchangeToken(channel, accessToken);
       const handoff = service.createHandoff(channel, pending);
@@ -84,7 +85,7 @@ export function createAuthController(channel, service, {
       return sendSuccess(res, createAuthMeDto(channel, toAuthUserDto(req.user), req.user));
     },
     async logout(req, res) {
-      const refreshToken = readCookie(req, refreshCookieName);
+      const refreshToken = channel === 'student' ? undefined : readCookie(req, refreshCookieName);
       if (refreshToken || req.headers.origin) requireFrontendOrigin(req);
       try {
         if (refreshToken) service.logoutSession(channel, refreshToken);

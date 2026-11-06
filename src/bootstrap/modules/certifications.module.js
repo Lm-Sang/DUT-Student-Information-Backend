@@ -22,13 +22,19 @@ import { createAdminCertificationsRouter } from "../../admin/modules/certificati
 import { createStudentItCertificationsRouter } from "../../student/modules/certifications/routes/it-certifications.routes.js";
 import { createAdminItCertificationsRouter } from "../../admin/modules/certifications/routes/it-certifications.routes.js";
 
-const reviewerContext = createLocalPermissionContext("certifications:review");
+const reviewerContext = createLocalPermissionContext("certifications:review", undefined, 1);
 const catalogContext = createLocalPermissionContext(
   "certifications:catalog:manage",
+  undefined, 1,
 );
 const localReviewerAuthentication = {
   actor: (req, role) =>
     (role === "catalog" ? catalogContext : reviewerContext)(req),
+};
+const localItReviewerAuthentication = {
+  actor: (req, role) => createLocalPermissionContext(
+    role === 'catalog' ? 'certifications:catalog:manage' : 'certifications:review', undefined, 2,
+  )(req),
 };
 
 export function createCertificationsModule({
@@ -65,7 +71,7 @@ export function createCertificationsModule({
     studentContextProvider,
     reviewerAuthentication?.actor,
   );
-  const eventHandler = createCertificationEventsController(events, config);
+  const eventHandler = createCertificationEventsController(events, config, 'language');
   return {
     basePath: "/api/certifications",
     router: createCertificationsRouter(
@@ -89,7 +95,7 @@ export function createItCertificationsModule({
   inspectImage = createDocumentImageInspector(config),
   contextProvider,
   studentContextProvider = createDutStudentContext(),
-  reviewerAuthentication = localReviewerAuthentication,
+  reviewerAuthentication = localItReviewerAuthentication,
   clock,
   events = certificationEvents,
   inspectionQueue = certificationImageQueue,
@@ -115,12 +121,13 @@ export function createItCertificationsModule({
     studentContextProvider,
     reviewerAuthentication?.actor,
   );
+  const eventHandler = createCertificationEventsController(events, config, 'it');
   return {
     basePath: "/api/it-certifications",
     service,
-    router: createItCertificationsRouter(controller, context),
-    studentRouter: createStudentItCertificationsRouter(studentController, context),
-    adminRouter: createAdminItCertificationsRouter(adminController, context),
+    router: createItCertificationsRouter(controller, context, eventHandler),
+    studentRouter: createStudentItCertificationsRouter(studentController, context, eventHandler),
+    adminRouter: createAdminItCertificationsRouter(adminController, context, eventHandler),
   };
 }
 

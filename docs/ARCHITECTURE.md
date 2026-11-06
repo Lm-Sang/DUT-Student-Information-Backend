@@ -1,5 +1,9 @@
 # Kiến trúc backend theo frontend và module
 
+Phân quyền ba cấp, phòng và tác vụ được mô tả tại [AUTH_ORGANIZATION.md](AUTH_ORGANIZATION.md).
+Schema và quyền hiệu lực thuộc [common/auth](../src/common/auth/); API quản lý
+và truy vấn tiến độ chỉ dành cho admin thuộc [organization](../src/admin/modules/organization/).
+
 Quy tắc bắt buộc cho agent: [AGENTS.md](../AGENTS.md).
 Các đường dẫn thay đổi và alias API: [REFACTOR_LAYOUT.md](REFACTOR_LAYOUT.md).
 
@@ -89,7 +93,10 @@ Adapter ở bootstrap/routes chỉ ghép các router student/admin để giữ U
 Không sao chép khai báo endpoint hoặc redirect POST/PATCH sang URL mới.
 Các alias dùng chung service, kiểm tra quyền và bộ giới hạn request của module.
 
-Auth giữ nguyên audience, cookie path, state/handoff, refresh rotation và thu hồi phiên.
+Sinh viên dùng nguyên access token SSO, xác minh HS256/secret/hạn dùng và logout tại common/auth;
+không dùng JWT hoặc refresh riêng của BE. State được ràng buộc qua đường dẫn callback
+và cookie; handoff trả lại token SSO gốc. Admin/staff giữ audience và cookie path riêng,
+dùng khóa JWT nội bộ độc lập; refresh trùng trong 5 giây trả 409, replay sau đó thu hồi phiên.
 Không tự coi đổi thư mục thành quyền truy cập mới. Chi tiết channel hiện hành nằm trong
 [AUTH_CHANNELS.md](AUTH_CHANNELS.md).
 
@@ -106,3 +113,25 @@ của module công khai. Mẫu biểu/font giữ ở assets, không nhân bản 
 Chạy npm run test:feature -- <module> để chọn test theo module ở mọi khu vực,
 npm test để chạy toàn bộ offline, npm run check để kiểm tra cú pháp .js và .mjs.
 Architecture test kiểm tra hướng phụ thuộc, tầng, import tồn tại và vị trí test/CLI.
+
+## Nguồn phân quyền duy nhất
+
+Tài khoản local, mật khẩu và quyền nằm trong common/auth. Admin tổng quản lý phòng/admin phòng;
+admin phòng quản lý chuyên viên và tác vụ cùng phòng; chuyên viên xử lý đúng task được giao.
+Không fallback sang role/permission demo khi thiếu profile. Bootstrap không mount module demo;
+API requests không cung cấp CRUD tài khoản/role. SQL workflow giữ view quyền tương thích nhưng
+view chỉ đọc auth. Bản ghi người xử lý và hồ sơ lịch sử được giữ, không sao chép credential mới
+sang demo. Chi tiết tại [AUTH_ORGANIZATION.md](AUTH_ORGANIZATION.md).
+
+## Dữ liệu chuyên viên/admin của chứng chỉ và nghỉ học
+
+Các API đọc hồ sơ và tiến độ dùng DB local cùng snapshot đã lưu; không gọi dịch vụ
+hồ sơ sinh viên hoặc DB trường để bổ sung dữ liệu thiếu trên hồ sơ cũ. Adapter
+DB trường chỉ tham gia các bước lập/nộp hồ sơ của sinh viên cần dữ liệu nguồn.
+SSE ngoại ngữ/tin học dùng endpoint và task riêng. Admin phòng theo dõi, chuyên viên
+được giao tác vụ mới được xử lý; không có cấp duyệt admin bổ sung.
+Xem [workflow và trạng thái](CERTIFICATIONS_ACADEMIC_LEAVE_WORKFLOW.md).
+
+## Quy t?c th?i h?n v? DB local
+
+Xem [quy t?c th?i h?n ch?ng ch?/h?c v?](REQUEST_REGULATIONS.md) v? m?c ti?p nh?n, x? l?, tr? k?t qu? v? tag qu? h?n trong API danh s?ch/chi ti?t. B? [Database_newversion](../Database_newversion/README.md) ch?a c?u tr?c, danh m?c DB local v? h??ng d?n d?ng m?i tr??ng.

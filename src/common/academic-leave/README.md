@@ -18,8 +18,11 @@ Không suy diễn lại những lần xử lý trước khi có lịch sử.
 - Một đơn trước chỉ có một đơn kế tiếp chưa bị từ chối/hủy, bao gồm cả gia hạn
   và trở lại học. Không mở đợt ngừng học mới khi đợt trước chưa có đơn trở lại
   học được duyệt. Không tự coi sinh viên đã trở lại chỉ vì hết số kỳ.
-- `approved` là duyệt hồ sơ online; bản giấy phải nộp trong 72 giờ. Đây chưa phải
-  thao tác đồng bộ quyết định hay trạng thái học tập sang hệ thống trường.
+- `submitted` → xác nhận sẽ tiếp nhận online → `received` (chờ giấy, mốc +3 ngày)
+  → nhận bản giấy → `processing` → chấp nhận `approved` hoặc từ chối `rejected`.
+  Chỉ được từ chối ở `submitted` hoặc `processing`; khi chờ giấy không từ chối.
+  Qua mốc +3 ngày vẫn giữ `received` và cho phép nhận giấy muộn. Không tự đồng bộ
+  quyết định hay trạng thái học tập sang DB trường.
 - Chỉnh sửa, xác nhận, duyệt, nhận giấy và hủy đều giữ lịch sử riêng, gồm người
   xử lý, thời điểm và dữ liệu đơn tại thời điểm đó. Không xóa đơn khi hoàn tất.
 - `If-Match` với `rowVersion` bắt buộc cho mọi thay đổi đơn đã tạo; sai phiên
@@ -42,8 +45,8 @@ viên dùng tài khoản có quyền `academic-leave:review`.
 | GET | `/reviewer/applications` | Chuyên viên xem danh sách, lọc `status`, `page` |
 | GET | `/reviewer/applications/:id` | Chuyên viên xem đơn |
 | GET | `/reviewer/applications/:id/history?page=1` | Chuyên viên xem lịch sử xử lý |
-| POST | `/reviewer/applications/:id/review` | `decision`: `approved`, `needs_changes`, `rejected`; yêu cầu ghi chú nếu không duyệt |
-| POST | `/reviewer/applications/:id/receive-paper` | Xác nhận nhận giấy trong hạn |
+| POST | `/reviewer/applications/:id/review` | Khi `submitted`: `received`, `needs_changes`, `rejected`; khi `processing`: `approved`, `rejected`. Bổ sung/từ chối cần lý do. |
+| POST | `/reviewer/applications/:id/receive-paper` | Xác nhận nhận giấy: `received` → `processing`, kể cả qua mốc +3 ngày |
 | POST | `/print-session`, `/reviewer/print-session` | Cấp cookie in 5 phút với body `{ "MADN": "NH9992600011" }` |
 | GET | `/print?MADN=NH9992600011` | PDF xác thực bằng Bearer hoặc cookie in, không truyền token trong URL |
 
@@ -71,7 +74,9 @@ kết thúc tương ứng. Các ví dụ mã kỳ trên chỉ để minh họa; 
 `/history` trả `{page,pageSize,totalRecords,items}`; mỗi mốc gồm `applicationId`,
 `requestCode`, `action`, `status`, `actorName`, `createdAt`, `data` (bản dữ liệu
 đơn tại thời điểm xử lý). Các action: `migrated`, `created`, `updated`,
-`confirmed`, `reviewed`, `paper_received`, `cancelled`.
+`confirmed`, `reviewed`, `paper_received`, `cancelled`, `workflow_upgraded`.
+`paper_received` là tên action lịch sử, trạng thái sau nhận giấy là `processing`.
+Xem [workflow và migration local](../../../docs/CERTIFICATIONS_ACADEMIC_LEAVE_WORKFLOW.md).
 
 ## PDF và kiểm thử
 

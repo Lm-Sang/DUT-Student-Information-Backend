@@ -1,6 +1,7 @@
 import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
 import { AppError } from '../../../shared/errors/app-error.js';
+import { validatePassword } from '../rules/credentials.js';
 
 const derive = promisify(scrypt);
 const options = { N: 131072, r: 8, p: 1, maxmem: 192 * 1024 * 1024 };
@@ -15,9 +16,7 @@ async function boundedDerive(password, salt) {
 }
 
 export async function hashPassword(password) {
-  if (typeof password !== 'string' || [...password].length < 12 || password.length > 128) {
-    throw new AppError('Password must contain between 12 and 128 characters', 400);
-  }
+  validatePassword(password);
   const salt = randomBytes(16);
   const hash = await boundedDerive(password, salt);
   return `scrypt$131072$8$1$${salt.toString('hex')}$${hash.toString('hex')}`;

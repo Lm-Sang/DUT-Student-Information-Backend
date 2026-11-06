@@ -24,7 +24,7 @@ test('role validation rejects invented permissions, duplicate keys, stale versio
  for(const input of [{...value,permissions:['root.*']},{...value,permissions:['requests.view','requests.view']},{...value,role:'ADMIN'},{...value,active:'true'}])assert.throws(()=>parseRole(input,['requests.view']));assert.throws(()=>parseRole(value,['requests.view'],true));assert.throws(()=>parseAssignments({roleIds:['invented'],version:1},['known']));
 });
 test('account validation does not permit native role/source spoofing or short passwords',()=>{
- const value={name:'Chuyên viên',username:'Staff.Test',password:'qa-password-long-enough',department:'CTSV',roleIds:[]};assert.equal(parseAccount(value,[]).username,'staff.test');assert.throws(()=>parseAccount({...value,role:'ADMIN'},[]));assert.throws(()=>parseAccount({...value,password:'short'},[]));assert.throws(()=>parseAccount({...value,roleIds:['unknown']},[]));
+ const value={name:'Chuyên viên',username:'Staff.Test',password:'qa-password-long-enough-1',department:'CTSV',roleIds:[]};assert.equal(parseAccount(value,[]).username,'staff.test');assert.throws(()=>parseAccount({...value,role:'ADMIN'},[]));assert.throws(()=>parseAccount({...value,password:'short'},[]));assert.throws(()=>parseAccount({...value,roleIds:['unknown']},[]));
 });
 test('password hashes use independent salts, verify correctly and never contain the password',async()=>{
  const password='qa-password-long-enough',a=await hashStaffPassword(password),b=await hashStaffPassword(password);assert.notEqual(a,b);assert(!a.includes(password));assert(await verifyStaffPassword(password,a));assert(!await verifyStaffPassword('wrong',a));assert(!await verifyStaffPassword(password,null));

@@ -1,4 +1,3 @@
-import {createRbacRepository} from './rbac.repository.js';
 import {actionPermission} from '../rules/rbac.js';
 import { queryLocalDatabase,transactionLocalDatabase,entitySchema } from '../../../database.js';
 import {selectEntity,selectRows} from '../../../infrastructure/database/typeorm-repository.js';
@@ -145,17 +144,34 @@ export function createRequestsRepository({ query=queryLocalDatabase,transaction=
     actors:()=>rows(actorQuery().where("HieuLuc=1 AND NguonDanhTinh='DEMO'").orderBy('VaiTro').addOrderBy('MaHS')),
     async actor(id){
       const row=(await rows(actorQuery().where('MaHS=:id AND HieuLuc=1',{id})))[0];if(!row)return null;
-      const[permissions,roles,login]=await Promise.all([rows(table('vQuyenHieuLuc','MaQuyen').distinct().where('MaHS=:id',{id})),rows(selectEntity('svc_demo.TaiKhoanVaiTro','u').innerJoin(entitySchema('svc_demo.VaiTroRBAC'),'r','r.MaRole=u.MaRole').select(['r.MaRole AS id','r.TenRole AS name','r.HieuLuc AS active']).where('u.MaHS=:id',{id})),rows(table('DangNhapChuyenVien','TenDangNhap AS username').where('MaHS=:id',{id}))]);
-      row.Permissions=permissions.map(p=>p.MaQuyen);row.WorkPermissions=row.Permissions.filter(p=>p.startsWith('work:')).map(p=>p.slice(5));row.Roles=roles;row.Username=login[0]?.username??null;return row;
+      if(row.Role==='STUDENT')return {...row,Permissions:[],WorkPermissions:[],Roles:[],Username:null};
+      const account=(await rows(selectEntity('auth.AccountProfiles','p')
+        .innerJoin(entitySchema('auth.LocalAccounts'),'a','a.Id=p.AccountId')
+        .innerJoin(entitySchema('auth.Fields'),'f','f.FieldCode=p.FieldCode')
+        .select(['a.Username AS username','p.AccessLevel AS accessLevel'])
+        .where('p.StaffAccountId=:id',{id}).andWhere("a.IsActive=1 AND f.IsActive=1 AND p.AccessLevel='specialist'")))[0];
+      if(!account)return null;
+      const permissions=await rows(table('vQuyenHieuLuc','MaQuyen').distinct().where('MaHS=:id',{id}));
+      row.Role='STAFF';row.Permissions=permissions.map(p=>p.MaQuyen);
+      row.WorkPermissions=row.Permissions.filter(p=>p.startsWith('work:')).map(p=>p.slice(5));
+      row.Roles=[{id:account.accessLevel,name:account.accessLevel,active:true}];row.Username=account.username;return row;
     },
     async staff(){
-      const[people,permissions,roles,logins]=await Promise.all([rows(actorQuery().where("VaiTro='STAFF' AND HieuLuc=1").orderBy('MaDV').addOrderBy('Hoten')),rows(table('vQuyenHieuLuc',['MaHS','MaQuyen']).distinct()),rows(selectEntity('svc_demo.TaiKhoanVaiTro','u').innerJoin(entitySchema('svc_demo.VaiTroRBAC'),'r','r.MaRole=u.MaRole').select(['u.MaHS AS MaHS','r.MaRole AS id','r.TenRole AS name','r.HieuLuc AS active'])),rows(table('DangNhapChuyenVien',['MaHS','TenDangNhap AS username']))]);
-      return people.map(row=>{const keys=permissions.filter(p=>p.MaHS===row.Id).map(p=>p.MaQuyen);return{...row,Permissions:keys,WorkPermissions:keys.filter(p=>p.startsWith('work:')).map(p=>p.slice(5)),Roles:roles.filter(p=>p.MaHS===row.Id).map(({MaHS,...role})=>role),Username:logins.find(l=>l.MaHS===row.Id)?.username??null};});
+      const [people,permissions,accounts]=await Promise.all([
+        rows(actorQuery().innerJoin(entitySchema('auth.AccountProfiles'),'p','p.StaffAccountId=tk.MaHS')
+          .innerJoin(entitySchema('auth.LocalAccounts'),'a','a.Id=p.AccountId')
+          .innerJoin(entitySchema('auth.Fields'),'f','f.FieldCode=p.FieldCode')
+          .where("tk.VaiTro='STAFF' AND tk.HieuLuc=1 AND a.IsActive=1 AND f.IsActive=1 AND p.AccessLevel='specialist'").orderBy('tk.MaDV').addOrderBy('tk.Hoten')),
+        rows(table('vQuyenHieuLuc',['MaHS','MaQuyen']).distinct()),
+        rows(selectEntity('auth.AccountProfiles','p').innerJoin(entitySchema('auth.LocalAccounts'),'a','a.Id=p.AccountId')
+          .select(['p.StaffAccountId AS actorId','a.Username AS username','p.AccessLevel AS accessLevel']))]);
+      return people.map(row=>{const keys=permissions.filter(p=>p.MaHS===row.Id).map(p=>p.MaQuyen),account=accounts.find(a=>a.actorId===row.Id);
+        return {...row,Permissions:keys,WorkPermissions:keys.filter(p=>p.startsWith('work:')).map(p=>p.slice(5)),
+          Roles:[{id:account.accessLevel,name:account.accessLevel,active:true}],Username:account.username};});
     },
     async workbookSecret(){return (await rows(table('CauHinh','GiaTri').where('MaCauHinh=:key',{key:'workbookSigningKey'})))[0]?.GiaTri;},
-    async setPermissions({adminId,staffId,version,keys}){return createRbacRepository({query,guard}).legacy(adminId,staffId,version,keys);},
     async reassign(d){await write(b=>`DECLARE @id uniqueidentifier=${b(d.id)},@admin nvarchar(40)=${b(d.adminId)},@target nvarchar(40)=${b(d.staffId)},@previous nvarchar(40),@status varchar(30),@work varchar(60),@key nvarchar(100)=${b(d.key)},@hash varchar(64)=${b(d.hash)};
-      IF NOT EXISTS(SELECT 1 FROM svc_demo.TaiKhoan WHERE MaHS=@admin AND HieuLuc=1 AND (VaiTro='ADMIN' OR EXISTS(SELECT 1 FROM svc_demo.vQuyenHieuLuc WITH(UPDLOCK,HOLDLOCK) WHERE MaHS=@admin AND MaQuyen='requests.reassign'))) THROW 51003,'PERMISSION_REVOKED',1;
+      IF NOT EXISTS(SELECT 1 FROM svc_demo.TaiKhoan WHERE MaHS=@admin AND HieuLuc=1 AND EXISTS(SELECT 1 FROM svc_demo.vQuyenHieuLuc WITH(UPDLOCK,HOLDLOCK) WHERE MaHS=@admin AND MaQuyen='requests.reassign')) THROW 51003,'PERMISSION_REVOKED',1;
       IF EXISTS(SELECT 1 FROM svc_demo.ChongGuiTrung WITH(UPDLOCK,HOLDLOCK) WHERE MaHS=@admin AND MaThaoTac=@key) BEGIN
        IF NOT EXISTS(SELECT 1 FROM svc_demo.ChongGuiTrung WHERE MaHS=@admin AND MaThaoTac=@key AND MaBamNoiDung=@hash AND IDDon=@id) THROW 51002,'IDEMPOTENCY_CONFLICT',1;
       END ELSE BEGIN

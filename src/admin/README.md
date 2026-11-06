@@ -1,5 +1,8 @@
 # API chuyên viên và quản trị viên
 
+Module [organization](modules/organization/) cung cấp quản lý phòng/admin phòng/
+chuyên viên và xem tiến độ. Xem [schema, tag và API](../../docs/AUTH_ORGANIZATION.md).
+
 [admin.routes.js](admin.routes.js) là nơi xem và đăng ký các nhóm API dưới
 `/api/admin`: auth admin cũ, xử lý đơn, chứng chỉ ngoại ngữ/CNTT và ngừng học.
 
@@ -13,3 +16,8 @@
 Staff auth tiếp tục ở `/api/staff/auth` để giữ cookie path và audience hiện có.
 Admin auth cũ vẫn opt-in. File gom route không cấp thêm quyền cho tài khoản;
 guard từng module tiếp tục kiểm tra channel và phạm vi xử lý.
+
+Hai channel dùng JWT do BE cấp với `JWT_SECRET` độc lập, khác secret SSO;
+`JWT_SHARE_SSO_KEY=false`. Token SSO không được dùng ở API quản trị.
+Refresh trùng trả 409 trong 5 giây để FE thử lại với cookie mới, không xóa phiên.
+Xem [ma trận token và hướng dẫn FE](../../docs/AUTH_CHANNELS.md).

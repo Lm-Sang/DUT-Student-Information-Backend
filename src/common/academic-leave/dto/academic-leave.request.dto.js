@@ -84,7 +84,7 @@ export function draft(value) {
 }
 export function review(value) {
   object(value, ["decision", "note"]);
-  if (!["approved", "rejected", "needs_changes"].includes(value.decision))
+  if (!["received", "approved", "rejected", "needs_changes"].includes(value.decision))
     fail("Kết quả xét duyệt không hợp lệ.", "decision");
   if (
     value.note !== undefined &&
@@ -92,7 +92,7 @@ export function review(value) {
   )
     fail("Ghi chú tối đa 1000 ký tự.", "note");
   const note = value.note?.trim() ?? "";
-  if (value.decision !== "approved" && !note)
+  if (['rejected','needs_changes'].includes(value.decision) && !note)
     fail("Cần ghi rõ lý do không duyệt hoặc yêu cầu bổ sung.", "note");
   return { decision: value.decision, note };
 }
@@ -106,10 +106,11 @@ export function list(value) {
     ![
       "draft",
       "submitted",
+      "received",
+      "processing",
       "needs_changes",
       "approved",
       "rejected",
-      "paper_received",
       "cancelled",
     ].includes(value.status)
   )

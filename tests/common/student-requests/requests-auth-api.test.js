@@ -27,7 +27,8 @@ async function fixture(t) {
   const auth={verifyToken:async(token,channel)=>{
     verified.push({token,channel});
     if(token==='student.jwt'&&channel==='student')return{authMethod:'sso',identity:{microsoftId:'000000001@sv1.dut.udn.vn'}};
-    if(token==='staff.jwt'&&channel==='staff')return{authMethod:'password',identity:{requestActorId:staff.id}};
+    if(token==='staff.jwt'&&channel==='staff')return{authMethod:'password',identity:{requestActorId:staff.id},permissions:staff.permissions,
+      organization:{active:true,fieldActive:true,accessLevel:'specialist',taskIds:[4]}};
     if(token==='staff-sso.jwt')return{authMethod:'sso',identity:{requestActorId:staff.id}};
     throw new AppError('JWT không hợp lệ hoặc sai audience.',401);
   }};

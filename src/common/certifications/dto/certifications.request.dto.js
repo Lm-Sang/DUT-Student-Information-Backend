@@ -222,18 +222,18 @@ export function parseIssuer(body) {
 }
 export function parseReview(body) {
   const input = object(body, ["decision", "reason", "verificationMethod"]);
-  if (!["verified", "needs_changes", "rejected"].includes(input.decision))
+  if (!["processing", "verified", "needs_changes", "rejected"].includes(input.decision))
     invalid("Quyết định không hợp lệ.", "decision");
   if (
-    !["document_comparison", "issuer_lookup", "other"].includes(
+    (input.decision === 'verified' || input.verificationMethod != null) && !["document_comparison", "issuer_lookup", "other"].includes(
       input.verificationMethod,
     )
   )
     invalid("Cách xác minh không hợp lệ.", "verificationMethod");
   return {
     decision: input.decision,
-    reason: text(input.reason, "reason", 2000, input.decision !== "verified"),
-    verificationMethod: input.verificationMethod,
+    reason: text(input.reason, "reason", 2000, ['needs_changes','rejected'].includes(input.decision)),
+    verificationMethod: input.verificationMethod ?? null,
   };
 }
 export function parseList(query, defaultStatus = null) {
@@ -254,6 +254,7 @@ export function parseList(query, defaultStatus = null) {
     ![
       "uploading",
       "submitted",
+      "processing",
       "needs_changes",
       "verified",
       "rejected",

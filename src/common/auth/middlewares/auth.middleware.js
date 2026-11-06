@@ -4,8 +4,9 @@ import { authService } from '../services/auth.service.js';
 export function createSsoTokenResolver(service = authService) {
   return async req => {
     const match = /^Bearer ([^\s]+)$/i.exec(req.headers.authorization ?? '');
-    if (!match || match[1].length > 8192) throw new AppError('Application Bearer token required', 401);
-    const token = await service.getSsoAccessToken(match[1], 'student');
+    if (!match || match[1].length > 16384) throw new AppError('DUT SSO Bearer token required', 401);
+    req.ssoClaims = await service.verifyToken(match[1], 'student');
+    const token = match[1];
     // Server-only request context; never include this in a response or logs.
     req.ssoAccessToken = token;
     return token;
@@ -14,12 +15,16 @@ export function createSsoTokenResolver(service = authService) {
 
 export const resolveSsoAccessToken = createSsoTokenResolver();
 
-export function createLocalPermissionContext(permission, service = authService) {
+export function createLocalPermissionContext(permission, service = authService, taskId) {
   return async req => {
     const match = /^Bearer ([^\s]+)$/i.exec(req.headers.authorization ?? '');
     if (!match) throw new AppError('Local account Bearer authentication required', 401);
     const claims = await service.verifyToken(match[1], 'admin');
-    if (claims.authMethod !== 'password' || !claims.permissions.includes(permission)) throw new AppError('Permission denied', 403);
+    const profile = claims.organization ?? claims.identity?.organization;
+    const scoped = profile?.active && profile.fieldActive && profile.accessLevel === 'specialist' && profile.taskIds.includes(taskId);
+    const monitoring = profile?.accessLevel === 'department_admin' && profile.fieldCode === 'DT'
+      && ['GET', 'HEAD'].includes(req.method) && permission.endsWith(':review');
+    if (claims.authMethod !== 'password' || !(monitoring || scoped && claims.permissions.includes(permission))) throw new AppError('Permission denied', 403);
     return { role: 'reviewer', source: 'auth', reference: `local-user:${claims.localUserId}`,
       name: claims.identity.displayName, permissions: [...claims.permissions] };
   };
@@ -29,7 +34,7 @@ export function authenticate(channel, service = authService) {
   return async (req, _res, next) => {
     try {
       const match = /^Bearer ([^\s]+)$/i.exec(req.headers.authorization ?? '');
-      if (!match || match[1].length > 8192) throw new AppError('Bearer authentication required', 401);
+      if (!match || match[1].length > (channel === 'student' ? 16384 : 8192)) throw new AppError('Bearer authentication required', 401);
       req.user = await service.verifyToken(match[1], channel);
       next();
     } catch (error) {

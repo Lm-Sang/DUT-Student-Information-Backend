@@ -9,12 +9,3 @@ export function requireStudentInformation(student) {
     422, { code: 'CERT_STUDENT_INFORMATION_REQUIRED', fields });
   return student;
 }
-
-// Snapshots keep the submitted identity stable. Legacy rows are supplemented by
-// a read-only school lookup only after the application ownership check.
-export async function supplementStudentInformation(dto, resolveProfile) {
-  if (dto.fullName && dto.className && /^\d{12}$/.test(dto.cccd ?? '')) return dto;
-  const student = await resolveProfile({ role: 'student', studentCode: dto.studentCode,
-    name: dto.fullName, className: dto.className, cccd: dto.cccd });
-  return { ...dto, ...student };
-}

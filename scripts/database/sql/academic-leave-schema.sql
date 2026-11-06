@@ -1,5 +1,6 @@
 -- Run against the local application database before starting this version.
 -- Re-runnable; preserves applications, request codes and confirmed snapshots.
+-- This base schema must be followed by review-workflow.sql; academic-leave:db:init runs both.
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 BEGIN TRY

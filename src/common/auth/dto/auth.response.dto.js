@@ -10,7 +10,8 @@
 /**
  * @typedef {SsoIdentityDto & {
  *   localUserId: string | number | null,
- *   roles: string[], permissions: string[], authorizationStatus: string
+ *   roles: string[], permissions: string[], authorizationStatus: string,
+ *   organization: object | null, tags: { role: string, fieldCode: string | null, taskIds: number[] } | null
  * }} AuthUserDto
  */
 

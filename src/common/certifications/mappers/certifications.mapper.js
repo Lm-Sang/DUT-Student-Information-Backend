@@ -1,4 +1,5 @@
-import { resolveFormSchema } from '../rules/certifications.rules.js';
+import { requestDeadlines } from '../../request-regulations/index.js';
+import { resolveFormSchema, certificationReviewActions } from '../rules/certifications.rules.js';
 
 const id = value => value?.toLowerCase();
 const utc = value => value ? new Date(/[zZ]|[+-]\d\d:\d\d$/.test(value) ? value : value+'Z').toISOString() : null;
@@ -30,7 +31,7 @@ export function fileDto(file) {
       widthPixels:inspection.widthPixels,heightPixels:inspection.heightPixels,
       algorithm:inspection.algorithmName,algorithmVersion:inspection.algorithmVersion} : null };
 }
-export function applicationDto(row) {
+export function applicationDto(row, now = new Date()) {
   return { id:id(row.Id),studentCode:row.StudentCode,cohortYear:row.CohortYear,
     rowVersion:row.VersionToken,fullName:row.FullName,className:row.ClassName,
     cccd:row.Cccd ?? null,issuingOrganizationId:row.IssuingOrganizationId ?? null,
@@ -38,12 +39,14 @@ export function applicationDto(row) {
     certificateTypeId:row.CertificateTypeId,result:row.Result,
     catalogSnapshot:row.CatalogSnapshot,issuedOn:row.IssuedOn?.slice(0,10),notes:row.Notes ?? null,
     status:row.Status === 'checking' ? 'uploading' : row.Status,processing:row.Status === 'checking',
+    ...requestDeadlines({kind:'certificate',status:row.Status,submittedAt:row.SubmittedAt,receivedAt:row.ReviewedAt}, now),
+    allowedActions:certificationReviewActions(row.Status),
     expiresAt:utc(row.ExpiresAt),submittedAt:utc(row.SubmittedAt),createdAt:utc(row.CreatedAt),updatedAt:utc(row.UpdatedAt),
     files:(row.Files ?? []).map(fileDto),
     review:row.ReviewedAt ? {decision:row.Status,reason:row.ReviewReason ?? null,
       verificationMethod:row.VerificationMethod,reviewerName:row.ReviewerName,reviewedAt:utc(row.ReviewedAt)} : null };
 }
-export function listDto(result) {
+export function listDto(result, now = new Date()) {
   return {page:result.page,pageSize:result.pageSize,totalRecords:result.totalRecords,
     totalPages:Math.ceil(result.totalRecords/result.pageSize),
     items:(result.items ?? []).map(row => ({id:id(row.Id),studentCode:row.StudentCode,cohortYear:row.CohortYear,
@@ -51,5 +54,6 @@ export function listDto(result) {
       certificateTypeName:row.CertificateTypeName ?? null,rowVersion:row.VersionToken,
       className:row.ClassName ?? null,cccd:row.Cccd ?? null,
       issuingOrganizationId:row.IssuingOrganizationId ?? null,issuingOrganizationName:row.IssuingOrganizationName ?? null,
+      ...requestDeadlines({kind:'certificate',status:row.Status,submittedAt:row.SubmittedAt,receivedAt:row.ReviewedAt}, now),
       createdAt:utc(row.CreatedAt),updatedAt:utc(row.UpdatedAt)}))};
 }

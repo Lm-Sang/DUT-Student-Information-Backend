@@ -16,7 +16,7 @@ export const svc_demo_DangNhapChuyenVien=new EntitySchema({
     },
     "TenDangNhap": {
       "name": "TenDangNhap",
-      "type": "varchar",
+      "type": "nvarchar",
       "nullable": false,
       "length": 64
     },

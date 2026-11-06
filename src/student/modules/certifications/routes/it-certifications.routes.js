@@ -1,9 +1,10 @@
 import { Router } from 'express';
 
-export function createStudentItCertificationsRouter(controller, context) {
+export function createStudentItCertificationsRouter(controller, context, eventHandler) {
   const router = Router();
   router.use(context('student'));
   router.get('/form', controller.form);
+  if (eventHandler) router.get('/events', eventHandler);
   router.get('/records', controller.records);
   router.post('/applications', controller.prepare);
   router.post('/applications/:applicationId/complete', controller.complete);

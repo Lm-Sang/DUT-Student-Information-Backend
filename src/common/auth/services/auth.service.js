@@ -8,6 +8,8 @@ import { parseSsoAccessToken, parsePasswordLogin,parsePasswordUpdate } from '../
 import { createAuthSessionDto } from '../dto/auth.response.dto.js';
 import { toSsoIdentityDto } from '../mappers/auth.mapper.js';
 import { verifyPassword,hashPassword } from './password.service.js';
+import { validatePassword } from '../rules/credentials.js';
+import { requireOrganizationManager } from '../rules/organization.js';
 
 const digest = value => createHash('sha256').update(value).digest('hex');
 const failToken = () => new AppError('Invalid or expired application token', 401);
@@ -29,7 +31,7 @@ export function createAuthService({ config = env, repository = authRepository, s
   function requireAppConfig(channel) {
     const aud = audience(channel);
     const signingKey = appKey();
-    const audiences = [config.jwt.studentAudience, config.jwt.adminAudience, config.jwt.staffAudience].filter(Boolean);
+    const audiences = [config.jwt.adminAudience, config.jwt.staffAudience].filter(Boolean);
     if (signingKey.length < 32 || !config.jwt.issuer || !aud
       || config.jwt.issuer === config.microsoftSso?.jwtIssuer
       || new Set(audiences).size !== audiences.length
@@ -39,8 +41,14 @@ export function createAuthService({ config = env, repository = authRepository, s
   }
 
   function appKey() {
-    if (config.jwt.shareSsoKey === true) return ssoKey();
-    return Buffer.from(config.jwt.secret || '');
+    if (config.jwt.shareSsoKey === true) throw new AppError('Set JWT_SHARE_SSO_KEY=false and configure a separate JWT_SECRET for local accounts', 503);
+    const secret = Buffer.from(config.jwt.secret || '');
+    const sso = config.microsoftSso;
+    const ssoEncoding = sso?.jwtSecretEncoding ?? 'utf8';
+    if (sso?.jwtSecret && ['utf8', 'base64'].includes(ssoEncoding) && secret.equals(Buffer.from(sso.jwtSecret, ssoEncoding))) {
+      throw new AppError('JWT_SECRET must differ from the SSO signing key', 503);
+    }
+    return secret;
   }
 
   function ssoKey() {
@@ -54,8 +62,7 @@ export function createAuthService({ config = env, repository = authRepository, s
       throw new AppError('Invalid SSO key encoding configuration', 503);
     }
     const secret = Buffer.from(sso.jwtSecret, encoding);
-    if (!secret.length || (config.jwt.shareSsoKey !== true && secret.equals(Buffer.from(config.jwt.secret || '')))
-      || (config.nodeEnv === 'production' && secret.length < 32)) {
+    if (!secret.length || (config.nodeEnv === 'production' && secret.length < 32)) {
       throw new AppError('SSO signing key is missing, weak or incompatible with the configured key policy', 503);
     }
     return secret;
@@ -74,7 +81,8 @@ export function createAuthService({ config = env, repository = authRepository, s
           && ['student','staff','admin'].includes(claims.channel))) throw new Error();
       const identity = toSsoIdentityDto(claims);
       if (!identity || identity.id.length > 256 || identity.microsoftId.length > 256) throw new Error();
-      return { identity, expiresAt: claims.exp * 1000 };
+      if (store.get(key('revoked', 'student', accessToken))) throw new Error();
+      return { claims, identity, expiresAt: claims.exp * 1000 };
     } catch { throw new AppError('Invalid or expired SSO token', 401); }
   }
 
@@ -91,10 +99,9 @@ export function createAuthService({ config = env, repository = authRepository, s
   }
 
   function requireSsoConfig(channel) {
-    requireAppConfig(channel);
-    ssoKey();
     // SSO identifies school users; an admin URL must never grant staff privileges.
     if (channel !== 'student') throw new AppError('SSO does not grant local administrative access', 403);
+    ssoKey();
     const sso = config.microsoftSso;
     const frontend = channel === 'student' ? config.app.studentFrontendUrl : config.app.adminFrontendUrl;
     const callback = channel === 'student' ? sso.studentCallbackUrl : sso.adminCallbackUrl;
@@ -110,7 +117,8 @@ export function createAuthService({ config = env, repository = authRepository, s
   }
 
   function encryptionKey() {
-    return Buffer.from(hkdfSync('sha256', appKey(), 'dut-auth', 'upstream-token-v1', 32));
+    // Only the short-lived SSO handoff is encrypted; student auth never needs JWT_SECRET.
+    return Buffer.from(hkdfSync('sha256', ssoKey(), 'dut-auth', 'upstream-token-v1', 32));
   }
 
   function encrypt(token, binding) {
@@ -135,6 +143,8 @@ export function createAuthService({ config = env, repository = authRepository, s
       microsoftId: null, displayName: account.displayName, email: null, provider: 'local',
       roles: account.roles, permissions: account.permissions, authorizationStatus: 'active',
       requestActorId: account.requestActorId ?? null,
+      organization: account.organization ?? null,
+      tags: account.organization?.tags ?? null,
     };
   }
 
@@ -176,7 +186,7 @@ export function createAuthService({ config = env, repository = authRepository, s
         clockTimestamp: seconds(), clockTolerance: 0,
       });
       if (header.typ !== (use === 'access' ? 'at+jwt' : 'refresh+jwt') || payload.tokenUse !== use
-        || payload.channel !== channel || !['sso', 'password'].includes(payload.authMethod)
+        || payload.channel !== channel || payload.authMethod !== 'password'
         || typeof payload.sid !== 'string' || !/^[a-f0-9-]{36}$/.test(payload.sid)
         || typeof payload.sub !== 'string' || !payload.sub || typeof payload.jti !== 'string'
         || !Number.isInteger(payload.exp) || !Number.isInteger(payload.iat) || payload.iat > seconds()) throw new Error();
@@ -200,10 +210,18 @@ export function createAuthService({ config = env, repository = authRepository, s
   }
 
   async function verifyToken(token, channel) {
+    if (channel === 'student') {
+      const { claims, identity, expiresAt } = verifySsoToken(token);
+      const user = { ...identity, localUserId: null, roles: ['student'], permissions: [], authorizationStatus: 'active' };
+      return { ...claims, sub: identity.id, sid: null, channel: 'student', authMethod: 'sso', tokenUse: 'access',
+        identity: user, localUserId: null, roles: user.roles, permissions: [], organization: null,
+        authorizationStatus: 'active', ssoExpiresAt: expiresAt, ssoTokenHash: digest(token) };
+    }
     const claims = verifyJwt(token, channel, 'access');
     const session = await activeSession(claims);
     return { ...claims, identity: session.user, localUserId: session.user.localUserId,
       roles: session.user.roles, permissions: session.user.permissions,
+      organization: session.user.organization ?? null,
       authorizationStatus: session.user.authorizationStatus, ssoExpiresAt: session.ssoExpiresAt ?? null };
   }
 
@@ -227,56 +245,60 @@ export function createAuthService({ config = env, repository = authRepository, s
   async function exchangeToken(channel, accessToken) {
     requireSsoConfig(channel);
     const { identity, expiresAt } = verifySsoToken(accessToken);
-    const subject = `sso:${digest(config.microsoftSso.jwtIssuer + '\0' + identity.id)}`;
+    const subject = `sso:${digest(identity.id)}`;
     return { authMethod: 'sso', subject, ssoExpiresAt: expiresAt,
       ssoCiphertext: encrypt(accessToken, `${channel}:${subject}`),
       user: { ...identity, localUserId: null, roles: ['student'], permissions: [], authorizationStatus: 'active' } };
   }
 
   async function updateStaffPassword(claims,body,{targetId}={}) {
-    if(claims?.channel!=='staff'||claims.authMethod!=='password')throw new AppError('Chỉ tài khoản chuyên viên đăng nhập bằng mật khẩu được sử dụng chức năng này.',403);
+    if(!['staff','admin'].includes(claims?.channel)||claims.authMethod!=='password')throw new AppError('Local password authentication required',403);
     const session=await activeSession(claims),reset=targetId!==undefined;
-    const actor=await repository.findStaffById(session.user.localUserId);
+    const findAccount=session.channel==='staff'?repository.findStaffById:repository.findLocalById;
+    const actor=await findAccount(session.user.localUserId);
     if(!actor?.isActive||actor.version!==session.accountVersion)throw failToken();
-    if(reset&&!actor.permissions.includes('rbac.staff.manage'))throw new AppError('Bạn chưa có quyền quản lý tài khoản chuyên viên.',403);
     if(reset&&(typeof targetId!=='string'||!/^[\w:-]{1,40}$/.test(targetId)))throw new AppError('Mã tài khoản không hợp lệ.',400);
     if(reset&&targetId===actor.id)throw new AppError('Hãy dùng chức năng Đổi mật khẩu cho tài khoản của chính bạn.',400);
     const data=parsePasswordUpdate(body,{reset});
     rateLimit(reset?'password-reset':'password-change',actor.id,reset?10:5,900000);
-    const account=reset?await repository.findStaffById(targetId):actor;
-    if(!account?.isActive||account.channel!=='staff')throw new AppError('Không tìm thấy tài khoản chuyên viên có hiệu lực.',404);
+    const account=reset?await repository.findLocalById(targetId):actor;
+    if(!account?.isActive)throw new AppError('Active auth account not found',404);
+    if(reset)requireOrganizationManager({authorizationStatus:'active',organization:actor.organization},account.organization?.accessLevel,account.organization?.fieldCode);
+    validatePassword(data.newPassword, account.username);
     if(!reset&&!await verifyPassword(data.currentPassword,account.passwordHash))throw new AppError('Mật khẩu hiện tại không đúng.',400);
     if(await verifyPassword(data.newPassword,account.passwordHash))throw new AppError('Mật khẩu mới phải khác mật khẩu hiện tại.',400);
     const passwordHash=await hashPassword(data.newPassword);
     await repository.updateStaffPassword({actor,account,passwordHash,reset});
     // Hash/version verification also invalidates sessions in other API processes.
     store.revokeAccountSessions('staff',`local:${account.id}`);
+    store.revokeAccountSessions('admin',`local:${account.id}`);
     return {requiresLogin:true,message:reset?'Đã đặt lại mật khẩu. Các phiên đăng nhập cũ của tài khoản đã bị thu hồi.':'Đã đổi mật khẩu. Vui lòng đăng nhập lại bằng mật khẩu mới.'};
   }
 
   async function refreshSession(channel, refreshToken) {
+    if (channel === 'student') throw new AppError('Sign in with DUT SSO again; the backend cannot refresh an SSO token', 403, { code: 'SSO_REAUTH_REQUIRED' });
     const claims = verifyJwt(refreshToken, channel, 'refresh');
     const session = await activeSession(claims);
     const result = bundle(session);
-    if (!store.rotateRefresh(digest(refreshToken), digest(result.refreshToken), channel, session.id)) throw failToken();
+    const rotated = store.rotateRefresh(digest(refreshToken), digest(result.refreshToken), channel, session.id);
+    if (rotated === 'retry') throw new AppError('Another request already refreshed this session; retry using the current cookie', 409,
+      { code: 'REFRESH_ALREADY_ROTATED', retryAfterSeconds: 1 });
+    if (!rotated) throw failToken();
     return result;
   }
 
   async function getSsoAccessToken(token, channel = 'student') {
     const claims = await verifyToken(token, channel);
     if (claims.authMethod !== 'sso') throw new AppError('Local accounts cannot use DUT SSO APIs', 403, { code: 'SSO_REQUIRED' });
-    const session = store.getSession(claims.sid);
-    if (!session?.ssoCiphertext || session.ssoExpiresAt <= now()) throw failSso();
-    const upstream = decrypt(session.ssoCiphertext, `${channel}:${session.subject}`);
-    verifySsoToken(upstream);
-    return upstream;
+    return token;
   }
 
   function loginUrl(channel, state) {
     requireSsoConfig(channel);
     const sso = config.microsoftSso;
     const callback = new URL(sso.studentCallbackUrl);
-    callback.searchParams.set('state', state);
+    // Gateways may drop callback query parameters. Bind the attempt in the path.
+    callback.pathname += `/${state}`;
     const url = new URL(sso.loginPath, sso.baseUrl);
     url.searchParams.set('callbackUrl', callback.href); url.searchParams.set('response_mode', 'query');
     return url.href;
@@ -306,11 +328,21 @@ export function createAuthService({ config = env, repository = authRepository, s
     if (!entry || entry.bindingHash !== key('binding', channel, binding)) throw new AppError('Invalid or expired login code', 401);
     const consumed = store.consume(entryKey);
     if (!consumed || consumed.pending.ssoExpiresAt <= now()) throw new AppError('Login code expired or already used', 401);
-    return issueSession(channel, consumed.pending);
+    if (channel !== 'student') throw new AppError('SSO is only available to students', 403);
+    const token = decrypt(consumed.pending.ssoCiphertext, `${channel}:${consumed.pending.subject}`);
+    const { identity, expiresAt } = verifySsoToken(token);
+    return { data: createAuthSessionDto({ token, expiresAt: new Date(expiresAt).toISOString(), channel,
+      user: { ...identity, localUserId: null, roles: ['student'], permissions: [], authorizationStatus: 'active' },
+      authMethod: 'sso', ssoAvailable: true, ssoExpiresAt: new Date(expiresAt).toISOString(), refreshExpiresAt: null }) };
   }
 
   function revokeSession(channel, claims) {
     if (claims.channel !== channel) throw failToken();
+    if (channel === 'student') {
+      if (!/^[a-f0-9]{64}$/.test(claims.ssoTokenHash) || !Number.isInteger(claims.exp)) throw failToken();
+      store.revokeSsoToken(`revoked:student:${claims.ssoTokenHash}`, claims.exp * 1000);
+      return;
+    }
     store.revokeSession(claims.sid);
   }
 

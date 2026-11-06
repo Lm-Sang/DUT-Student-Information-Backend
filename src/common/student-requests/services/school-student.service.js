@@ -27,9 +27,10 @@ export function createSchoolStudentService(repository,{connect,readProfile=creat
   return{
     async signIn(claims){
       const number=studentNumberFromIdentity(claims?.identity);
-      // Legacy demo callers have no verified application session and cannot reuse links.
-      if(!claims?.sid)return sync(await load(number));
-      const key=JSON.stringify([claims.sid,claims.sub,claims.identity?.id,number]);
+      // Raw SSO tokens are validated on every request; cache only their profile link.
+      const identityKey=claims?.ssoTokenHash??claims?.sid;
+      if(!identityKey)return sync(await load(number));
+      const key=JSON.stringify([identityKey,claims.sub,claims.identity?.id,number]);
       const cached=links.get(key);
       if(cached&&cached.expiresAt>now())return cached.promise;
       for(const[k,entry]of links)if(entry.expiresAt<=now())links.delete(k);

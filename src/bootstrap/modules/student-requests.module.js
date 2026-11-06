@@ -1,13 +1,10 @@
 import { createStudentProfileService } from "../../common/student-requests/services/student-profile.service.js";
 import { createPaperFilesService } from "../../common/student-requests/services/paper-files.service.js";
 import { createConfirmationFilesService } from "../../common/student-requests/services/confirmation-files.service.js";
-import { createRbacRepository } from "../../common/student-requests/repositories/rbac.repository.js";
-import { createRbacService } from "../../common/student-requests/services/rbac.service.js";
 import { env } from "../../config/env.js";
 import { createStudentRequestsController } from "../../student/modules/student-requests/controllers/requests.controller.js";
 import { createRequestsRepository } from "../../common/student-requests/repositories/requests.repository.js";
 import { createRequestsService } from "../../common/student-requests/services/requests.service.js";
-import { createAdminWorkflowService } from "../../admin/modules/student-requests/services/admin-workflow.service.js";
 import { createWorkbookWorkflowService } from "../../admin/modules/student-requests/services/workbook-workflow.service.js";
 import { createSchoolStudentService } from "../../common/student-requests/services/school-student.service.js";
 import { createRequestActorResolver } from "../../common/student-requests/middlewares/request-actor.js";
@@ -16,10 +13,8 @@ import { createAdminRequestsRouter } from "../../admin/modules/student-requests/
 import { createAdminRequestsController } from "../../admin/modules/student-requests/controllers/requests.controller.js";
 import { AppError } from "../../shared/errors/app-error.js";
 
-import { createRequestsModule } from "../../development/student-requests/index.js";
-export { createRequestsModule } from "../../development/student-requests/index.js";
-
-export default createRequestsModule();
+// Demo impersonation and demo RBAC are no longer part of application bootstrap.
+export default null;
 
 export function createRequestsApiModule({
   channel = "student",
@@ -51,10 +46,8 @@ export function createRequestsApiModule({
       service,
     };
   }
-  const rbac = createRbacService(createRbacRepository(), repository);
-  const admin = createAdminWorkflowService(repository, service, { rbac });
   const workbook = createWorkbookWorkflowService(repository, service);
-  const options = { admin, rbac, workbook };
+  const options = { workbook };
   const controller = createAdminRequestsController(service, options);
   return {
     basePath: "/api/staff/student-services",

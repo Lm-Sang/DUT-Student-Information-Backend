@@ -8,6 +8,7 @@ export function createAdminRouter({
   certificationsModule,
   itCertificationsModule,
   academicLeaveModule,
+  organizationModule,
 } = {}) {
   const router = Router();
   const routes = [
@@ -16,6 +17,7 @@ export function createAdminRouter({
     ["/certifications", certificationsModule?.adminRouter],
     ["/it-certifications", itCertificationsModule?.adminRouter],
     ["/academic-leave", academicLeaveModule?.adminRouter],
+    ["/organization", organizationModule?.router],
   ];
 
   for (const [path, moduleRouter] of routes) {

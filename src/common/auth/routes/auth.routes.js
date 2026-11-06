@@ -23,8 +23,9 @@ export function createAuthRouter(channel, controller, service) {
   });
   router.get('/microsoft/login', controller.login);
   router.get('/microsoft/callback', asyncHandler(controller.callback));
+  router.get('/microsoft/callback/:state', asyncHandler(controller.callback));
   router.post('/login', json({ limit: '2kb' }), asyncHandler(controller.passwordLogin));
-  if(channel==='staff') {
+  if(channel==='staff'||channel==='admin') {
     router.post('/change-password',authenticate(channel,service),json({limit:'2kb'}),asyncHandler(controller.changePassword));
     router.post('/accounts/:id/reset-password',authenticate(channel,service),json({limit:'2kb'}),asyncHandler(controller.resetStaffPassword));
   }

@@ -1,5 +1,8 @@
 # Xử lý hồ sơ local
 
+> C?p nh?t auth: sinh vi?n d?ng nguy?n access token DUT SSO, x?c minh secret key/HS256/h?n d?ng, kh?ng c?n issuer/audience v? kh?ng c? JWT/refresh BE. Callback m?i r?ng bu?c state trong ???ng d?n; admin/staff d?ng JWT_SECRET ri?ng. Contract v? h??ng d?n FE hi?n h?nh: [AUTH_CHANNELS.md](AUTH_CHANNELS.md). C?c m? t? ??i sang app token ho?c d?ng chung kh?a ? d??i l? l?ch s? tr??c thay ??i n?y.
+
+
 Luồng chuyên viên: **Tiếp nhận → In đơn → Đã xử lý**. Hủy đơn phải có lý do phản hồi cho sinh viên. Hai chuyên viên cùng tiếp nhận chỉ có một người thành công; mọi thay đổi kiểm tra phiên bản và quyền hiện hành trong transaction SQL local.
 
 Văn bản xác nhận tạo ngày nhận ngay khi ghi nhận in lần đầu, bằng thời gian in + **3 ngày dương lịch** (kể cả cuối tuần). In lại lưu thời gian in gần nhất và lịch sử, không đổi lần in đầu / ngày nhận. Hồ sơ lịch sử đã xử lý giữ lịch nhận trước đây.

@@ -22,7 +22,7 @@ export function createApp(moduleOverrides = {}) {
 
   for (const module of Object.values(modules).filter(Boolean)) {
     // Authentication is already mounted once by the frontend routers.
-    if (module === modules.studentAuthModule || module === modules.adminAuthModule) continue;
+    if (module === modules.studentAuthModule || module === modules.adminAuthModule || module === modules.organizationModule) continue;
     app.use(module.basePath, module.router);
     for (const mount of module.mounts ?? []) {
       app.use(mount.basePath, mount.router);

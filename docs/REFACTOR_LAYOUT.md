@@ -58,7 +58,9 @@ snapshot, transaction, idempotency hoặc metadata entity trong refactor này.
 
 ## Xác thực và công cụ
 
-Auth URL/cookie/audience giữ nguyên; xem [AUTH_CHANNELS.md](AUTH_CHANNELS.md).
+Auth local giữ URL/cookie/audience; sinh viên dùng token SSO trực tiếp theo
+[AUTH_CHANNELS.md](AUTH_CHANNELS.md). Callback mới thêm /:state vào đường dẫn;
+callback cũ vẫn nhận query state nhưng từ chối khi không có state.
 Các API /api/admin/requests dùng channel staff, các API duyệt chứng chỉ/ngừng học
 dùng channel admin như trước. Source tách hai frontend không đồng nghĩa gộp token.
 

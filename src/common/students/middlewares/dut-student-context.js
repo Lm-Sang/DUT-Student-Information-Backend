@@ -1,11 +1,9 @@
 import { AppError } from "../../../shared/errors/app-error.js";
-import jwt from 'jsonwebtoken';
 import { resolveSsoAccessToken } from '../../auth/index.js';
-import { env } from '../../../config/env.js';
 import { citizenId } from '../index.js';
 
 // The profile service validates the token. Never trust JWT payloads decoded in the browser.
-export function createDutStudentContext({ fetchImpl = fetch, ssoTokenResolver = resolveSsoAccessToken, ssoConfig = env.microsoftSso } = {}) {
+export function createDutStudentContext({ fetchImpl = fetch, ssoTokenResolver = resolveSsoAccessToken } = {}) {
   return async function studentContext(req) {
     const token = await ssoTokenResolver(req);
     if (!token || token.length > 16384)
@@ -48,15 +46,9 @@ export function createDutStudentContext({ fetchImpl = fetch, ssoTokenResolver = 
       !/^\d{9}$/.test(studentCode)
     )
       throw new AppError("Tài khoản chưa có hồ sơ sinh viên DUT hợp lệ.", 403);
-    // Read token fields only after cryptographic verification. If this gateway's
-    // signing config is unavailable, use the profile service's verified data.
-    let claims = {};
-    try {
-      const verified = jwt.verify(token, ssoConfig.jwtSecret, { algorithms:['HS256'],
-        ...(ssoConfig.jwtIssuer ? {issuer:ssoConfig.jwtIssuer} : {}),
-        ...(ssoConfig.jwtAudience ? {audience:ssoConfig.jwtAudience} : {}) });
-      if (verified && typeof verified === 'object' && Number.isFinite(verified.exp)) claims = verified;
-    } catch { /* The authenticated profile remains the authority for this token. */ }
+    // The shared auth resolver already verified the signature, expiry and logout
+    // revocation. Reuse its claims so all student modules apply the same policy.
+    const claims = req.ssoClaims ?? {};
     const tokenStudentCode = claims.studentCardNumber ?? claims.studentCode;
     if (tokenStudentCode != null && String(tokenStudentCode) !== studentCode)
       throw new AppError('MSSV trong token không khớp hồ sơ DUT.',403);

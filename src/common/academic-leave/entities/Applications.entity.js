@@ -7,6 +7,12 @@ export const academic_leave_Applications=new EntitySchema({
   "schema": "academic_leave",
   "synchronize": false,
   "columns": {
+    "ReceivedAt": {
+      "name": "ReceivedAt",
+      "type": "datetime2",
+      "precision": 3,
+      "nullable": true
+    },
     "Id": {
       "name": "Id",
       "type": "int",

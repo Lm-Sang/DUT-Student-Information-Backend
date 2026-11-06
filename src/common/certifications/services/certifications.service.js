@@ -3,11 +3,12 @@ import { AppError } from "../../../shared/errors/app-error.js";
 import { inspectEvidenceFiles } from "./evidence-inspection.service.js";
 import { notifyCertificateChanged } from "../events/certification-events.js";
 import { studentService } from '../../students/index.js';
-import { requireStudentInformation, supplementStudentInformation } from './student-information.js';
+import { requireStudentInformation } from './student-information.js';
 import {
   validateResult,
   recognition,
   canEdit,
+  certificationReviewActions,
   resolveFormSchema,
 } from "../rules/certifications.rules.js";
 import {
@@ -94,7 +95,6 @@ export function createCertificationsService({
       { code: 'CERT_ISSUER_NOT_ALLOWED', field: 'issuingOrganizationId' });
     return issuer;
   }
-  const present = dto => supplementStudentInformation(dto, studentProfile);
   function snapshot(details) {
     return {
       type: {
@@ -288,12 +288,10 @@ export function createCertificationsService({
       ](row);
     },
     async list(actor, query) {
-      const result = listDto(await repository.list({ ...query, actor }));
-      result.items = await Promise.all(result.items.map(present));
-      return result;
+      return listDto(await repository.list({ ...query, actor }), clock());
     },
     async get(actor, applicationId) {
-      return present(applicationDto(await load(actor, applicationId)));
+      return applicationDto(await load(actor, applicationId), clock());
     },
     async prepare(actor, input) {
       profile(actor);
@@ -404,7 +402,7 @@ export function createCertificationsService({
       profile(actor);
       const application = await load(actor, applicationId);
       if (["submitted", "verified", "rejected"].includes(application.Status))
-        return applicationDto(application);
+        return applicationDto(application, clock());
       if (application.Status !== "uploading")
         throw new AppError("Hồ sơ không thể nộp thêm.", 409);
       const pending = application;
@@ -467,13 +465,13 @@ export function createCertificationsService({
         throw error;
       }
       notifyCertificateChanged(events, "language", result);
-      return applicationDto(result);
+      return applicationDto(result, clock());
     },
     async review(actor, applicationId, expected, input) {
       role(actor, "reviewer");
       const application = await load(actor, applicationId);
       if (
-        application.Status !== "submitted" ||
+        !certificationReviewActions(application.Status).includes(input.decision) ||
         application.VersionToken !== expected
       )
         throw new AppError("Hồ sơ đã thay đổi hoặc không còn chờ duyệt.", 409);
@@ -484,7 +482,7 @@ export function createCertificationsService({
         ...input,
       });
       notifyCertificateChanged(events, "language", result);
-      return applicationDto(result);
+      return applicationDto(result, clock());
     },
     async download(actor, applicationId, fileId) {
       const application = await load(actor, applicationId);

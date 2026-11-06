@@ -1,8 +1,9 @@
 import { Router } from 'express';
 
-export function createAdminItCertificationsRouter(controller, context) {
+export function createAdminItCertificationsRouter(controller, context, eventHandler) {
   const router = Router();
   router.use(context('reviewer'));
+  if (eventHandler) router.get('/events', eventHandler);
   router.get('/records', controller.records);
   router.get('/applications', controller.queue);
   router.get('/applications/:applicationId', controller.get);

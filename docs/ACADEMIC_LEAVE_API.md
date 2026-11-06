@@ -1,31 +1,32 @@
 # Đơn ngừng học và gia hạn ngừng học
 
-Luồng đang triển khai nằm trong `src/modules/academic-leave/`, API ở backend
+Luồng đang triển khai nằm trong [module common](../src/common/academic-leave/), API ở backend
 cổng 3003. FE test sinh viên/chuyên viên cùng dùng `/academic-leave.html` ở cổng
 5173/5174. Phần lập đơn không chạy qua server FE local như trang chẩn đoán dữ liệu.
 
 ## Yêu cầu đã chốt
 
 - Bốn lý do: chữa bệnh, tai nạn, thực hiện nghĩa vụ quân sự, thai sản.
-- Học kỳ bắt đầu chỉ gồm kỳ trước, kỳ hiện tại và kỳ sau; dùng hai học kỳ chính
+- Học kỳ bắt đầu chỉ là học kỳ hiện tại; dùng hai học kỳ chính
   mỗi năm, không tính kỳ hè trong thời lượng ngừng học.
-- Mỗi lần đề nghị ngừng học hoặc gia hạn chọn từ 1 đến 4 kỳ.
+- Mỗi lần ngừng học/gia hạn chọn 1 kỳ; riêng nghĩa vụ quân sự được 1–4 kỳ. Trở lại học có `semesterCount=0`.
 - Học kỳ hiện tại đọc `DATA_GVien1.dbo.tmConfig`, `VarName='optIDCode'`, cột
-  `VarString1`. Nguồn hiện trả `2610`, nên ba lựa chọn là `2520`, `2610`, `2620`.
+  `VarString1`. Form chỉ trả học kỳ chính hiện tại từ nguồn.
   Không cố định các mã này trong code. Cấu hình thiếu/trùng/không phải kỳ chính
   thì báo chưa xác định được kỳ; không tự đoán theo ngày máy chủ.
-- Gia hạn chỉ liên kết đơn tạo trên hệ thống mới, đã duyệt online hoặc đã nhận
-  bản giấy, cùng chủ sở hữu. Kỳ gia hạn nối tiếp kỳ cuối của đơn trước.
+- Gia hạn/trở lại học chỉ liên kết đơn đã chấp nhận cuối cùng (`approved`), cùng
+  chủ sở hữu. Kỳ gia hạn nối tiếp kỳ cuối của đơn trước.
 - Một đơn trước chỉ có một đơn gia hạn chưa hủy/chưa bị từ chối. Có thể tiếp tục
   chuỗi gia hạn bằng cách liên kết tới đơn gia hạn đã duyệt gần nhất. Giới hạn
   4 kỳ áp dụng từng lần, chưa đặt thêm giới hạn tổng số kỳ hoặc số lần gia hạn.
-- Duyệt online tạo hạn nộp bản giấy **3 ngày (72 giờ)** sau thời điểm duyệt,
-  gồm cả cuối tuần. Chuyên viên không nhập/sửa hạn bằng request.
+- Xác nhận sẽ tiếp nhận online ghi mốc nộp bản giấy **+3 ngày** và chuyển `received`.
+  Chưa nộp giấy thì giữ trạng thái này, kể cả qua mốc; không khóa nhận giấy muộn.
 
 ## DB
 
-Migration: `docs/sql/academic-leave.sql`, đã tạo trong DB local cấu hình hiện tại
-`Studentpage`. Chỉ một bảng: `academic_leave.Applications`.
+DB local có `academic_leave.Applications` và `academic_leave.ApplicationHistory`.
+Khởi tạo bằng `npm run academic-leave:db:init`; nâng cấp DB đã có bằng
+`npm run db:review-workflow:upgrade`. Xem [migration workflow](CERTIFICATIONS_ACADEMIC_LEAVE_WORKFLOW.md#nâng-cấp-db-local).
 
 | Nhóm | Cột |
 | --- | --- |
@@ -33,15 +34,16 @@ Migration: `docs/sql/academic-leave.sql`, đã tạo trong DB local cấu hình 
 | Nội dung | `Kind`, `ParentApplicationId`, `ReasonCode`, `StartSemesterCode`, `SemesterCount`, `Content` |
 | Dữ liệu để in | `SnapshotJson`, `StudentConfirmedAt` |
 | Chuyên viên xử lý | `Status`, `ReviewerReference`, `ReviewerName`, `ReviewNote`, `ReviewedAt` |
-| Bản giấy | `PaperDeadlineAt`, `PaperReceivedAt`, `PaperReceivedBy` |
+| Tiếp nhận/bản giấy | `ReceivedAt`, `PaperDeadlineAt` (mốc +3 ngày), `PaperReceivedAt`, `PaperReceivedBy` |
 | Cập nhật | `CreatedAt`, `UpdatedAt`, `RowVersion` |
 
 FK `(ParentApplicationId,StudentCode) → (Id,StudentCode)` ràng buộc đơn gia hạn
 cùng MSSV. Service kiểm tra thêm tài khoản sở hữu và trạng thái đơn trước.
 CHECK bảo vệ số kỳ 1–4, bốn lý do, loại đơn/đơn cha, trạng thái, JSON hợp lệ,
-hạn duyệt +3 ngày và thời điểm nhận giấy trong hạn. Unique index ngăn một sinh
-viên có nhiều đơn đang nháp/chờ duyệt/cần bổ sung cùng lúc, và ngăn gia hạn trùng
-đơn cha. Không ghi vào `tmNgungTroLaiHoc` hoặc các DB trường.
+mốc +3 ngày và thời điểm nhận giấy không trước lúc xác nhận sẽ tiếp nhận. Transaction
+khóa theo sinh viên ngăn tạo thêm đơn khi còn nháp/chờ xét/chờ giấy/đang xử lý;
+unique index bảo vệ nháp/chờ xét/cần bổ sung và đơn kế tiếp trùng cha.
+Không ghi vào `tmNgungTroLaiHoc` hoặc các DB trường.
 
 Đã đối chiếu cấu trúc gốc `DATA_GVien1.dbo.tmNgungTroLaiHoc`: `MaDeNghi`,
 `MaSV`, `LyDoNgung`, `SoKyNgung`, `NgungTuKy`, `XacNhanNgung`, các nhóm duyệt,
@@ -67,14 +69,16 @@ stateDiagram-v2
   needs_changes --> submitted: Sửa và xác nhận lại cùng đơn
   needs_changes --> cancelled: Hủy
   submitted --> rejected: Không duyệt
-  submitted --> approved: Duyệt online và đặt hạn +3 ngày
-  approved --> paper_received: Chuyên viên nhận giấy trong hạn
+  submitted --> received: Xác nhận sẽ tiếp nhận online, mốc +3 ngày
+  received --> processing: Đã nhận bản giấy, kể cả sau mốc
+  processing --> approved: Chấp nhận
+  processing --> rejected: Từ chối cuối xử lý
 ```
 
-`approved` xác nhận hồ sơ online hợp lệ để nộp trực tiếp, chưa phải quyết định
-cho phép ngừng học của Nhà trường. Đơn quá hạn giữ trạng thái approved, trả thêm
-`overdue:true` và chặn nhận giấy; không tự xóa đơn. Chưa có luồng cấp/gia hạn
-thời hạn ngoại lệ hoặc phát hành số quyết định.
+`received` là chờ giấy, `processing` là đã nhận giấy và đang xử lý, `approved` là
+chấp nhận cuối cùng. Chỉ từ chối ở `submitted` hoặc `processing`, không từ chối
+trong lúc chờ giấy. Qua mốc vẫn `received`, `overdue:true` chỉ để hiển thị;
+không tự xóa/từ chối hoặc chặn nhận giấy. Chưa tự phát hành số quyết định.
 
 ## Nguồn dữ liệu và bản in
 
@@ -87,11 +91,11 @@ MSSV của profile; chỉ dự phòng `cmnd` khi là 12 chữ số. Điểm đ�
 Lúc xác nhận lập đơn, backend lấy lại dữ liệu, kiểm tra đủ trường cá nhân và lưu
 `SnapshotJson`. Bản in về sau dùng snapshot này; đổi profile/điểm không tự sửa
 đơn đã xác nhận. Khi chuyên viên yêu cầu bổ sung, sinh viên sửa và xác nhận lại
-cùng đơn, snapshot được cập nhật và kết quả duyệt cũ được xóa. Không lưu lịch sử
-từng phiên bản thành bảng riêng.
+cùng đơn, snapshot được cập nhật và kết quả duyệt hiện tại được xóa; lịch sử
+thao tác/snapshot vẫn giữ trong `ApplicationHistory` ở DB local.
 
-Snapshot chứa các học kỳ sau bước validate; **ba học kỳ lựa chọn chỉ áp dụng kỳ
-bắt đầu**, không cắt bảng điểm thành ba dòng. Bộ xử lý tại
+Snapshot chứa các học kỳ sau bước validate; lựa chọn học kỳ bắt đầu không cắt
+bảng điểm. Bộ xử lý tại
 `students/validators/academic-statistics.validator.js` ghép đủ các cột trước khi
 lọc trùng. Kỳ hè `XX21` đã nằm trong kỳ 2 `XX20`: giữ bản ghi `XX20`, bỏ `XX21`,
 không cộng tín chỉ/điểm hoặc tính lại GPA. Ví dụ `2320/2321`, `2420/2421`,
@@ -123,16 +127,16 @@ PDF dựng theo yêu cầu rồi trả trực tiếp, không upload R2 hay ghi f
 ## API
 
 Sinh viên dùng `Authorization: Bearer <DUT SSO token>`. Không nhận MSSV, thông tin
-cá nhân, snapshot, status hoặc hạn giấy trong body. Chuyên viên cần adapter xác
-thực riêng được truyền vào module; khi thiếu adapter, route chuyên viên trả 503.
-Môi trường local dùng chung session chuyên viên admin của FE certification.
+cá nhân, snapshot, status hoặc mốc giấy trong body. Chuyên viên đăng nhập tài khoản
+auth local, cần task 3 và quyền `academic-leave:review`; admin phòng DT chỉ GET.
+Môi trường local dùng chung phiên `/api/admin/auth` với FE certification.
 
 | Method | Path sau `/api/academic-leave` | Chức năng |
 | --- | --- | --- |
 | POST | `/print-session` | Sinh viên cấp quyền mở PDF cho mã MADN đã xác nhận |
 | POST | `/reviewer/print-session` | Chuyên viên cấp quyền mở PDF cho mã MADN |
 | GET | `/print?MADN=NH1022303771` | PDF A4, Content-Type application/pdf, mở inline |
-| GET | `/form` | Thông tin điền sẵn, bốn lý do, ba kỳ, giới hạn kỳ và đơn cha hợp lệ |
+| GET | `/form` | Thông tin điền sẵn, bốn lý do, kỳ hiện tại, giới hạn kỳ và đơn cha hợp lệ |
 | GET | `/applications?page=1&status=submitted` | Đơn của tài khoản hiện tại, 20 dòng/trang |
 | POST | `/applications` | Lưu đơn nháp |
 | GET | `/applications/:id` | Chi tiết và rowVersion |
@@ -154,13 +158,14 @@ học trùng các đơn đã nộp/duyệt/nhận giấy của cùng MSSV.
 Ví dụ lưu nháp:
 
 ```json
-{"kind":"leave","parentApplicationId":null,"reasonCode":"medical","startSemesterCode":"2610","semesterCount":2,"content":"Thông tin bổ sung"}
+{"kind":"leave","parentApplicationId":null,"reasonCode":"medical","startSemesterCode":"2610","semesterCount":1,"content":"Thông tin bổ sung"}
 ```
 
 Gia hạn dùng `kind:"extension"` và `parentApplicationId` của đơn trước. Xác nhận,
-hủy và nhận giấy gửi `{}`. Xét duyệt gửi
-`{"decision":"approved","note":"Hồ sơ hợp lệ"}`; `needs_changes`/`rejected` bắt
-buộc note.
+hủy và nhận giấy gửi `{}`. Khi `submitted`, gửi `decision:"received"` để xác nhận
+sẽ tiếp nhận online, hoặc `needs_changes`/`rejected`. Khi `processing`, gửi
+`{"decision":"approved","note":"Hồ sơ hợp lệ"}` hoặc `rejected`.
+`needs_changes`/`rejected` bắt buộc note; mọi thay đổi dùng `If-Match`.
 
 ## Mở link PDF và cấu hình renderer
 
@@ -197,17 +202,15 @@ Tham khảo cơ chế PDF: [Puppeteer Page.pdf](https://pptr.dev/api/puppeteer.p
 ## Kiểm thử
 
 ```powershell
-node --test tests/integration/academic-leave.test.js tests/architecture.test.js
-$env:LEAVE_DB_TEST='1'
-node --test tests/integration/academic-leave-sql.test.js
-$env:PDF_BROWSER_TEST='1'
-node --test tests/integration/academic-leave-pdf.test.js
+npm test
+npm run check
 ```
 
-SQL test dùng schema riêng, dữ liệu sinh viên giả, rồi tự dọn. Bao phủ tạo/sửa/
-xác nhận/in, giữ snapshot, quyền sở hữu, rowversion, yêu cầu bổ sung, duyệt +72
-giờ, nhận giấy, gia hạn 4 kỳ và FK, trùng thời gian, quá hạn và CHECK số kỳ.
-Đã bổ sung cấp số theo từng MSSV, tạo đồng thời, migration giữ mã/snapshot cũ,
-query PDF có phân quyền và xác nhận việc in không cập nhật DB. Test browser PDF
-thật xác minh mẫu 10 dòng học kỳ và biên nhận nằm trong 1 trang A4. File PDF mẫu
-trong `.data` chỉ là artifact kiểm thử bằng dữ liệu giả, không phải cách lưu đơn.
+Test offline kiểm tra hai mốc từ chối, không từ chối khi chờ giấy, nhận giấy muộn,
+không bỏ bước, quyền chuyên viên/admin, phiên bản, dữ liệu local và điều kiện đơn
+gốc. Batch migration/SQL guard được kiểm tra với dependency giả; chưa xác minh
+migration trên SQL Server thật. Không tự chạy migration, seed hay ghi DB trường.
+
+## Quy t?c th?i h?n v? DB local
+
+Xem [quy t?c th?i h?n ch?ng ch?/h?c v?](REQUEST_REGULATIONS.md) v? m?c ti?p nh?n, x? l?, tr? k?t qu? v? tag qu? h?n trong API danh s?ch/chi ti?t. B? [Database_newversion](../Database_newversion/README.md) ch?a c?u tr?c, danh m?c DB local v? h??ng d?n d?ng m?i tr??ng.

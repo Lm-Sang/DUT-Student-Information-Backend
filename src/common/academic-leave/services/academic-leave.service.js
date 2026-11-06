@@ -1,5 +1,5 @@
 import {AppError} from '../../../shared/errors/app-error.js';
-import {reasons,semester,semesterChoices,shiftSemester,validatePeriod,applicationView} from '../rules/academic-leave.rules.js';
+import {reasons,semester,semesterChoices,shiftSemester,validatePeriod,applicationView,academicLeaveReviewActions} from '../rules/academic-leave.rules.js';
 import {normalizeAcademicRows} from '../../students/index.js';
 
 export function createAcademicLeaveService({repository,snapshotProvider,prefillProvider,clock=()=>new Date()}={}) {
@@ -57,12 +57,12 @@ export function createAcademicLeaveService({repository,snapshotProvider,prefillP
     },
     async review(actor,id,expected,input) {
       reviewer(actor);const row=await get(actor,id);expectedVersion(row,expected);
-      if(row.status!=='submitted')throw new AppError('Chỉ xét duyệt đơn đang chờ.',409);
+      if(!academicLeaveReviewActions(row.status).includes(input.decision))throw new AppError('Thao tác không phù hợp với giai đoạn của đơn.',409);
       return view(await repository.review(actor,id,expected,input));
     },
     async receivePaper(actor,id,expected) {
       reviewer(actor);const row=await get(actor,id);expectedVersion(row,expected);
-      if(row.status!=='approved'||Date.parse(row.paperDeadlineAt)<clock().getTime())throw new AppError('Đơn chưa được duyệt hoặc đã quá hạn nộp giấy 3 ngày.',409);
+      if(row.status!=='received')throw new AppError('Chỉ nhận giấy sau khi đã xác nhận sẽ tiếp nhận đơn online.',409);
       return view(await repository.receivePaper(actor,id,expected));
     },
     async cancel(actor,id,expected) {

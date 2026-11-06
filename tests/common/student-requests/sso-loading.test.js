@@ -53,6 +53,13 @@ test('new sessions and different verified student identities cannot reuse anothe
   await f.school.signIn(claims('session-a','000000002'));assert.equal(f.stats.reads,3);
 });
 
+test('raw SSO token hashes share profile loads without requiring a backend session',async()=>{
+ const f=fixture();const direct={...claims(),sid:null,ssoTokenHash:'verified-token-a'};
+ await Promise.all([f.school.signIn(direct),f.school.signIn(direct)]);
+ assert.equal(f.stats.reads,1);assert.equal(f.stats.writes,1);
+ await f.school.signIn({...direct,ssoTokenHash:'verified-token-b'});assert.equal(f.stats.reads,2);
+});
+
 test('expired links are rechecked; school failures are evicted and can be retried',async()=>{
   const f=fixture();await f.school.signIn(claims());f.advance(300_000);f.fail(true);
   await assert.rejects(()=>f.school.signIn(claims()),e=>e.statusCode===503);

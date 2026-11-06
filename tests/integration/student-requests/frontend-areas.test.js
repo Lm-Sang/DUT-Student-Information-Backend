@@ -22,7 +22,8 @@ test('request aliases require their channel and keep demo and administrative end
     if (token !== channel) throw new AppError('Wrong audience', 401);
     return channel === 'student'
       ? { authMethod: 'sso', identity: { microsoftId: '102210001@sv1.dut.udn.vn' } }
-      : { authMethod: 'password', identity: { requestActorId: 'staff' } };
+      : { authMethod: 'password', identity: { requestActorId: 'staff' }, permissions:[],
+        organization:{active:true,fieldActive:true,accessLevel:'specialist',taskIds:[4]} };
   } };
   const school = { signIn: async () => 'student' };
   const modules = {};
@@ -58,6 +59,8 @@ test('request aliases require their channel and keep demo and administrative end
     method: 'POST', headers: { ...headers('staff'), 'Content-Type': 'application/json' }, body: '{}',
   })).status, 400, 'legacy staff submissions preserve input validation before permission rejection');
   assert.equal(creations, 2);
+  for(const path of ['/api/admin/requests/roles','/api/admin/requests/accounts','/api/staff/student-services/admin/roles','/api/staff/student-services/admin/staff'])
+    assert.equal((await post(path,'staff')).status,404,'demo account/role management must not be mounted');
   for (const suffix of ['/session', '/sso/session', '/staff/session', '/admin/roles']) {
     assert.equal((await post('/api/student/requests' + suffix, 'student')).status, 404);
   }

@@ -1,5 +1,8 @@
 # DUT Student Information Backend
 
+Phân quyền admin tổng / admin phòng / chuyên viên, fieldCode và TaskId:
+[hướng dẫn schema và API](docs/AUTH_ORGANIZATION.md).
+
 Backend Node.js/Express phục vụ hai frontend riêng: sinh viên và chuyên viên/admin.
 Quy tắc làm việc của agent nằm trong [AGENTS.md](AGENTS.md).
 
@@ -62,10 +65,17 @@ CORS không thay thế xác thực và phân quyền.
 Các URL trước refactor tiếp tục hoạt động qua adapter tương thích. API công khai
 vẫn ở /api/public. Chi tiết method, URL phụ và token: [hướng dẫn chuyển đổi](docs/REFACTOR_LAYOUT.md).
 
-Luồng auth được giữ nguyên: sinh viên đăng nhập DUT SSO, API backend nhận JWT ứng dụng
-channel student; token SSO được giữ mã hóa trên server để gọi DUT. Chuyên viên
+Sinh viên dùng trực tiếp access token DUT SSO làm Bearer xuyên suốt API sinh viên
+và API DUT; backend xác minh secret key, HS256, hạn dùng và danh sách logout,
+không yêu cầu issuer/audience SSO hay phát JWT/refresh riêng cho sinh viên. Chuyên viên
 đăng nhập /api/staff/auth bằng tài khoản local; auth admin cũ ở /api/admin/auth
-vẫn opt-in. Không dùng lẫn token staff/admin. Xem [auth hiện tại](docs/AUTH_CHANNELS.md).
+vẫn opt-in. Admin/staff dùng JWT_SECRET riêng, khác khóa SSO; đặt JWT_SHARE_SSO_KEY=false.
+Không dùng lẫn token staff/admin. Xem [auth hiện tại và hướng dẫn FE](docs/AUTH_CHANNELS.md).
+
+Tài khoản local và quyền chỉ lấy từ auth theo phân cấp admin tổng → admin phòng →
+chuyên viên được giao tác vụ. Không fallback sang RBAC demo; API tạo tài khoản và
+giao tác vụ ở `/api/admin/organization`. Giữ dữ liệu hồ sơ cũ và định danh người xử lý,
+không tạo credential mới trong demo. Xem [phân quyền auth](docs/AUTH_ORGANIZATION.md).
 
 ## Database và tài liệu
 
@@ -76,6 +86,7 @@ Refactor cấu trúc không đổi bảng/cột, không tự chạy migration ho
 - [TypeORM và entity](docs/TYPEORM_MIGRATION.md)
 - [Luồng đơn sinh viên](docs/REQUEST_WORKFLOWS.md)
 - [Chứng chỉ và ngừng học dành cho FE](docs/FE_HANDOVER_CERTIFICATIONS_ACADEMIC_LEAVE.md)
+- [Workflow chứng chỉ/nghỉ học và nguồn dữ liệu local của chuyên viên/admin](docs/CERTIFICATIONS_ACADEMIC_LEAVE_WORKFLOW.md)
 - [Ngừng học, gia hạn và trở lại học](src/common/academic-leave/README.md)
 - [Mẫu biểu và xuất tài liệu](assets/request-forms/README.md)
 
@@ -83,8 +94,21 @@ Các CLI giữ nguyên tên lệnh npm: auth:db:init, auth:user:create,
 auth:staff:create, academic-leave:db:init. Mã CLI ở scripts/auth và scripts/database.
 Chỉ chạy lệnh DB khi có chủ đích; npm test không chạy smoke test live.
 
-Công cụ FE local từng được tham chiếu từ thư mục bị Git ignore không còn là dependency
-của server. Hai frontend được chạy từ dự án FE riêng.
+Workflow chứng chỉ/nghỉ học mới cần nâng cấp DB local bằng
+`npm run db:review-workflow:upgrade` trước khi chạy backend. Luồng và cách chuyển
+dữ liệu cũ được ghi trong [hướng dẫn workflow](docs/CERTIFICATIONS_ACADEMIC_LEAVE_WORKFLOW.md).
+
+Khi đã có thư mục [certification-web-test](certification-web-test/) trong dự án,
+chạy hai FE test từ thư mục gốc bằng:
+
+```bash
+npm run certifications:fe
+```
+
+FE sinh viên ở http://localhost:5173, FE chuyên viên ở http://localhost:5174.
+Lệnh này chỉ khởi động FE; chạy backend riêng bằng `npm run dev`.
+Cấu hình FE được đọc từ `certification-web-test/.env` nếu có, mặc định gọi backend
+ở http://localhost:3003. Xem [hướng dẫn FE test](certification-web-test/README.md).
 
 ## Kiểm tra
 
@@ -97,3 +121,7 @@ npm run check
 
 Bộ test mặc định dùng fake dependency/upstream local; test SQL live cần cờ môi trường
 riêng và được skip mặc định. PowerShell có thể dùng npm.cmd nếu Execution Policy chặn npm.ps1.
+
+## Quy t?c th?i h?n v? DB local
+
+Xem [quy t?c th?i h?n ch?ng ch?/h?c v?](docs/REQUEST_REGULATIONS.md) v? m?c ti?p nh?n, x? l?, tr? k?t qu? v? tag qu? h?n trong API danh s?ch/chi ti?t. B? [Database_newversion](Database_newversion/README.md) ch?a c?u tr?c, danh m?c DB local v? h??ng d?n d?ng m?i tr??ng.

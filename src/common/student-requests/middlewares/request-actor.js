@@ -13,6 +13,9 @@ export function createRequestActorResolver({ channel, service, school, auth = au
       id = await school.signIn(claims);
     } else {
       if (claims.authMethod !== 'password' || !claims.identity?.requestActorId) throw new AppError('Cần tài khoản chuyên viên trong DB.', 403);
+      const profile=claims.organization??claims.identity.organization;
+      if(!profile?.active||!profile.fieldActive||profile.accessLevel!=='specialist'||!profile.taskIds.includes(4))
+        throw new AppError('Auth specialist task assignment required',403);
       id = claims.identity.requestActorId;
     }
     const actor = await service.sessionActor(id);
@@ -21,7 +24,11 @@ export function createRequestActorResolver({ channel, service, school, auth = au
       || actor.studentNumber !== studentNumberFromIdentity(claims.identity))) {
       throw new AppError('Liên kết hồ sơ không còn khớp tài khoản SSO.', 403);
     }
-    // Roles and scope always come from SQL on this request, never SSO claims.
+    if(channel!=='student') {
+      actor.permissions=[...claims.permissions];
+      actor.workPermissions=claims.permissions.filter(permission=>permission.startsWith('work:')).map(permission=>permission.slice(5));
+    }
+    // The workflow identity preserves history; auth owns current permissions.
     return actor;
   };
 }

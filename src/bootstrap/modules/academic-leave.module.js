@@ -25,6 +25,7 @@ export function createAcademicLeaveModule({
   studentContextProvider = createDutStudentContext(),
   reviewerContextProvider = createLocalPermissionContext(
     "academic-leave:review",
+      undefined, 3,
   ),
   clock,
   renderPdf = (html) => pdfRenderer.render(html),

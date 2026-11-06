@@ -1,251 +1,76 @@
-import {
-  queryLocalDatabase,
-  transactionLocalDatabase,
-  entitySchema,
-} from "../../../database.js";
-import { AppError } from "../../../shared/errors/app-error.js";
-import { createHash } from "node:crypto";
-import {
-  assertLocalDemoTarget,
-  localDatabaseGuardSql,
-} from "../../../infrastructure/database/local-write-guard.js";
-import {
-  selectEntity,
-  selectRows,
-  selectOne,
-} from "../../../infrastructure/database/typeorm-repository.js";
+import { queryLocalDatabase, transactionLocalDatabase } from '../../../database.js';
+import { AppError } from '../../../shared/errors/app-error.js';
+import { createHash } from 'node:crypto';
+import { createOrganizationRepository } from './organization.repository.js';
+import { assertLocalDemoTarget, localDatabaseGuardSql } from '../../../infrastructure/database/local-write-guard.js';
+import { selectEntity, selectOne } from '../../../infrastructure/database/typeorm-repository.js';
 
-const columns = `CONVERT(varchar(36), Id) AS id, Username AS username,
-  DisplayName AS displayName, PasswordHash AS passwordHash, Channel AS channel,
-  IsActive AS isActive, CONVERT(varchar(18), CAST([Version] AS binary(8)), 1) AS accountVersion`;
-const list = (rows) => [...new Set(rows.map((r) => r.value))].sort();
-const version = (row) =>
-  createHash("sha256")
-    .update(
-      JSON.stringify([
-        row.accountVersion,
-        row.passwordHash,
-        row.roles,
-        row.permissions,
-        row.isActive,
-        row.requestActorId,
-        row.channel,
-      ]),
-    )
-    .digest("hex");
+const columns = `LOWER(CONVERT(varchar(36), a.Id)) AS id,a.Username AS username,
+ a.DisplayName AS displayName,a.PasswordHash AS passwordHash,a.Channel AS storedChannel,
+ a.IsActive AS isActive,CONVERT(varchar(18),CAST(a.[Version] AS binary(8)),1) AS accountVersion`;
+const version = account => createHash('sha256').update(JSON.stringify([
+  account.accountVersion,account.passwordHash,account.channel,account.isActive,account.organization,
+])).digest('hex');
 
-export function createAuthRepository({
-  query = queryLocalDatabase,
-  transaction = query === queryLocalDatabase ? transactionLocalDatabase : query,
-  guard = assertLocalDemoTarget,
-} = {}) {
-  async function find(condition, value) {
+export function createAuthRepository({query=queryLocalDatabase,
+  transaction=query===queryLocalDatabase?transactionLocalDatabase:query,guard=assertLocalDemoTarget}={}) {
+  const organization=createOrganizationRepository({query,transaction,guard});
+  async function find(column,value,channel='admin') {
+    if(column==='Id'&&(typeof value!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value)))return null;
     try {
-      const row = await selectOne(
-        selectEntity("auth.LocalAccounts", "a")
-          .select(columns)
-          .where(`a.${condition}=:value`, { value }),
-        query,
-      );
-      if (!row) return null;
-      const [roles, direct, inherited] = await Promise.all([
-        selectRows(
-          selectEntity("auth.AccountRoles", "r")
-            .select("r.RoleName", "value")
-            .where("r.AccountId=:id", { id: row.id })
-            .orderBy("r.RoleName"),
-          query,
-        ),
-        selectRows(
-          selectEntity("auth.AccountPermissions", "p")
-            .select("p.PermissionName", "value")
-            .where("p.AccountId=:id", { id: row.id }),
-          query,
-        ),
-        selectRows(
-          selectEntity("auth.RolePermissions", "p")
-            .innerJoin(
-              entitySchema("auth.AccountRoles"),
-              "r",
-              "r.RoleName=p.RoleName",
-            )
-            .select("p.PermissionName", "value")
-            .where("r.AccountId=:id", { id: row.id }),
-          query,
-        ),
-      ]);
-      const account = {
-        ...row,
-        roles: list(roles),
-        permissions: list([...direct, ...inherited]),
-        isActive: row.isActive === true || row.isActive === 1,
-      };
-      if (
-        !["student", "admin"].includes(account.channel) ||
-        !account.displayName?.trim()
-      )
-        throw new Error();
-      return { ...account, version: version(account) };
-    } catch {
-      throw new AppError("Local account database is not ready", 503);
-    }
-  }
-  async function findStaff(condition, value) {
-    try {
-      const row = await selectOne(
-        selectEntity("svc_demo.DangNhapChuyenVien", "c")
-          .innerJoin(entitySchema("svc_demo.TaiKhoan"), "a", "a.MaHS=c.MaHS")
-          .select([
-            "a.MaHS AS id",
-            "c.TenDangNhap AS username",
-            "a.Hoten AS displayName",
-            "c.MatKhauBam AS passwordHash",
-            "a.HieuLuc AS isActive",
-            "a.PhienBanQuyen AS accountVersion",
-            "a.MaHS AS requestActorId",
-          ])
-          .where(`${condition}=:value`, { value })
-          .andWhere(
-            "a.VaiTro IN ('STAFF','ADMIN') AND a.NguonDanhTinh='LOCAL'",
-          ),
-        query,
-      );
-      if (!row) return null;
-      const [roles, permissions] = await Promise.all([
-        selectRows(
-          selectEntity("svc_demo.TaiKhoanVaiTro", "u")
-            .innerJoin(
-              entitySchema("svc_demo.VaiTroRBAC"),
-              "r",
-              "r.MaRole=u.MaRole",
-            )
-            .select("r.MaRole", "value")
-            .where("u.MaHS=:id", { id: row.id })
-            .andWhere("r.HieuLuc=1")
-            .orderBy("r.MaRole"),
-          query,
-        ),
-        selectRows(
-          selectEntity("svc_demo.vQuyenHieuLuc", "p")
-            .select("p.MaQuyen", "value")
-            .where("p.MaHS=:id", { id: row.id })
-            .orderBy("p.MaQuyen"),
-          query,
-        ),
-      ]);
-      const account = {
-        ...row,
-        channel: "staff",
-        roles: list(roles),
-        permissions: list(permissions),
-        isActive: row.isActive === true || row.isActive === 1,
-      };
-      return { ...account, version: version(account) };
-    } catch {
-      throw new AppError("Specialist account database is not ready", 503);
-    }
+      const row=await selectOne(selectEntity('auth.LocalAccounts','a').select(columns)
+        .where(`a.${column}=:value`,{value}).andWhere("a.Channel='admin'"),query);
+      if(!row)return null;
+      const profile=await organization.authorization(row.id);
+      if(!profile)return null;
+      // The staff endpoint is a compatibility channel for canonical auth specialists.
+      // It never reads demo credentials, role tables or grants.
+      if(channel==='staff'&&(profile.accessLevel!=='specialist'||!profile.staffAccountId))return null;
+      const account={...row,channel,organization:profile,roles:[profile.accessLevel],permissions:profile.permissions,
+        requestActorId:profile.staffAccountId??null,
+        isActive:Boolean(row.isActive)&&profile.active&&(profile.accessLevel==='super_admin'||profile.fieldActive)};
+      if(!account.displayName?.trim())throw new Error('Invalid local account');
+      return {...account,version:version(account)};
+    } catch {throw new AppError('Local auth account/profile database is not ready',503);}
   }
   return Object.freeze({
-    findLocalByUsername: (username) => find("Username", username),
-    findLocalById: (id) => find("Id", id),
-    findStaffByUsername: (username) => findStaff("c.TenDangNhap", username),
-    findStaffById: (id) => findStaff("a.MaHS", id),
-    async updateStaffPassword({ actor, account, passwordHash, reset = false }) {
+    findLocalByUsername:username=>find('Username',username),
+    findLocalById:id=>find('Id',id),
+    findStaffByUsername:username=>find('Username',username,'staff'),
+    findStaffById:id=>find('Id',id,'staff'),
+    async updateStaffPassword({actor,account,passwordHash,reset=false}) {
       guard();
       try {
-        await transaction(
-          `SET NOCOUNT ON;SET XACT_ABORT ON;${localDatabaseGuardSql}
-          DECLARE @actor nvarchar(40)=?,@target nvarchar(40)=?;
-          IF NOT EXISTS(SELECT 1 FROM svc_demo.TaiKhoan a WITH(UPDLOCK,HOLDLOCK)
-            JOIN svc_demo.DangNhapChuyenVien c WITH(UPDLOCK,HOLDLOCK) ON c.MaHS=a.MaHS
-            WHERE a.MaHS=@actor AND a.HieuLuc=1 AND a.NguonDanhTinh='LOCAL' AND a.VaiTro IN('STAFF','ADMIN')
-              AND a.PhienBanQuyen=? AND c.MatKhauBam=?) THROW 51201,'PASSWORD_ACTOR_STALE',1;
-          ${
-            reset
-              ? `IF @actor=@target OR NOT EXISTS(SELECT 1 FROM svc_demo.vQuyenHieuLuc WITH(UPDLOCK,HOLDLOCK)
-            WHERE MaHS=@actor AND MaQuyen='rbac.staff.manage') THROW 51202,'PASSWORD_FORBIDDEN',1;`
-              : "IF @actor<>@target THROW 51202,'PASSWORD_FORBIDDEN',1;"
-          }
-          UPDATE c SET MatKhauBam=? FROM svc_demo.DangNhapChuyenVien c
-            JOIN svc_demo.TaiKhoan a WITH(UPDLOCK,HOLDLOCK) ON a.MaHS=c.MaHS
-            WHERE c.MaHS=@target AND c.MatKhauBam=? AND a.HieuLuc=1
-              AND a.NguonDanhTinh='LOCAL' AND a.VaiTro IN('STAFF','ADMIN');
+        await transaction(`SET NOCOUNT ON;SET XACT_ABORT ON;${localDatabaseGuardSql}
+          DECLARE @actor uniqueidentifier=?,@target uniqueidentifier=?;
+          IF NOT EXISTS(SELECT 1 FROM auth.LocalAccounts a WITH(UPDLOCK,HOLDLOCK)
+            JOIN auth.AccountProfiles p WITH(UPDLOCK,HOLDLOCK) ON p.AccountId=a.Id
+            LEFT JOIN auth.Fields f WITH(UPDLOCK,HOLDLOCK) ON f.FieldCode=p.FieldCode
+            WHERE a.Id=@actor AND a.IsActive=1 AND a.[Version]=CONVERT(binary(8),?,1) AND a.PasswordHash=?
+              AND p.Revision=? AND (p.AccessLevel='super_admin' OR f.IsActive=1)) THROW 51201,'PASSWORD_ACTOR_STALE',1;
+          ${reset?`IF @actor=@target OR NOT EXISTS(SELECT 1 FROM auth.AccountProfiles p WITH(UPDLOCK,HOLDLOCK)
+            JOIN auth.AccountProfiles target WITH(UPDLOCK,HOLDLOCK) ON target.AccountId=@target
+            JOIN auth.Fields f WITH(UPDLOCK,HOLDLOCK) ON f.FieldCode=target.FieldCode AND f.IsActive=1
+            WHERE p.AccountId=@actor AND ((p.AccessLevel='super_admin' AND target.AccessLevel='department_admin')
+              OR(p.AccessLevel='department_admin' AND target.AccessLevel='specialist' AND p.FieldCode=target.FieldCode)))
+            THROW 51202,'PASSWORD_FORBIDDEN',1;`:'IF @actor<>@target THROW 51202,\'PASSWORD_FORBIDDEN\',1;'}
+          UPDATE auth.LocalAccounts SET PasswordHash=? WHERE Id=@target AND PasswordHash=? AND IsActive=1;
           IF @@ROWCOUNT<>1 THROW 51203,'PASSWORD_TARGET_STALE',1;
-          UPDATE svc_demo.TaiKhoan SET PhienBanQuyen=PhienBanQuyen+1 WHERE MaHS=@target;
-          INSERT svc_demo.LichSuRBAC(MaNguoiThucHien,ThaoTac,MaTaiKhoan,MoTa)
-            VALUES(@actor,?,@target,?);
-          `,
-          [
-            actor.id,
-            account.id,
-            actor.accountVersion,
-            actor.passwordHash,
-            passwordHash,
-            account.passwordHash,
-            reset ? "RESET_PASSWORD" : "CHANGE_PASSWORD",
-            reset
-              ? "Quản trị viên đặt lại mật khẩu tài khoản."
-              : "Chủ tài khoản tự đổi mật khẩu.",
-          ],
-        );
-      } catch (error) {
-        if (/PASSWORD_FORBIDDEN/.test(error.message))
-          throw new AppError(
-            "Bạn chưa có quyền đặt lại mật khẩu tài khoản này.",
-            403,
-          );
-        if (/PASSWORD_ACTOR_STALE/.test(error.message))
-          throw new AppError(
-            "Tài khoản hoặc quyền của bạn vừa thay đổi. Vui lòng đăng nhập lại.",
-            401,
-          );
-        if (/PASSWORD_TARGET_STALE/.test(error.message))
-          throw new AppError(
-            "Tài khoản đã thay đổi. Hãy tải lại trước khi đặt mật khẩu.",
-            409,
-          );
-        throw new AppError(
-          "Chưa cập nhật được mật khẩu trong DB local. Vui lòng thử lại.",
-          503,
-        );
+          UPDATE auth.AccountProfiles SET Revision=Revision+1 WHERE AccountId=@target;
+          INSERT auth.AccountSecurityEvents(ActorId,TargetId,Action) VALUES(@actor,@target,?);`,
+          [actor.id,account.id,actor.accountVersion,actor.passwordHash,actor.organization.revision,passwordHash,account.passwordHash,
+            reset?'RESET_PASSWORD':'CHANGE_PASSWORD']);
+      } catch(error) {
+        if(/PASSWORD_FORBIDDEN/.test(error.message))throw new AppError('Permission denied',403);
+        if(/PASSWORD_ACTOR_STALE/.test(error.message))throw new AppError('Account changed; sign in again',401);
+        if(/PASSWORD_TARGET_STALE/.test(error.message))throw new AppError('Account changed; reload before saving',409);
+        throw new AppError('Unable to update the local auth password',503);
       }
     },
-    async createLocalAccount({
-      id,
-      username,
-      displayName,
-      passwordHash,
-      channel,
-      roles,
-      permissions,
-    }) {
-      if (channel !== "admin")
-        throw new AppError(
-          "Student accounts use DUT SSO; only admin local accounts can be provisioned here",
-          400,
-        );
-      const params = [id, username, displayName, passwordHash, channel];
-      let sql = `INSERT auth.LocalAccounts(Id,Username,DisplayName,PasswordHash,Channel) VALUES(?,?,?,?,?);`;
-      for (const role of [...new Set(roles)]) {
-        sql += `IF NOT EXISTS(SELECT 1 FROM auth.Roles WITH(UPDLOCK,HOLDLOCK) WHERE RoleName=?) INSERT auth.Roles(RoleName) VALUES(?);INSERT auth.AccountRoles(AccountId,RoleName) VALUES(?,?);`;
-        params.push(role, role, id, role);
-      }
-      for (const permission of [...new Set(permissions)]) {
-        sql += `IF NOT EXISTS(SELECT 1 FROM auth.Permissions WITH(UPDLOCK,HOLDLOCK) WHERE PermissionName=?) INSERT auth.Permissions(PermissionName) VALUES(?);INSERT auth.AccountPermissions(AccountId,PermissionName) VALUES(?,?);`;
-        params.push(permission, permission, id, permission);
-      }
-      try {
-        await transaction(
-          `SET XACT_ABORT ON;${localDatabaseGuardSql}${sql}`,
-          params,
-        );
-      } catch {
-        throw new AppError(
-          "Unable to create local account; check database setup and username uniqueness",
-          503,
-        );
-      }
+    async createLocalAccount({id,username,displayName,passwordHash,channel,roles=[],permissions=[]}) {
+      if(channel!=='admin'||roles.length||permissions.length)throw new AppError('Create accounts through auth organization roles and tasks; arbitrary role/permission grants are disabled',400);
+      return organization.bootstrapSuperAdmin({id,username,displayName,passwordHash});
     },
   });
 }
-export const authRepository = createAuthRepository();
+export const authRepository=createAuthRepository();

@@ -5,11 +5,11 @@ import {
   itApplicationDto,
   itListDto,
 } from "../mappers/it-certifications.mapper.js";
-import { canEdit } from "../rules/certifications.rules.js";
+import { canEdit, certificationReviewActions } from "../rules/certifications.rules.js";
 import { inspectEvidenceFiles } from "./evidence-inspection.service.js";
 import { notifyCertificateChanged } from "../events/certification-events.js";
 import { studentService } from '../../students/index.js';
-import { requireStudentInformation, supplementStudentInformation } from './student-information.js';
+import { requireStudentInformation } from './student-information.js';
 
 export function createItCertificationsService({
   repository,
@@ -41,7 +41,6 @@ export function createItCertificationsService({
       throw new AppError("Không được truy cập hồ sơ này.", 403);
     return application;
   }
-  const present = dto => supplementStudentInformation(dto, studentProfile);
   return Object.freeze({
     async form(actor) {
       profile(actor);
@@ -95,10 +94,10 @@ export function createItCertificationsService({
         throw new AppError("Không có quyền truy cập.", 403);
       if (actor.role === "student") profile(actor);
       const result = await repository.records({ ...query, actor });
-      if (actor.role === 'reviewer') result.items = await Promise.all(result.items.map(row =>
-        /^\d{9}$/.test(row.MaHS ?? '') ? present({ ...row, studentCode:row.MaHS,
-          fullName:row.StudentSnapshot?.fullName ?? null,className:row.StudentSnapshot?.className ?? null,cccd:row.StudentSnapshot?.cccd ?? null })
-          : { ...row, studentCode:row.MaHS ?? null,fullName:null,className:null,cccd:null }));
+      if (actor.role === 'reviewer') result.items = result.items.map(row =>
+        /^\d{9}$/.test(row.MaHS ?? '') ? { ...row, studentCode:row.MaHS,
+          fullName:row.StudentSnapshot?.fullName ?? null,className:row.StudentSnapshot?.className ?? null,cccd:row.StudentSnapshot?.cccd ?? null }
+          : { ...row, studentCode:row.MaHS ?? null,fullName:null,className:null,cccd:null });
       return {
         ...result,
         page: query.page,
@@ -107,12 +106,10 @@ export function createItCertificationsService({
       };
     },
     async list(actor, query) {
-      const result = itListDto(await repository.list({ ...query, actor }));
-      result.items = await Promise.all(result.items.map(present));
-      return result;
+      return itListDto(await repository.list({ ...query, actor }), clock());
     },
     async get(actor, applicationId) {
-      return present(itApplicationDto(await load(actor, applicationId)));
+      return itApplicationDto(await load(actor, applicationId), clock());
     },
     async prepare(actor, input) {
       profile(actor);
@@ -192,7 +189,7 @@ export function createItCertificationsService({
       const application = await load(actor, applicationId),
         pending = application.Submissions.find((s) => s.Status !== "submitted");
       if (!pending && application.CurrentSubmissionId)
-        return itApplicationDto(application);
+        return itApplicationDto(application, clock());
       if (!pending || !canEdit(application.Status))
         throw new AppError("Hồ sơ không thể nộp thêm.", 409);
       const { ID, ...data } = pending.Certificate;
@@ -220,7 +217,7 @@ export function createItCertificationsService({
           files,
         });
         notifyCertificateChanged(events, "it", result);
-        return itApplicationDto(result);
+        return itApplicationDto(result, clock());
       } catch (error) {
         // Valid objects remain available if a DB response or an R2 read is lost.
         await repository.releaseSubmission(reference).catch(() => {});
@@ -232,7 +229,7 @@ export function createItCertificationsService({
         throw new AppError("Không có quyền xét duyệt.", 403);
       const application = await load(actor, applicationId);
       if (
-        application.Status !== "submitted" ||
+        !certificationReviewActions(application.Status).includes(input.decision) ||
         application.VersionToken !== expected
       )
         throw new AppError("Hồ sơ đã thay đổi hoặc không còn chờ duyệt.", 409);
@@ -244,7 +241,7 @@ export function createItCertificationsService({
         reviewId: randomUUID(),
       });
       notifyCertificateChanged(events, "it", result);
-      return itApplicationDto(result);
+      return itApplicationDto(result, clock());
     },
     async download(actor, applicationId, fileId) {
       const application = await load(actor, applicationId);

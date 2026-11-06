@@ -1,5 +1,9 @@
 # Báo cáo bàn giao FE: Chứng chỉ và Đơn ngừng học / Gia hạn ngừng học
 
+Nguồn dữ liệu và trạng thái mới nhất: [workflow chứng chỉ/nghỉ học](CERTIFICATIONS_ACADEMIC_LEAVE_WORKFLOW.md).
+Chuyên viên/admin đọc hồ sơ và snapshot DB local; không bổ sung dữ liệu từ DB trường
+khi mở danh sách/chi tiết. Admin phòng theo dõi, không duyệt tiếp sau chuyên viên.
+
 Ngày đối chiếu: **27/10/2026**. Nội dung dựa trên code trong workspace tại thời điểm lập báo cáo, bao gồm các thay đổi đang phát triển chưa commit.
 
 Mục đích: tổng hợp phần BE đã triển khai, hợp đồng API và công việc FE cần thực hiện để nối hai module. Phạm vi chứng chỉ gồm **ngoại ngữ và tin học**. Các chức năng dưới đây đã có trong code; điều kiện để triển khai và những phần còn thiếu được ghi riêng ở mục 6.
@@ -33,6 +37,10 @@ BE local mặc định: `http://localhost:3003`. FE cấu hình một biến bas
 
 API sinh viên dùng:
 
+Đăng nhập và tải form dùng token SSO/profile DUT trực tiếp. Không tự truy vấn DB
+trường để bù các trường thiếu trong form chứng chỉ hoặc phần điền sẵn nghỉ học.
+Trường chưa được nguồn xác minh cung cấp để trống; nộp/xác nhận vẫn kiểm tra dữ liệu bắt buộc.
+
 ```http
 Authorization: Bearer <DUT_SSO_ACCESS_TOKEN>
 Accept: application/json
@@ -40,9 +48,9 @@ Accept: application/json
 
 Request có JSON body thêm `Content-Type: application/json`. Backend lấy danh tính từ token đã xác thực; FE không tự gán MSSV, khóa tuyển sinh, vai trò hoặc quyền để thay thế đăng nhập. Giữ MSSV, CCCD và điện thoại dạng chuỗi.
 
-**Xác thực chuyên viên:** module mặc định cần BE nối adapter xác thực phù hợp. Khi chưa có adapter, API chuyên viên trả `503`; chứng chỉ có thể kèm `details.code = CERT_AUTH_CONTEXT_REQUIRED`. Riêng các route chuyên viên của academic leave từ chối request mang `Authorization` để tránh dùng nhầm token sinh viên. FE chuyên viên cần client riêng theo cơ chế phiên đã thống nhất với BE.
+**Xác thực hiện hành:** sinh viên dùng nguyên token SSO; backend kiểm tra secret key/HS256/hạn dùng và logout, không yêu cầu issuer/audience SSO. Chứng chỉ/ngừng học phía quản trị dùng Bearer JWT BE channel admin với quyền tương ứng; API đơn dùng channel staff. Xem [AUTH_CHANNELS.md](AUTH_CHANNELS.md) để nối login, callback, refresh và logout.
 
-Trong môi trường local đã có adapter cookie dùng chung cho chuyên viên hai module. FE gọi với `credentials: 'include'`; với Axios dùng `withCredentials: true`. Đăng nhập/kiểm tra phiên/đăng xuất thử nghiệm nằm dưới `/api/certifications/reviewer/auth`. Đây là adapter local khi `CERTIFICATIONS_DEV_MODE=true` và `NODE_ENV=development` hoặc `test`; không coi các route đăng nhập này là hợp đồng xác thực production.
+Các adapter cookie thử nghiệm trước đây không phải hợp đồng auth hiện hành. Login/refresh/logout local dùng `/api/admin/auth` hoặc `/api/staff/auth` theo channel, gửi cookie với `credentials: 'include'` và Origin đúng frontend. API nghiệp vụ dùng access Bearer; không gửi token SSO sang API quản trị.
 
 ### 2.2. Response và dữ liệu đặc biệt
 
@@ -248,7 +256,8 @@ Nếu FE làm màn hình quản trị danh mục ngoại ngữ, dùng `/api/cert
 | `status` | Nhãn gợi ý | Thao tác sinh viên | Thao tác chuyên viên |
 | --- | --- | --- | --- |
 | `uploading` | Chưa nộp | Tiếp tục/sửa để nộp; khóa khi `processing=true` | Xem, chưa xét duyệt |
-| `submitted` | Chờ xét duyệt | Xem | Xác nhận / Yêu cầu bổ sung / Từ chối |
+| `submitted` | Chờ kiểm tra online | Xem | Xác nhận tiếp nhận sang `processing` / Yêu cầu bổ sung / Từ chối |
+| `processing` | Đang xử lý | Xem | Chấp nhận `verified` / Từ chối |
 | `needs_changes` | Cần bổ sung | Sửa, chọn lại ảnh, nộp bổ sung cùng ID | Xem |
 | `verified` | Đã xác nhận chứng chỉ | Xem | Xem |
 | `rejected` | Đã từ chối | Xem | Xem |
@@ -263,7 +272,7 @@ Body xét duyệt dùng chung hai nhóm:
 }
 ```
 
-`decision`: `verified`, `needs_changes`, `rejected`. Hai lựa chọn sau bắt buộc `reason` (tối đa 2000 ký tự). `verificationMethod` bắt buộc là `document_comparison`, `issuer_lookup` hoặc `other`. FE gửi `If-Match` của **hồ sơ**, không lấy phiên bản từ file/submission.
+Khi `submitted`, `decision` nhận `processing`, `needs_changes`, `rejected`; khi `processing`, nhận `verified`, `rejected`. Bổ sung/từ chối bắt buộc `reason` (tối đa 2000 ký tự). Khi `verified`, `verificationMethod` bắt buộc là `document_comparison`, `issuer_lookup` hoặc `other`; thao tác khác có thể bỏ trường này. FE gửi `If-Match` của **hồ sơ**, không lấy phiên bản từ file/submission. Không thể chấp nhận thẳng từ `submitted`.
 
 ### 3.7. SSE cập nhật kết quả
 
@@ -287,14 +296,14 @@ FE dùng Fetch streaming để gửi Bearer header cho sinh viên; `EventSource`
 
 - Hai loại đơn: `leave` và `extension`. Bốn lý do: `medical` (chữa bệnh), `accident` (tai nạn), `military` (nghĩa vụ quân sự), `maternity` (thai sản).
 - Lấy học kỳ chính hiện tại từ cấu hình trường; chỉ cho chọn kỳ trước, kỳ hiện tại hoặc kỳ sau. Mỗi lần đề nghị từ 1 đến 4 kỳ, không tính kỳ hè vào thời lượng.
-- Gia hạn phải liên kết đơn cùng chủ sở hữu trên hệ thống mới, đã `approved` hoặc `paper_received`; bắt đầu nối tiếp kỳ cuối của đơn trước. Kỳ nối tiếp cũng phải nằm trong ba kỳ đang được phép chọn.
-- Một sinh viên chỉ có một đơn đang `draft`/`submitted`/`needs_changes` cùng lúc; kiểm tra khoảng thời gian trùng khi xác nhận. Một đơn cha chỉ có một đơn gia hạn chưa hủy/chưa từ chối; muốn gia hạn tiếp thì nối tới đơn đã duyệt gần nhất.
+- Gia hạn phải liên kết đơn cùng chủ sở hữu đã được chấp nhận cuối cùng ở `approved`; bắt đầu nối tiếp kỳ cuối của đơn trước và lập ở học kỳ hiện tại.
+- Một sinh viên chỉ có một đơn đang `draft`/`submitted`/`needs_changes`/`received`/`processing` cùng lúc; kiểm tra khoảng thời gian trùng khi xác nhận. Một đơn cha chỉ có một đơn kế tiếp chưa hủy/chưa từ chối; muốn gia hạn tiếp thì nối tới đơn đã chấp nhận gần nhất.
 - Lưu tại `academic_leave.Applications` trong DB local. Mã đơn là `NH + MSSV + số thứ tự riêng của sinh viên`, ví dụ `NH1022303771`; sửa/in lại không cấp mã mới.
 - Lúc xác nhận, BE lấy lại thông tin và lưu snapshot. Chi tiết/bản in dùng dữ liệu đã chốt. Bổ sung rồi xác nhận lại cập nhật snapshot trên cùng đơn và xóa kết quả duyệt cũ.
-- Duyệt online tự đặt hạn nộp bản giấy **72 giờ**, tính cả cuối tuần. Quá hạn vẫn giữ `approved`, trả `overdue: true` và chặn nhận giấy.
+- Xác nhận sẽ tiếp nhận online chuyển sang `received`, ghi mốc nộp giấy +3 ngày. Qua mốc vẫn giữ `received`; `overdue: true` chỉ để hiển thị, không chặn nhận giấy muộn.
 - Dựng HTML/PDF từ snapshot; PDF trả trực tiếp khi yêu cầu, không lưu file PDF trong DB hoặc R2.
 
-`approved` có nghĩa hồ sơ online hợp lệ và đang chờ nộp giấy. FE cần hiển thị đúng ý nghĩa này, chưa phải quyết định cho phép ngừng học của Nhà trường.
+`received` là đã xác nhận sẽ tiếp nhận, đang chờ giấy; nhận giấy chuyển `processing`; `approved` là chấp nhận cuối cùng. Thao tác này không tự cập nhật quyết định/trạng thái học tập vào DB trường.
 
 ### 4.2. FE cần làm khi mở form
 
@@ -371,22 +380,23 @@ Danh sách chỉ nhận `page` và `status`, cố định **20 dòng/trang**; kh
 | `status` | Nhãn gợi ý | Sinh viên | Chuyên viên |
 | --- | --- | --- | --- |
 | `draft` | Bản nháp | Sửa, xác nhận, hủy | Xem |
-| `submitted` | Chờ xét duyệt | Xem/in | Duyệt, yêu cầu bổ sung, từ chối |
+| `submitted` | Chờ kiểm tra online | Xem/in | Xác nhận sẽ tiếp nhận `received`, yêu cầu bổ sung, từ chối |
 | `needs_changes` | Cần bổ sung | Sửa, xác nhận lại, hủy | Xem |
-| `approved` | Đã duyệt online · chờ nộp giấy | Xem/in, thấy hạn giấy và cảnh báo quá hạn | Nhận giấy nếu còn hạn |
-| `paper_received` | Đã nhận đơn giấy | Xem/in | Xem |
+| `received` | Đã xác nhận sẽ tiếp nhận · chờ giấy | Xem/in, thấy mốc +3 ngày | Xác nhận nhận giấy; không được từ chối ở bước này |
+| `processing` | Đã nhận giấy · đang xử lý | Xem/in | Chấp nhận `approved` / Từ chối |
+| `approved` | Đã chấp nhận | Xem/in | Xem |
 | `rejected` | Không duyệt | Xem | Xem |
 | `cancelled` | Đã hủy | Xem | Xem |
 
 Body xét duyệt:
 
 ```json
-{ "decision": "approved", "note": "Hồ sơ hợp lệ" }
+{ "decision": "received", "note": "Đã kiểm tra online, xác nhận sẽ tiếp nhận bản giấy" }
 ```
 
-`decision` nhận `approved`, `needs_changes`, `rejected`; hai lựa chọn sau bắt buộc `note` (tối đa 1000 ký tự). Khác chứng chỉ, module này dùng **`note`** và kết quả duyệt **`approved`**, không dùng `reason`/`verified`.
+Khi `submitted`, `decision` nhận `received`, `needs_changes`, `rejected`; khi `processing`, nhận `approved`, `rejected`. Bổ sung/từ chối bắt buộc `note` (tối đa 1000 ký tự). Module này dùng **`note`** và kết quả cuối **`approved`**, không dùng `reason`/`verified`.
 
-BE tự tính hạn khi duyệt và tự ghi thời điểm/người nhận khi nhận giấy. FE hiển thị `paperDeadlineAt`, dùng `overdue` để cảnh báo và khóa nút nhận giấy khi đã quá hạn. Nút nhận giấy gọi API riêng; thao tác in không đồng nghĩa đã nhận giấy.
+BE ghi `receivedAt` và mốc `paperDeadlineAt=receivedAt+3 ngày` khi xác nhận sẽ tiếp nhận. `overdue` chỉ để hiển thị, không khóa nhận giấy. Nút nhận giấy gọi `/receive-paper` đưa đơn sang `processing`, tự ghi thời điểm/người nhận; thao tác in không đồng nghĩa đã nhận giấy. Không cho từ chối trong giai đoạn chờ giấy.
 
 Academic leave hiện chưa có SSE. FE tải lại danh sách/chi tiết sau thao tác, khi quay lại trang hoặc khi người dùng bấm tải lại; không dùng sự kiện của chứng chỉ để suy trạng thái đơn.
 
@@ -473,12 +483,12 @@ Phần đã có code chưa đồng nghĩa môi trường production đã sẵn s
 - [ ] Chuyên viên yêu cầu bổ sung; sinh viên sửa/nộp lại; trạng thái và kết quả mới hiển thị đúng ở cả hai phía.
 - [ ] Chứng chỉ verified/rejected khóa sửa; review cùng rowVersion ở hai tab chỉ một thao tác được chấp nhận.
 - [ ] SSE nhận thay đổi hai nhóm, reconnect tải lại dữ liệu, đổi tab/đăng xuất không tạo kết nối trùng.
-- [ ] Đơn ngừng học: lưu nháp → sửa → xác nhận → duyệt online → nhận giấy; thời hạn hiển thị đúng 72 giờ theo BE.
+- [ ] Đơn ngừng học: lưu nháp → xác nhận → xác nhận sẽ tiếp nhận online → chờ giấy (+3 ngày) → nhận giấy/processing → chấp nhận hoặc từ chối.
 - [ ] Đơn cần bổ sung giữ ID/mã cũ khi xác nhận lại; đơn nháp/cần bổ sung hủy được, đơn đã nộp không hiện nút hủy.
 - [ ] Gia hạn chỉ chọn đơn cha hợp lệ, kỳ nối tiếp nằm trong ba kỳ cho phép, số kỳ 1–4; xử lý lỗi trùng thời gian/đơn đang mở.
 - [ ] Thiếu CCCD/thông tin nguồn báo rõ lỗi xác nhận; điểm `0`/`null` và dòng kỳ hè được hiển thị theo dữ liệu BE.
 - [ ] PDF mở sau xác nhận, in lại không tạo đơn/mã mới; cookie hết hạn hoặc xác nhận lại thì cấp quyền in mới.
-- [ ] Đơn quá hạn cảnh báo đúng và không nhận giấy; approved hiển thị là chờ nộp giấy, không diễn đạt thành quyết định nghỉ học.
+- [ ] Qua mốc +3 ngày vẫn chờ giấy và nhận giấy được; chỉ từ chối ở submitted/processing, approved là kết quả cuối.
 
 ## 8. Tài liệu và mã tham khảo
 
@@ -501,8 +511,12 @@ Terminal thứ hai:
 npm.cmd run certifications:fe
 ```
 
-Trang sinh viên: `http://localhost:5173/` (ngoại ngữ), `http://localhost:5173/?kind=it` (tin học), `http://localhost:5173/academic-leave.html` (đơn ngừng học). Trang chuyên viên tương ứng ở cổng `5174`; để dùng adapter chuyên viên local, cấu hình `CERTIFICATIONS_DEV_MODE=true` cùng `NODE_ENV=development` hoặc `test` trước khi chạy BE.
+Trang sinh viên: `http://localhost:5173/` (ngoại ngữ), `http://localhost:5173/?kind=it` (tin học), `http://localhost:5173/academic-leave.html` (đơn ngừng học). Trang chuyên viên tương ứng ở cổng `5174`, đăng nhập tài khoản trong `auth` local với task được giao; admin phòng chỉ theo dõi. Chạy FE test bằng `npm run certifications:fe`, backend chạy riêng.
 
 FE test thực hiện ghi dữ liệu khi nộp/xét duyệt; dùng môi trường và hồ sơ thử nghiệm đã thống nhất.
 
 **Tình trạng kiểm chứng khi soạn báo cáo:** đã đối chiếu route, DTO, controller, service, mapper, middleware và mã FE test. Repo đã có test cho upload/complete/review, SSE, tin học, quy tắc đơn, snapshot/điểm và quyền in PDF. Lần này thử chạy nhóm test liên quan nhưng trình chạy báo `Node.js v>=24.0.0 is not installed or cannot be found`, nên chưa có kết quả chạy test mới. Các test SQL và browser PDF thật cần điều kiện riêng; không coi việc có mã test là đã kiểm chứng DB/SSO/R2/PDF thật của môi trường bàn giao.
+
+## Quy t?c th?i h?n v? DB local
+
+Xem [quy t?c th?i h?n ch?ng ch?/h?c v?](REQUEST_REGULATIONS.md) v? m?c ti?p nh?n, x? l?, tr? k?t qu? v? tag qu? h?n trong API danh s?ch/chi ti?t. B? [Database_newversion](../Database_newversion/README.md) ch?a c?u tr?c, danh m?c DB local v? h??ng d?n d?ng m?i tr??ng.

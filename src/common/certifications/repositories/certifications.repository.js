@@ -181,7 +181,7 @@ export function createCertificationsRepository({query=queryLocalDatabase,transac
           CASE WHEN c.Status='checking' THEN 'uploading' ELSE c.Status END=JSON_VALUE(@input,'$.status'))`;
       return run(`DECLARE @page int=TRY_CONVERT(int,JSON_VALUE(@input,'$.page')),@pageSize int=TRY_CONVERT(int,JSON_VALUE(@input,'$.pageSize'));
         SELECT(SELECT @page AS page,@pageSize AS pageSize,(SELECT COUNT(*) FROM certification.StudentCertificates c WHERE ${filter}) AS totalRecords,
-        JSON_QUERY(COALESCE((SELECT c.Id,c.StudentCode,c.CohortYear,c.Status,c.FullName,c.ClassName,c.Cccd,c.CertificateTypeId,c.CreatedAt,c.UpdatedAt,
+        JSON_QUERY(COALESCE((SELECT c.Id,c.StudentCode,c.CohortYear,c.Status,c.FullName,c.ClassName,c.Cccd,c.CertificateTypeId,c.CreatedAt,c.UpdatedAt,c.SubmittedAt,c.ReviewedAt,
           c.IssuingOrganizationId,JSON_VALUE(c.CatalogSnapshotJson,'$.issuingOrganization.displayName') AS IssuingOrganizationName,
           JSON_VALUE(c.CatalogSnapshotJson,'$.type.displayName') AS CertificateTypeName,
           CONVERT(varchar(16),CONVERT(binary(8),c.RowVersion),2) AS VersionToken
@@ -242,7 +242,9 @@ export function createCertificationsRepository({query=queryLocalDatabase,transac
     },
     review(input) {
       return mutate(input,`${lockCertificate}${sameToken}
-        IF @status<>'submitted' THROW 51409,'CERT_CONFLICT',1;
+        IF NOT((@status='submitted' AND JSON_VALUE(@input,'$.decision') IN('processing','rejected','needs_changes'))
+          OR (@status='processing' AND JSON_VALUE(@input,'$.decision') IN('verified','rejected')))
+          THROW 51409,'CERT_CONFLICT',1;
         UPDATE certification.StudentCertificates SET Status=JSON_VALUE(@input,'$.decision'),
           ReviewerReference=JSON_VALUE(@input,'$.actor.reference'),ReviewerName=JSON_VALUE(@input,'$.actor.name'),
           ReviewerSource=JSON_VALUE(@input,'$.actor.source'),ReviewReason=JSON_VALUE(@input,'$.reason'),

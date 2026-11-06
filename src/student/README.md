@@ -11,3 +11,7 @@
   rồi đăng ký router của nó trong file route chính ở đây.
 
 Guard nằm tại router từng module; file gom route không thay đổi token hoặc quyền.
+
+Tất cả API sinh viên nhận `Authorization: Bearer <DUT_SSO_ACCESS_TOKEN>`.
+Token được kiểm tra bằng secret key/HS256/hạn dùng, không yêu cầu issuer/audience.
+Không đổi sang JWT nội bộ hay refresh token. Xem [auth và logout](../../docs/AUTH_CHANNELS.md).

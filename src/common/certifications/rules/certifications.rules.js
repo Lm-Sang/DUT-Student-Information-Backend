@@ -100,3 +100,9 @@ export function recognition(type, language, policies, cohortYear) {
 export function canEdit(status) {
   return ['uploading','needs_changes'].includes(status);
 }
+
+export function certificationReviewActions(status) {
+  if (status === 'submitted') return ['processing', 'rejected', 'needs_changes'];
+  if (status === 'processing') return ['verified', 'rejected'];
+  return [];
+}

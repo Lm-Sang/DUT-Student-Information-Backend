@@ -8,6 +8,7 @@ import defaultCurriculumModule from '../public/modules/curriculum/index.js';
 import defaultHealthModule from '../public/modules/health/index.js';
 import defaultRequestsModule, { createRequestsApiModule } from './modules/student-requests.module.js';
 import defaultTimetableModule from '../public/modules/timetable/index.js';
+import { createOrganizationModule } from '../admin/modules/organization/index.js';
 
 // The only place that registers business features. Legacy admin auth stays opt-in:
 // server.js loads its entry point only when ENABLE_ADMIN_AUTH is enabled.
@@ -30,6 +31,7 @@ export function createModuleRegistry({
   itCertificationsModule = defaultItCertificationsModule,
   academicLeaveModule = defaultAcademicLeaveModule,
   adminAuthModule,
+  organizationModule = createOrganizationModule(),
 } = {}) {
   return {
     healthModule,
@@ -49,6 +51,7 @@ export function createModuleRegistry({
     itCertificationsModule,
     academicLeaveModule,
     adminAuthModule,
+    organizationModule,
   };
 }
 

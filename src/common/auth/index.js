@@ -3,6 +3,11 @@ export { authenticate, requireAuth, requirePermissions } from './middlewares/aut
 export { authService } from './services/auth.service.js';
 export { closeAuthStore } from './stores/auth.store.js';
 export { createSsoTokenResolver, resolveSsoAccessToken, createLocalPermissionContext } from './middlewares/auth.middleware.js';
+export { createOrganizationRepository, organizationRepository } from './repositories/organization.repository.js';
+export { parseOrganizationAccount, requireOrganizationManager } from './rules/organization.js';
+export { hashPassword } from './services/password.service.js';
+export { validateUsername, validatePassword } from './rules/credentials.js';
+export { workflowPermissionsViewSql } from './repositories/authorization-views.js';
 
 import { env } from '../../config/env.js';
 import { authService } from './services/auth.service.js';
@@ -16,7 +21,12 @@ export function createAuthModule({ channel = 'student', service = authService,
   const router = createAuthRouter(channel, controller, service);
   if (env.nodeEnv !== 'production') router.get('/configuration', (_req,res) => {
     const missing = [];
-    if (!env.microsoftSso.jwtSecret) missing.push('MICROSOFT_SSO_JWT_SECRET');
+    if (channel === 'student') {
+      if (!env.microsoftSso.jwtSecret) missing.push('MICROSOFT_SSO_JWT_SECRET');
+    } else {
+      if (Buffer.byteLength(env.jwt.secret) < 32) missing.push('JWT_SECRET (at least 32 bytes)');
+      if (env.jwt.shareSsoKey) missing.push('JWT_SHARE_SSO_KEY must be false');
+    }
     res.set('Cache-Control','no-store').json({data:{ready:missing.length===0,missing}});
   });
   return { basePath: `/api/${channel}/auth`, router };

@@ -7,7 +7,8 @@ const certificateTable = 'certification.tmCNTTChungChi_SV';
 const summarySql = `SELECT g.ApplicationId AS Id,f.ActorReference,f.ActorSource,
  c.MaHS AS StudentCode,f.CertificateId,f.StudentSnapshotJson,
  CASE WHEN done.Id IS NULL THEN 'uploading' ELSE COALESCE(JSON_VALUE(done.ReviewJson,'$.Decision'),'submitted') END AS Status,
- done.SubmissionId AS CurrentSubmissionId,g.CreatedAt,g.UpdatedAt,
+ done.SubmissionId AS CurrentSubmissionId,done.CompletedAt AS SubmittedAt,
+ JSON_VALUE(done.ReviewJson,'$.ReviewedAt') AS ReviewedAt,g.CreatedAt,g.UpdatedAt,
  CONVERT(varchar(16),CONVERT(binary(8),g.VersionNumber),2) AS VersionToken
  FROM (SELECT ApplicationId,MIN(CreatedAt) AS CreatedAt,MAX(UpdatedAt) AS UpdatedAt,
    MAX(CONVERT(bigint,RowVersion)) AS VersionNumber FROM ${fileTable} GROUP BY ApplicationId) g
@@ -194,7 +195,9 @@ export function createItCertificationsRepository({query=queryLocalDatabase,trans
     },
     review(input) {
       return mutate(input,`${lockApplication}${sameToken}
-        IF @status<>'submitted' THROW 51809,'ITCERT_CONFLICT',1;
+        IF NOT((@status='submitted' AND JSON_VALUE(@input,'$.decision') IN('processing','rejected','needs_changes'))
+          OR (@status='processing' AND JSON_VALUE(@input,'$.decision') IN('verified','rejected')))
+          THROW 51809,'ITCERT_CONFLICT',1;
         DECLARE @review nvarchar(max)=(SELECT JSON_VALUE(@input,'$.decision') AS Decision,JSON_VALUE(@input,'$.reason') AS Reason,
           JSON_VALUE(@input,'$.verificationMethod') AS VerificationMethod,JSON_VALUE(@input,'$.actor.reference') AS ReviewerReference,
           JSON_VALUE(@input,'$.actor.name') AS ReviewerName,@now AS ReviewedAt FOR JSON PATH,WITHOUT_ARRAY_WRAPPER);

@@ -6,7 +6,7 @@ export function isolatedApp(overrides) {
   const names = ['healthModule', 'studentAuthModule', 'staffAuthModule', 'studentServicesModule',
     'staffServicesModule', 'studentsModule', 'adminModule', 'usersModule', 'courseRegistrationModule',
     'timetableModule', 'curriculumModule', 'announcementsModule', 'requestsModule',
-    'certificationsModule', 'itCertificationsModule', 'academicLeaveModule', 'adminAuthModule'];
+    'certificationsModule', 'itCertificationsModule', 'academicLeaveModule', 'adminAuthModule', 'organizationModule'];
   return createApp({ ...Object.fromEntries(names.map(name => [name, null])), ...overrides });
 }
 const student = { role: 'student', source: 'auth', reference: 'student:one', studentCode: '102210001', cohortYear: 2021 };

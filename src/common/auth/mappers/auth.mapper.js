@@ -31,5 +31,7 @@ export function toAuthUserDto(claims) {
     provider: identity?.provider,
     localUserId, roles, permissions, authorizationStatus,
     requestActorId: identity?.requestActorId ?? null,
+    organization: identity?.organization ?? null,
+    tags: identity?.tags ?? null,
   };
 }

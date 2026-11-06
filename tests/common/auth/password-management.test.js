@@ -17,21 +17,23 @@ const password='old-test-password-123',next='new-test-password-456';
 const salt='ab'.repeat(16),hash=`scrypt$${salt}$${scryptSync(password,salt,32).toString('hex')}`;
 function fixture(t){
  const accounts=['reviewer','manager'].map(username=>({id:'cv:'+username,requestActorId:'cv:'+username,username,
-  displayName:username,passwordHash:hash,channel:'staff',isActive:true,roles:[],permissions:username==='manager'?['rbac.staff.manage']:[],version:'v1',accountVersion:1}));
+  displayName:username,passwordHash:hash,channel:username==='manager'?'admin':'staff',isActive:true,roles:[],permissions:[],version:'v1',accountVersion:1,
+  organization:{active:true,fieldActive:true,revision:1,fieldCode:'DT',accessLevel:username==='manager'?'department_admin':'specialist',taskIds:username==='manager'?[]:[4]}}));
  const find=(field,value)=>{const a=accounts.find(a=>a[field]===value);return a?{...a,permissions:[...a.permissions]}:null;};
  const writes=[];let rejectWrite=false;
  const repository={findStaffByUsername:async value=>find('username',value),findStaffById:async value=>find('id',value),
+  findLocalByUsername:async value=>find('username',value),findLocalById:async value=>find('id',value),
   async updateStaffPassword(data){
    if(rejectWrite)throw new AppError('changed concurrently',409);
    const account=accounts.find(a=>a.id===data.account.id);assert.equal(account.passwordHash,data.account.passwordHash);
    writes.push(data);account.passwordHash=data.passwordHash;account.version='v'+(++account.accountVersion);
   }};
  const store=createAuthStore();t.after(()=>store.close());
- const config={nodeEnv:'test',jwt:{shareSsoKey:true,issuer:'password-test-app',studentAudience:'student',staffAudience:'staff',adminAudience:'admin',expiresIn:'15m'},
+ const config={nodeEnv:'test',jwt:{secret:'offline-app-key-with-at-least-32-bytes',shareSsoKey:false,issuer:'password-test-app',studentAudience:'student',staffAudience:'staff',adminAudience:'admin',expiresIn:'15m'},
   microsoftSso:{jwtSecret:'password-test-key-with-at-least-32-bytes'},auth:{refreshTtlSeconds:3600}};
  const service=createAuthService({config,repository,store});
- const login=async(username='reviewer',value=password)=>service.loginWithPassword('staff',{username,password:value});
- const claims=async bundle=>service.verifyToken(bundle.data.accessToken,'staff');
+ const login=async(username='reviewer',value=password)=>service.loginWithPassword(username==='manager'?'admin':'staff',{username,password:value});
+ const claims=async bundle=>service.verifyToken(bundle.data.accessToken,bundle.data.channel);
  return {accounts,service,store,writes,login,claims,rejectWrite:()=>rejectWrite=true};
 }
 
@@ -85,12 +87,12 @@ test('password update DTO rejects arrays, missing old passwords, extra fields an
 test('SQL password mutation checks loopback, live permissions and compare-and-swap inside the audited transaction',async()=>{
  let statement,parameters,guarded=0;
  const repository=createAuthRepository({guard:()=>guarded++,query:async(sql,params)=>{statement=sql;parameters=params;return{};}});
- const actor={id:'cv:manager',accountVersion:4,passwordHash:'old-manager-hash'},account={id:'cv:reviewer',passwordHash:'old-target-hash'};
+ const actor={id:'cv:manager',accountVersion:'0x0000000000000004',passwordHash:'old-manager-hash',organization:{revision:1}},account={id:'cv:reviewer',passwordHash:'old-target-hash'};
  await repository.updateStaffPassword({actor,account,passwordHash:'new-target-hash',reset:true});
  assert.equal(guarded,1);assert(statement.includes('DB_NAME()')); // The executor owns the TypeORM transaction.
- assert(statement.includes('UPDLOCK,HOLDLOCK'));assert(statement.includes("MaQuyen='rbac.staff.manage'"));
- assert(statement.includes('c.MatKhauBam=?'));assert(statement.includes('LichSuRBAC'));assert(!statement.includes('new-target-hash'));
- assert.equal(parameters.at(-2),'RESET_PASSWORD');assert(!parameters.at(-1).includes('hash'));
+ assert(statement.includes('UPDLOCK,HOLDLOCK'));assert(statement.includes("p.AccessLevel='department_admin'"));
+ assert(statement.includes('PasswordHash=?'));assert(statement.includes('auth.AccountSecurityEvents'));assert(!statement.includes('new-target-hash'));
+ assert(!statement.includes('svc_demo'));assert.equal(parameters.at(-1),'RESET_PASSWORD');
  const denied=createAuthRepository({guard:()=>{throw Error('wrong DB');},query:()=>assert.fail('must not query')});
  await assert.rejects(()=>denied.updateStaffPassword({actor,account,passwordHash:'hash'}),/wrong DB/);
 });

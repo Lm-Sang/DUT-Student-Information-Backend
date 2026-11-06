@@ -1,6 +1,6 @@
 ﻿import {empty} from '../dto/certifications.request.dto.js';
 
-export function createCertificationEventsController(events,config={}){
+export function createCertificationEventsController(events,config={},kind){
   return function stream(req,res,next){
     let unsubscribe,heartbeat,lifetime,closed=false;
     const cleanup=()=>{if(closed)return;closed=true;clearInterval(heartbeat);clearTimeout(lifetime);unsubscribe?.();};
@@ -9,7 +9,9 @@ export function createCertificationEventsController(events,config={}){
     try{
       empty(req.body,req.query);
       if(req.aborted||res.destroyed)return;
-      unsubscribe=events.subscribe(req.certificationActor,event=>write('event: certificate.updated\ndata: '+JSON.stringify(event)+'\n\n'),close);
+      unsubscribe=events.subscribe(req.certificationActor,event=>{
+        if(!kind||event.kind===kind)write('event: certificate.updated\ndata: '+JSON.stringify(event)+'\n\n');
+      },close);
       res.on('close',cleanup);res.on('error',cleanup);
       res.status(200).set({'Content-Type':'text/event-stream; charset=utf-8','Cache-Control':'private, no-store, no-transform','X-Accel-Buffering':'no'});
       res.flushHeaders();

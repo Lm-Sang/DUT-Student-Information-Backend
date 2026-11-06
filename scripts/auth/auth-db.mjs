@@ -9,6 +9,7 @@ import {
 } from "../../src/infrastructure/database/index.js";
 import { authRepository } from "../../src/common/auth/repositories/auth.repository.js";
 import { hashPassword } from "../../src/common/auth/services/password.service.js";
+import { validateUsername, validatePassword } from '../../src/common/auth/rules/credentials.js';
 
 async function passwordPrompt(prompt) {
   if (!process.stdin.isTTY)
@@ -50,7 +51,7 @@ try {
     !["init", "create"].includes(positionals[0])
   ) {
     throw new Error(
-      "Usage: npm run auth:db:init | npm run auth:user:create -- --username NAME --name DISPLAY --channel admin --permissions permission:one,permission:two",
+      "Usage: npm run auth:db:init | npm run auth:user:create -- --username NAME --name DISPLAY --channel admin",
     );
   }
   if (positionals[0] === "init") {
@@ -67,17 +68,16 @@ try {
     }
     console.log("Local auth schema is ready. No accounts were created.");
   } else {
-    const username = values.username?.toLowerCase(),
+    const username = validateUsername(values.username),
       displayName = values.name?.trim();
     if (
       !username ||
-      !/^[a-z0-9][a-z0-9._@-]{2,127}$/.test(username) ||
       !displayName ||
       displayName.length > 150 ||
       values.channel !== "admin"
     ) {
       throw new Error(
-        "A valid username, display name and admin channel are required. Students use DUT SSO; specialist provisioning belongs to request RBAC.",
+        "A valid username, display name and admin channel are required. Students use DUT SSO; provision specialists through auth organization.",
       );
     }
     const list = (value) => [
@@ -90,6 +90,7 @@ try {
     ];
     const roles = list(values.roles),
       permissions = list(values.permissions);
+    if(roles.length||permissions.length)throw new Error('Provision accounts through auth organization roles and taskIds; direct permission grants are disabled.');
     if (
       roles.length > 16 ||
       permissions.length > 32 ||
@@ -102,10 +103,11 @@ try {
       );
     }
     const password = await passwordPrompt(
-      "Password (12–128 characters, hidden): ",
+      "Password (9–128 characters, letters and numbers, hidden): ",
     );
     if (password !== (await passwordPrompt("Confirm password (hidden): ")))
       throw new Error("Passwords do not match.");
+    validatePassword(password, username);
     const passwordHash = await hashPassword(password);
     await authRepository.createLocalAccount({
       id: randomUUID(),

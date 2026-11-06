@@ -5,7 +5,8 @@ const table='academic_leave.Applications';
 const columns=`c.Id AS id,c.RequestCode AS requestCode,c.StudentCode AS studentCode,c.StudentSequence AS studentSequence,c.Kind AS kind,c.ParentApplicationId AS parentApplicationId,
  c.ReasonCode AS reasonCode,c.StartSemesterCode AS startSemesterCode,c.SemesterCount AS semesterCount,c.Content AS content,c.Status AS status,
  JSON_QUERY(c.SnapshotJson) AS snapshot,CONVERT(varchar(33),c.StudentConfirmedAt,126)+'Z' AS studentConfirmedAt,c.ReviewerName AS reviewerName,c.ReviewNote AS reviewNote,
- CONVERT(varchar(33),c.ReviewedAt,126)+'Z' AS reviewedAt,CONVERT(varchar(33),c.PaperDeadlineAt,126)+'Z' AS paperDeadlineAt,CONVERT(varchar(33),c.PaperReceivedAt,126)+'Z' AS paperReceivedAt,
+ CONVERT(varchar(33),c.ReviewedAt,126)+'Z' AS reviewedAt,CONVERT(varchar(33),c.ReceivedAt,126)+'Z' AS receivedAt,
+ CONVERT(varchar(33),c.PaperDeadlineAt,126)+'Z' AS paperDeadlineAt,CONVERT(varchar(33),c.PaperReceivedAt,126)+'Z' AS paperReceivedAt,
  CONVERT(varchar(33),c.CreatedAt,126)+'Z' AS createdAt,CONVERT(varchar(33),c.UpdatedAt,126)+'Z' AS updatedAt,CONVERT(varchar(16),CONVERT(binary(8),c.RowVersion),2) AS rowVersion`;
 const scope=`(JSON_VALUE(@input,'$.actor.role')='reviewer' OR
  (c.StudentCode=JSON_VALUE(@input,'$.actor.studentCode') AND c.ActorSource=JSON_VALUE(@input,'$.actor.source')
@@ -29,7 +30,7 @@ const parentCheck=`DECLARE @kind varchar(20)=JSON_VALUE(@input,'$.data.kind'),
     IF NOT EXISTS(SELECT 1 FROM ${table} p WITH(UPDLOCK,HOLDLOCK)
       WHERE p.Id=@parent AND p.StudentCode=JSON_VALUE(@input,'$.actor.studentCode')
       AND p.ActorSource=JSON_VALUE(@input,'$.actor.source') AND p.ActorReference=JSON_VALUE(@input,'$.actor.reference')
-      AND p.Kind IN('leave','extension') AND p.Status IN('approved','paper_received')
+      AND p.Kind IN('leave','extension') AND p.Status='approved'
       AND ((@kind='extension' AND ${ordinal('@start')}=${ordinal('p.StartSemesterCode')}+p.SemesterCount)
         OR (@kind='return' AND ${ordinal('@start')}>=${ordinal('p.StartSemesterCode')}+p.SemesterCount)))
       THROW 51509,'AL_PARENT',1;
@@ -38,9 +39,12 @@ const parentCheck=`DECLARE @kind varchar(20)=JSON_VALUE(@input,'$.data.kind'),
   END;
   IF @kind='leave' AND EXISTS(SELECT 1 FROM ${table} p WITH(UPDLOCK,HOLDLOCK)
     WHERE p.StudentCode=JSON_VALUE(@input,'$.actor.studentCode') AND p.Kind IN('leave','extension')
-    AND p.Status IN('approved','paper_received') AND NOT EXISTS(SELECT 1 FROM ${table} child
-      WHERE child.ParentApplicationId=p.Id AND child.Status IN('approved','paper_received')))
+    AND p.Status='approved' AND NOT EXISTS(SELECT 1 FROM ${table} child
+      WHERE child.ParentApplicationId=p.Id AND child.Status='approved'))
     THROW 51509,'AL_ACTIVE_LEAVE',1;`;
+const openCheck=`IF EXISTS(SELECT 1 FROM ${table} WITH(UPDLOCK,HOLDLOCK)
+  WHERE StudentCode=JSON_VALUE(@input,'$.actor.studentCode') AND Id<>COALESCE(@id,0)
+    AND Status IN('draft','submitted','needs_changes','received','processing')) THROW 51509,'AL_OPEN',1;`;
 
 export function createAcademicLeaveRepository({query=queryLocalDatabase,transaction=query===queryLocalDatabase?transactionLocalDatabase:query,connect=connectDatabase,now=Date.now,semesterCacheTtlMs=60000}={}) {
   let semesterCode,semesterExpiresAt=0,semesterLoading;
@@ -50,8 +54,10 @@ export function createAcademicLeaveRepository({query=queryLocalDatabase,transact
       return JSON.parse(result.first?.[0]?.Json??'null');
     }catch(error){
       const message=String(error.message??error);
+      if(/invalid column name.*ReceivedAt/i.test(message))throw new AppError('Cần nâng cấp workflow chứng chỉ/nghỉ học trên DB local.',503,
+        {code:'REVIEW_WORKFLOW_MIGRATION_REQUIRED',command:'npm run db:review-workflow:upgrade'});
       if(message.includes('AL_NOT_FOUND'))throw new AppError('Không tìm thấy đơn của tài khoản này.',404);
-      if(message.includes('UX_AcademicLeave_OpenStudent'))throw new AppError('Bạn đang có một đơn nháp, chờ xét duyệt hoặc cần bổ sung. Hãy tiếp tục đơn đó hoặc hủy bản nháp trước khi lập đơn khác.',409);
+      if(/UX_AcademicLeave_OpenStudent|AL_OPEN/.test(message))throw new AppError('Bạn đang có một đơn chưa xử lý xong. Hãy tiếp tục đơn đó hoặc chờ chuyên viên xử lý.',409);
       if(message.includes('UX_AcademicLeave_Parent'))throw new AppError('Đơn trước đã có một đơn gia hạn đang xử lý hoặc đã được duyệt. Hãy chọn đơn mới nhất để gia hạn tiếp.',409);
       if(message.includes('AL_ACTIVE_LEAVE'))throw new AppError('Bạn còn thời gian ngừng học trong lịch sử chưa kết thúc bằng đơn trở lại học. Hãy gia hạn hoặc lập đơn trở lại học từ đơn gần nhất.',409);
       if(/AL_CONFLICT|AL_PARENT|AL_OVERLAP|AL_STATE|AL_LATE|AL_LOCK|CK_AcademicLeave|UX_AcademicLeave|2601|2627/.test(message))
@@ -118,16 +124,18 @@ export function createAcademicLeaveRepository({query=queryLocalDatabase,transact
     },
     eligibleParents(actor) {
       return run(`SELECT COALESCE((SELECT ${columns.replace('JSON_QUERY(c.SnapshotJson) AS snapshot,','')}
-        FROM ${table} c WHERE ${scope} AND c.Kind IN('leave','extension') AND c.Status IN('approved','paper_received') AND NOT EXISTS
+        FROM ${table} c WHERE ${scope} AND c.Kind IN('leave','extension') AND c.Status='approved' AND NOT EXISTS
         (SELECT 1 FROM ${table} child WHERE child.ParentApplicationId=c.Id AND child.Status NOT IN('rejected','cancelled'))
         ORDER BY c.Id DESC FOR JSON PATH,INCLUDE_NULL_VALUES),'[]') AS Json;`,{actor});
     },
     save(actor,data,id=null,expected=null) {
       return mutate({actor,data,id,expected},id?`${lock}
         IF @status NOT IN('draft','needs_changes') THROW 51509,'AL_STATE',1;
+        ${openCheck}
         ${parentCheck}
         UPDATE ${table} SET ${fields},UpdatedAt=@now WHERE Id=@id;`:
         `DECLARE @id int=NULL;
+        ${openCheck}
         ${parentCheck}
         DECLARE @student varchar(9)=JSON_VALUE(@input,'$.actor.studentCode'),@sequence int;
         SELECT @sequence=COALESCE(MAX(StudentSequence),0)+1 FROM ${table} WITH(UPDLOCK,HOLDLOCK,INDEX(UX_AcademicLeave_StudentSequence))
@@ -141,28 +149,32 @@ export function createAcademicLeaveRepository({query=queryLocalDatabase,transact
     confirm(actor,id,expected,snapshot) {
       return mutate({actor,id,expected,snapshot},`${lock}
         IF @status NOT IN('draft','needs_changes') THROW 51509,'AL_STATE',1;
+        ${openCheck}
         SET @input=JSON_MODIFY(@input,'$.data',JSON_QUERY((SELECT Kind AS kind,ParentApplicationId AS parentApplicationId,
           StartSemesterCode AS startSemesterCode FROM ${table} WHERE Id=@id FOR JSON PATH,WITHOUT_ARRAY_WRAPPER)));
         ${parentCheck}
         IF EXISTS(SELECT 1 FROM ${table} c WITH(UPDLOCK,HOLDLOCK) WHERE c.StudentCode=JSON_VALUE(@input,'$.actor.studentCode')
-          AND @kind<>'return' AND c.Kind<>'return' AND c.Id<>@id AND c.Status IN('submitted','approved','paper_received') AND ${ordinal('c.StartSemesterCode')}<=${ordinal('@code')}+@count-1
+          AND @kind<>'return' AND c.Kind<>'return' AND c.Id<>@id AND c.Status IN('submitted','received','processing','approved') AND ${ordinal('c.StartSemesterCode')}<=${ordinal('@code')}+@count-1
           AND ${ordinal('c.StartSemesterCode')}+c.SemesterCount-1>=${ordinal('@code')}) THROW 51509,'AL_OVERLAP',1;
         UPDATE ${table} SET SnapshotJson=JSON_QUERY(@input,'$.snapshot'),Status='submitted',StudentConfirmedAt=@now,
-          ReviewerReference=NULL,ReviewerName=NULL,ReviewNote=NULL,ReviewedAt=NULL,PaperDeadlineAt=NULL,UpdatedAt=@now WHERE Id=@id;`,'confirmed');
+          ReviewerReference=NULL,ReviewerName=NULL,ReviewNote=NULL,ReviewedAt=NULL,ReceivedAt=NULL,PaperDeadlineAt=NULL,
+          PaperReceivedAt=NULL,PaperReceivedBy=NULL,UpdatedAt=@now WHERE Id=@id;`,'confirmed');
     },
     review(actor,id,expected,data) {
       return mutate({actor,id,expected,data},`${lock}
-        IF @status<>'submitted' THROW 51509,'AL_STATE',1;
+        IF NOT((@status='submitted' AND JSON_VALUE(@input,'$.data.decision') IN('received','rejected','needs_changes'))
+          OR (@status='processing' AND JSON_VALUE(@input,'$.data.decision') IN('approved','rejected')))
+          THROW 51509,'AL_STATE',1;
         UPDATE ${table} SET Status=JSON_VALUE(@input,'$.data.decision'),ReviewNote=JSON_VALUE(@input,'$.data.note'),
           ReviewerReference=JSON_VALUE(@input,'$.actor.reference'),ReviewerName=JSON_VALUE(@input,'$.actor.name'),ReviewedAt=@now,
-          PaperDeadlineAt=CASE WHEN JSON_VALUE(@input,'$.data.decision')='approved' THEN DATEADD(day,3,@now) ELSE NULL END,
+          ReceivedAt=CASE WHEN JSON_VALUE(@input,'$.data.decision')='received' THEN @now ELSE ReceivedAt END,
+          PaperDeadlineAt=CASE WHEN JSON_VALUE(@input,'$.data.decision')='received' THEN DATEADD(day,3,@now) ELSE PaperDeadlineAt END,
           UpdatedAt=@now WHERE Id=@id;`,'reviewed');
     },
     receivePaper(actor,id,expected) {
       return mutate({actor,id,expected},`${lock}
-        IF @status<>'approved' THROW 51509,'AL_STATE',1;
-        IF EXISTS(SELECT 1 FROM ${table} WHERE Id=@id AND PaperDeadlineAt<@now) THROW 51509,'AL_LATE',1;
-        UPDATE ${table} SET Status='paper_received',PaperReceivedAt=@now,PaperReceivedBy=JSON_VALUE(@input,'$.actor.reference'),UpdatedAt=@now WHERE Id=@id;`,'paper_received');
+        IF @status<>'received' THROW 51509,'AL_STATE',1;
+        UPDATE ${table} SET Status='processing',PaperReceivedAt=@now,PaperReceivedBy=JSON_VALUE(@input,'$.actor.reference'),UpdatedAt=@now WHERE Id=@id;`,'paper_received');
     },
     cancel(actor,id,expected) {
       return mutate({actor,id,expected},`${lock}

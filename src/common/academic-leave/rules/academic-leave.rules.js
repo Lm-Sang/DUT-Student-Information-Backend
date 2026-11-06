@@ -1,3 +1,4 @@
+import { requestDeadlines } from '../../request-regulations/index.js';
 import { AppError } from "../../../shared/errors/app-error.js";
 
 export const reasons = Object.freeze([
@@ -10,11 +11,18 @@ export const statusLabels = Object.freeze({
   draft: "Bản nháp",
   submitted: "Chờ chuyên viên xét duyệt",
   needs_changes: "Cần bổ sung",
-  approved: "Đã duyệt online · chờ nộp giấy",
+  received: "Đã xác nhận sẽ tiếp nhận · chờ nộp giấy",
+  processing: "Đã nhận bản giấy · đang xử lý",
+  approved: "Đã chấp nhận",
   rejected: "Không duyệt",
-  paper_received: "Đã nhận đơn giấy",
   cancelled: "Đã hủy",
 });
+
+export function academicLeaveReviewActions(status) {
+  if (status === 'submitted') return ['received', 'rejected', 'needs_changes'];
+  if (status === 'processing') return ['approved', 'rejected'];
+  return [];
+}
 
 export function semester(code) {
   const match = /^(\d{2})([12])0$/.exec(code ?? "");
@@ -65,7 +73,7 @@ export function validatePeriod(input, currentCode, parent) {
     if (
       !parent ||
       parent.kind === "return" ||
-      !["approved", "paper_received"].includes(parent.status)
+      parent.status !== 'approved'
     )
       throw new AppError(
         "Cần liên kết với đơn ngừng học/gia hạn đã được duyệt trong lịch sử.",
@@ -107,10 +115,9 @@ export function applicationView(row, now = new Date()) {
         ? null
         : shiftSemester(row.startSemesterCode, row.semesterCount - 1),
     returnSemester: shiftSemester(row.startSemesterCode, row.semesterCount),
-    overdue:
-      row.status === "approved" &&
-      Date.parse(row.paperDeadlineAt) < now.getTime(),
+    ...requestDeadlines({ ...row, submittedAt: row.studentConfirmedAt }, now),
     canEdit: ["draft", "needs_changes"].includes(row.status),
-    canPrint: ["submitted", "approved", "paper_received"].includes(row.status),
+    canPrint: ['submitted', 'received', 'processing', 'approved'].includes(row.status),
+    allowedActions: row.status === 'received' ? ['receive_paper'] : academicLeaveReviewActions(row.status),
   };
 }

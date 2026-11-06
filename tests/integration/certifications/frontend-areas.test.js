@@ -10,11 +10,12 @@ test('certificate aliases share services, enforce frontend identity and preserve
   const auth = { verifyToken: async (token, channel) => {
     if (channel !== 'admin' || !['reviewer', 'manager', 'unprivileged'].includes(token)) throw new AppError('Wrong audience', 401);
     return { authMethod: 'password', localUserId: token, identity: { displayName: token },
+      organization:{active:true,fieldActive:true,accessLevel:'specialist',taskIds:[1]},
       permissions: token === 'manager' ? ['certifications:review', 'certifications:catalog:manage']
         : token === 'reviewer' ? ['certifications:review'] : [] };
   } };
-  const review = createLocalPermissionContext('certifications:review', auth);
-  const catalog = createLocalPermissionContext('certifications:catalog:manage', auth);
+  const review = createLocalPermissionContext('certifications:review', auth, 1);
+  const catalog = createLocalPermissionContext('certifications:catalog:manage', auth, 1);
   const module = createCertificationsModule({
     config: { maxFiles: 1, r2: {} }, storage: {}, inspectImage: async () => ({}),
     studentContextProvider: studentContext,

@@ -5,7 +5,7 @@ import {join} from 'node:path';
 import {localEntities,schoolEntities,localDataSource} from '../../src/database.js';
 import {javascriptFiles,projectRoot} from '../../scripts/lib/files.js';
 test('all mapped local tables and views preserve SQL names without connecting or synchronizing',()=>{
- assert.equal(localDataSource.isInitialized,false);assert.equal(localEntities.length,50);assert.equal(schoolEntities.length,23);
+ assert.equal(localDataSource.isInitialized,false);assert.equal(localEntities.length,56);assert.equal(schoolEntities.length,23);
  for(const entity of [...localEntities,...schoolEntities]){
   assert.equal(entity.options.synchronize,false);assert(entity.options.tableName);assert(entity.options.schema);
   for(const[name,column]of Object.entries(entity.options.columns))assert.equal(column.name,name);

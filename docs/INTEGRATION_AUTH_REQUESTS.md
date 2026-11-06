@@ -1,5 +1,8 @@
 # Kế hoạch và báo cáo tích hợp xác nhận văn bản với xác thực
 
+> C?p nh?t auth: sinh vi?n d?ng nguy?n access token DUT SSO, x?c minh secret key/HS256/h?n d?ng, kh?ng c?n issuer/audience v? kh?ng c? JWT/refresh BE. Callback m?i r?ng bu?c state trong ???ng d?n; admin/staff d?ng JWT_SECRET ri?ng. Contract v? h??ng d?n FE hi?n h?nh: [AUTH_CHANNELS.md](AUTH_CHANNELS.md). C?c m? t? ??i sang app token ho?c d?ng chung kh?a ? d??i l? l?ch s? tr??c thay ??i n?y.
+
+
 Ngày thực hiện: 03/11/2026.
 
 ## Nhánh và phạm vi
