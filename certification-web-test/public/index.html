@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Nộp chứng chỉ · Sinh viên DUT</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <main>
+    <header><div><p class="eyebrow">DUT · SINH VIÊN</p><h1 id="page-title">Nộp chứng chỉ ngoại ngữ</h1>
+      <p>Chọn chứng chỉ, điền kết quả và tải ảnh minh chứng.</p></div><div class="header-tools"><span class="badge">Bản thử nghiệm</span><a id="reviewer-link" class="button-link" href="http://localhost:5174">Trang chuyên viên</a></div></header>
+    <nav class="certificate-tabs" aria-label="Module kiểm thử"><a id="language-tab" href="/?kind=language">Ngoại ngữ</a><a id="it-tab" href="/?kind=it">Tin học</a><a id="academic-leave-tab" href="/academic-leave.html">Ngừng học / Gia hạn</a></nav>
+    <section class="card" aria-labelledby="auth-title">
+      <div class="row"><div><h2 id="auth-title">Tài khoản sinh viên</h2><p id="identity">Đăng nhập để lấy danh mục theo khóa của bạn.</p></div>
+        <div class="actions"><button type="button" id="login">Đăng nhập DUT SSO</button><button type="button" id="logout" class="secondary" hidden>Đăng xuất</button></div></div>
+    </section>
+    <p id="notice" role="status" aria-live="polite" hidden></p>
+    <section class="card" aria-labelledby="form-title">
+      <h2 id="form-title">Thông tin chứng chỉ</h2>
+      <form id="application-form">
+        <fieldset id="form-fields" disabled>
+          <div class="grid"><label>Họ và tên<input name="fullName" id="full-name" readonly></label>
+            <label>MSSV<input id="student-code" readonly></label>
+            <label>Lớp sinh hoạt<input name="className" id="class-name" readonly></label>
+            <label>CCCD<input id="student-cccd" readonly></label></div>
+          <fieldset id="language-fields">
+          <div class="grid">
+            <label>Ngôn ngữ<select id="language" required><option value="">Đăng nhập để chọn</option></select></label>
+            <label>Loại chứng chỉ<select id="certificate-type" required><option value="">Chọn ngôn ngữ trước</option></select></label>
+            <label>Cơ sở cấp chứng chỉ<select id="issuing-organization" required></select></label>
+            <label>Ngày cấp<input id="issued-on" type="date" required></label></div>
+          <p id="eligibility" class="hint"></p>
+          <div id="result-fields" class="grid"></div>
+          <label>Ghi chú<textarea id="notes" maxlength="2000" rows="2" placeholder="Thông tin bổ sung (nếu có)"></textarea></label>
+          </fieldset>
+          <fieldset id="it-fields" class="grid" disabled hidden></fieldset>
+          <label class="file-picker">File minh chứng<input id="evidence-files" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" required>
+            <span id="file-hint" class="hint">Ảnh JPG, JPEG hoặc PNG, rõ thông tin chứng chỉ.</span></label>
+          <ul id="file-list" class="file-list"></ul>
+          <div class="actions"><button type="submit" id="submit">Nộp hồ sơ</button></div>
+        </fieldset>
+        <button type="button" id="new-application" class="secondary" hidden>Tạo hồ sơ khác</button>
+      </form>
+      <div id="progress" hidden aria-live="polite"><progress id="progress-bar" max="100" value="0"></progress><p id="progress-label"></p></div>
+    </section>
+    <section class="card" aria-labelledby="history-title"><div class="row"><h2 id="history-title">Hồ sơ của tôi</h2><button type="button" id="reload" class="secondary" disabled>Tải lại</button></div>
+      <div id="history"><p class="hint">Hồ sơ đã nộp sẽ xuất hiện ở đây.</p></div>
+      <div id="application-detail" hidden></div>
+    </section>
+    <footer id="connection">FE test sinh viên · Ảnh được gửi trực tiếp lên R2 bằng presigned URL.</footer>
+  </main>
+</body>
+</html>

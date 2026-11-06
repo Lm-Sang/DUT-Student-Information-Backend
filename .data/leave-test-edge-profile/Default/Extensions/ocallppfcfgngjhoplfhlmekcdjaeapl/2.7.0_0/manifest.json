@@ -1,0 +1,48 @@
+{
+   "action": {
+      "default_icon": {
+         "128": "icon128.plasmo.3c1ed2d2.png",
+         "16": "icon16.plasmo.6c567d50.png",
+         "32": "icon32.plasmo.76b92899.png",
+         "48": "icon48.plasmo.aced7582.png",
+         "64": "icon64.plasmo.8bb5e6e0.png"
+      },
+      "default_popup": "popup.html"
+   },
+   "author": "LoveDeals",
+   "background": {
+      "service_worker": "static/background/index.js"
+   },
+   "content_scripts": [ {
+      "css": [  ],
+      "js": [ "start.eb3c0f46.js" ],
+      "matches": [ "\u003Call_urls>" ]
+   }, {
+      "css": [ "contents.33df701b.css" ],
+      "js": [ "contents.04ff201a.js" ],
+      "matches": [ "\u003Call_urls>" ]
+   } ],
+   "default_locale": "en",
+   "description": "LoveDeals: AI-Powered Coupon Extension / Finder",
+   "externally_connectable": {
+      "matches": [ "*://*.localhost.com/*" ]
+   },
+   "host_permissions": [ "https://*/*", "http://*/*" ],
+   "icons": {
+      "128": "icon128.plasmo.3c1ed2d2.png",
+      "16": "icon16.plasmo.6c567d50.png",
+      "32": "icon32.plasmo.76b92899.png",
+      "48": "icon48.plasmo.aced7582.png",
+      "64": "icon64.plasmo.8bb5e6e0.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs6bdsmDhCC6o/RMrZwnY0GcPoEx4HQUTyOPPu8XZ26zuHm1cyNfOWDcGpI1r4rfVckir2CEoJZa3hFxQjqEUqnukMheYMdK2Y0p+DK4r3zu64HGJae4yuwYBUjUSaCVQGkGDu+1XWYtcF+p3UBHBldV0J3j04hnHHDYC+mY604zUlmp7Btd5HKcTUrm2Sw3StnWp3EyNCZjXlY56p1Hz/BUaUFZX8MB5LebUOkapvwUm9q+R8sUI/EJQf/OXcNiIN0pGvRmCUhD7HHC0GK4gOJkCLcXPutRIrTBB/VQPpLzP9bOEhSKx38zaGG/g86XBEsSKwHOmzK+7di2OoOkWpQIDAQAB",
+   "manifest_version": 3,
+   "name": "LoveDeals: Automatic Coupons & Deals",
+   "permissions": [ "storage", "scripting", "cookies", "tabs" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "2.7.0",
+   "web_accessible_resources": [ {
+      "matches": [ "\u003Call_urls>" ],
+      "resources": [ "on-38.b4358072.png", "google-search.f17e7469.css", "editIcon.66978e82.svg", "editIcon-active.473a59ac.svg", "gad.5d986492.css", "content.cdb150ac.css", "popup.39b11d46.css", "other.86ac75ad.css", "icon-close.635b2c33.png", "icon-close-hover.20ca78bf.png", "ball_out.a6c8f68b.png", "ball_in.c1ad0a53.png", "ball_out_1.9375e169.png", "ball_in_1.e8905288.png", "testBg.e16920fe.png", "testCode.ce7ac754.png", "testSucc.59321857.png", "close.8f4ebe36.png", "close_hover.b6c33861.png", "popup-base.b41fc249.css", "popup-base-safari.719b7d0e.css", "coupon.79b99b85.svg", "coupon_active.7bfd8e96.svg", "home.24baac64.svg", "home_active.134a2fca.svg", "user.7131e0e8.svg", "user_active.2ae9da9e.svg", "user_avatar.23967d7d.svg", "google.6d0320ee.png", "apple.012c9846.png", "lang.63ca086f.png", "lang_hover.e6ec2f7d.png", "ad.10e07838.css" ]
+   } ]
+}

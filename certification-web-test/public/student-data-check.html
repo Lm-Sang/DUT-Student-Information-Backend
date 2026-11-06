@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Kiểm tra dữ liệu sinh viên DUT</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="module" src="/student-data-check.js"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">DUT · KIỂM TRA DỮ LIỆU</p>
+          <h1>Dữ liệu điền đơn sinh viên</h1>
+          <p>
+            Dùng phiên DUT SSO của tab hiện tại để đọc hồ sơ, tra CCCD từ DB
+            trường và lấy kết quả học tập.
+          </p>
+        </div>
+        <a href="/" class="button-link">Về trang chứng chỉ</a>
+      </header>
+      <section class="card">
+        <button id="check" type="button">Kiểm tra dữ liệu</button>
+        <p id="status" role="status" aria-live="polite">
+          Bấm kiểm tra để đọc dữ liệu của tài khoản đang đăng nhập.
+        </p>
+      </section>
+      <section class="card">
+        <h2>Thông tin sinh viên</h2>
+        <dl id="profile" class="info-grid"></dl>
+      </section>
+      <section class="card">
+        <h2>Kết quả theo học kỳ</h2>
+        <p class="hint">
+          Điểm GPA hiển thị theo API; cần xác nhận điểm học kỳ hay tích lũy
+          trước khi điền vào đơn chính thức.
+        </p>
+        <div id="stats" class="table-wrap"></div>
+      </section>
+      <section class="card">
+        <h2>Phản hồi API</h2>
+        <div id="responses"></div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+2026/10/26-13:58:43.217 6234 Creating DB D:\Ky7\PBL6\DUT-Student-Information-Backend\.data\it-fe-edge-profile\Default\EdgeCoupons/coupons_data.db since it was missing.
+2026/10/26-13:58:43.228 6234 Reusing MANIFEST D:\Ky7\PBL6\DUT-Student-Information-Backend\.data\it-fe-edge-profile\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/10/26-13:58:43.817 6da0 Level-0 table #5: started
+2026/10/26-13:58:43.821 6da0 Level-0 table #5: 683273 bytes OK
+2026/10/26-13:58:43.824 6da0 Delete type=0 #3

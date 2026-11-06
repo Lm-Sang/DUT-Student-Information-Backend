@@ -1,0 +1,1 @@
+import"./reset-oWoNqkBA.js";import{r as e}from"./runtime-dom.esm-bundler-DvGq8ciL.js";import{t}from"./OptionsPanel-Vc0PWnj2.js";e(t,{showBack:!1}).mount(`#app`);

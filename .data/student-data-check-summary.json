@@ -1,0 +1,348 @@
+{
+  "checkedAt": "2026-10-26T09:45:08.231Z",
+  "endpoints": {
+    "profile": {
+      "url": "https://profile.dut.udn.vn/api/profile",
+      "ok": true,
+      "status": 200,
+      "fields": [
+        {
+          "path": "isSuccess",
+          "type": "boolean",
+          "present": true
+        },
+        {
+          "path": "data.id",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.studentCardNumber",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.classId",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.class.id",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.class.name",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.class.programId",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.class.scheduleGroup",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.class.enrollmentYear",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.class.numOfStudents",
+          "type": "number",
+          "present": true
+        },
+        {
+          "path": "data.fullName",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.gender",
+          "type": "number",
+          "present": true
+        },
+        {
+          "path": "data.birthday",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.programId",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.program.id",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.program.academicProgramName",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.program.academicProgramNameEn",
+          "type": "string",
+          "present": false
+        },
+        {
+          "path": "data.program.major.id",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.program.major.majorName",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.program.major.majorNameEn",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.program.faculty.id",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.program.faculty.facultyName",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.program.faculty.isDUT",
+          "type": "boolean",
+          "present": true
+        },
+        {
+          "path": "data.program.credits",
+          "type": "number",
+          "present": true
+        },
+        {
+          "path": "data.program.electiveCredits",
+          "type": "number",
+          "present": true
+        },
+        {
+          "path": "data.program.semesters",
+          "type": "number",
+          "present": true
+        },
+        {
+          "path": "data.program.startDate",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.program.endDate",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.program.educationLevel",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.program.isDeleted",
+          "type": "boolean",
+          "present": true
+        },
+        {
+          "path": "data.phoneNumber",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.warnings",
+          "type": "array",
+          "count": 0
+        },
+        {
+          "path": "message",
+          "type": "string",
+          "present": true
+        }
+      ]
+    },
+    "stats": {
+      "url": "https://xemdiem.dut.udn.vn/api/stats",
+      "ok": true,
+      "status": 200,
+      "fields": [
+        {
+          "path": "isSuccess",
+          "type": "boolean",
+          "present": true
+        },
+        {
+          "path": "data.Kỳ học",
+          "type": "array",
+          "count": 10
+        },
+        {
+          "path": "data.Kỳ học[]",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.GPA từng kỳ",
+          "type": "array",
+          "count": 10
+        },
+        {
+          "path": "data.GPA từng kỳ[]",
+          "type": "number",
+          "present": true
+        },
+        {
+          "path": "data.Điểm rèn luyện từng kỳ",
+          "type": "array",
+          "count": 10
+        },
+        {
+          "path": "data.Điểm rèn luyện từng kỳ[]",
+          "type": "number",
+          "present": true
+        },
+        {
+          "path": "data.Số tín chỉ đăng ký từng kì",
+          "type": "array",
+          "count": 10
+        },
+        {
+          "path": "data.Số tín chỉ đăng ký từng kì[]",
+          "type": "number",
+          "present": true
+        },
+        {
+          "path": "data.Tổng quan.GPA thang 4",
+          "type": "number",
+          "present": true
+        },
+        {
+          "path": "data.Tổng quan.Số tín chỉ tích luỹ",
+          "type": "number",
+          "present": true
+        },
+        {
+          "path": "data.Tổng quan.Điểm rèn luyện trung bình",
+          "type": "number",
+          "present": true
+        },
+        {
+          "path": "data.Tổng quan.Năm học",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "message",
+          "type": "string",
+          "present": true
+        }
+      ]
+    },
+    "results": {
+      "url": "https://xemdiem.dut.udn.vn/api/results",
+      "ok": true,
+      "status": 200,
+      "fields": [
+        {
+          "path": "isSuccess",
+          "type": "boolean",
+          "present": true
+        },
+        {
+          "path": "data",
+          "type": "array",
+          "count": 56
+        },
+        {
+          "path": "data[].Kỳ học",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data[].Mã sinh viên",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data[].Tên học phần",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data[].Mã lớp học phần",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data[].Số tín chỉ",
+          "type": "number",
+          "present": true
+        },
+        {
+          "path": "data[].Chi tiết điểm",
+          "type": "array",
+          "count": 3
+        },
+        {
+          "path": "data[].Chi tiết điểm[]",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data[].Tổng kết",
+          "type": "string",
+          "present": false
+        },
+        {
+          "path": "data[].Thang 10",
+          "type": "null",
+          "present": false
+        },
+        {
+          "path": "data[].Thang 4",
+          "type": "null",
+          "present": false
+        },
+        {
+          "path": "message",
+          "type": "string",
+          "present": true
+        }
+      ]
+    },
+    "identity": {
+      "url": "DATA_SV1.dbo.NhanThan",
+      "ok": true,
+      "status": 200,
+      "fields": [
+        {
+          "path": "data.status",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.cccd",
+          "type": "string",
+          "present": true
+        },
+        {
+          "path": "data.source",
+          "type": "string",
+          "present": true
+        }
+      ]
+    }
+  }
+}

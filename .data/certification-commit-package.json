@@ -1,0 +1,53 @@
+{
+  "name": "dut-student-information-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.js",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "check": "node scripts/check.js",
+    "test": "node scripts/test.js",
+    "test:feature": "node scripts/test.js --feature",
+    "test:curriculum:live": "node scripts/smoke-curriculum-api.js",
+    "test:db": "node scripts/test-database.js",
+    "test:db:local": "node scripts/test-database-instances.js local",
+    "test:db:all": "node scripts/test-database-instances.js all"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lm-Sang/DUT-Student-Information-Backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Lm-Sang/DUT-Student-Information-Backend/issues"
+  },
+  "homepage": "https://github.com/Lm-Sang/DUT-Student-Information-Backend#readme",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1156.0",
+    "@aws-sdk/s3-request-presigner": "^3.1156.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mssql": "^12.7.3",
+    "sharp": "^0.35.5",
+    "ssh2": "^1.17.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "optionalDependencies": {
+    "msnodesqlv8": "^6.0.0"
+  }
+}

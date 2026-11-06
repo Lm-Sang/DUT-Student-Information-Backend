@@ -1,0 +1,35 @@
+0:00:50 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:50 Tab2 PageLoad
+0:00:50 Tab2 StartNav4 #renderer-script #link
+0:00:50 Tab2 FinishNav4
+0:00:50 Widget Closed: LocationBarBubbleDelegateView
+0:00:50 Tab2 StartNav5 #renderer-script #link
+0:00:50 Tab2 FinishNav5
+0:00:50 Tab2 PageLoad
+0:00:50 Tab2 StartNav6 #renderer-script #link
+0:00:50 Tab2 FinishNav6
+0:00:50 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:50 Microsoft.ENP.Framework.CourtesyEngine.FrequencyCappingAllowed
+0:00:50 Microsoft.Nurturing.Framework.CourtesyEngine.FrequencyCappingAllowed
+0:00:50 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:50 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:50 Tab2 PageLoad
+0:00:51 Tab3 StartNav7 #auto_toplevel
+0:00:51 Widget Closed: LocationBarBubbleDelegateView
+0:00:51 Browser1 Insert active Tab3 at 2
+0:00:51 Tab3 FinishNav7
+0:00:51 Tab3 PageLoad
+0:00:51 Tab3 StartNav8 #typed
+0:00:51 Tab3 FinishNav8
+0:00:51 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:51 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:51 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:51 Microsoft.ENP.Framework.CourtesyEngine.FrequencyCappingAllowed
+0:00:51 Microsoft.Nurturing.Framework.CourtesyEngine.FrequencyCappingAllowed
+0:00:51 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:51 Tab3 PageLoad
+0:00:51 Widget Closed: LocationBarBubbleDelegateView
+0:00:51 Browser1 Switch from Tab3 to Tab2 at 1
+0:00:54 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:54 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:04:38 Microsoft.Shutdown.ExitIgnoreUnloadHandlers

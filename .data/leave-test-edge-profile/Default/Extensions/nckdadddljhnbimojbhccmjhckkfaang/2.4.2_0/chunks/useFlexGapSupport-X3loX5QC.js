@@ -1,0 +1,1 @@
+import{F as e,Z as t}from"./runtime-dom.esm-bundler-DvGq8ciL.js";import{n}from"./styleChecker-BhzAmHPl.js";var r=(()=>{let r=t(!1);return e(()=>{r.value=n()}),r});export{r as t};

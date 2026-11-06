@@ -1,0 +1,6 @@
+2026/10/26-15:18:03.088 425c Reusing MANIFEST D:\Ky7\PBL6\DUT-Student-Information-Backend\.data\it-fe-edge-profile\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/10/26-15:18:03.089 425c Recovering log #4
+2026/10/26-15:18:03.089 425c Reusing old log D:\Ky7\PBL6\DUT-Student-Information-Backend\.data\it-fe-edge-profile\Default\EdgeCoupons/coupons_data.db/000004.log 
+2026/10/26-15:18:03.133 51ac Level-0 table #8: started
+2026/10/26-15:18:03.137 51ac Level-0 table #8: 683444 bytes OK
+2026/10/26-15:18:03.139 51ac Delete type=0 #4

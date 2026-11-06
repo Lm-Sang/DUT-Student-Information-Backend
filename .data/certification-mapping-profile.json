@@ -1,0 +1,296 @@
+{
+  "conversionCatalog": [
+    {
+      "MaCC": "Aptis Esol",
+      "MaCon": "Aptis3",
+      "TenCon": "Aptis Esol B1",
+      "TrongSoQD": 1
+    },
+    {
+      "MaCC": "Aptis Esol",
+      "MaCon": "Aptis4",
+      "TenCon": "Aptis Esol B2",
+      "TrongSoQD": 2
+    },
+    {
+      "MaCC": "Aptis Esol",
+      "MaCon": "Aptis5",
+      "TenCon": "Aptis Esol C1",
+      "TrongSoQD": 3
+    },
+    {
+      "MaCC": "Aptis Esol",
+      "MaCon": "Aptis6",
+      "TenCon": "Aptis Esol C2",
+      "TrongSoQD": 4
+    },
+    {
+      "MaCC": "DELF",
+      "MaCon": "DELF1",
+      "TenCon": "DELF A2",
+      "TrongSoQD": 1
+    },
+    {
+      "MaCC": "DELF",
+      "MaCon": "DELF2",
+      "TenCon": "DELF B1",
+      "TrongSoQD": 2
+    },
+    {
+      "MaCC": "DELF",
+      "MaCon": "DELF3",
+      "TenCon": "DELF B2",
+      "TrongSoQD": 3
+    },
+    {
+      "MaCC": "HSK",
+      "MaCon": "HSK1",
+      "TenCon": "Tiếng Trung HSK 1",
+      "TrongSoQD": 1
+    },
+    {
+      "MaCC": "HSK",
+      "MaCon": "HSK2",
+      "TenCon": "Tiếng Trung HSK 2",
+      "TrongSoQD": 2
+    },
+    {
+      "MaCC": "HSK",
+      "MaCon": "HSK3",
+      "TenCon": "Tiếng Trung HSK 3",
+      "TrongSoQD": 3
+    },
+    {
+      "MaCC": "HSK",
+      "MaCon": "HSK4",
+      "TenCon": "Tiếng Trung HSK 4",
+      "TrongSoQD": 4
+    },
+    {
+      "MaCC": "HSK",
+      "MaCon": "HSK5",
+      "TenCon": "Tiếng Trung HSK 5",
+      "TrongSoQD": 5
+    },
+    {
+      "MaCC": "IELTS",
+      "MaCon": "IELTS1",
+      "TenCon": "IELTS 4.0",
+      "TrongSoQD": 1
+    },
+    {
+      "MaCC": "IELTS",
+      "MaCon": "IELTS2",
+      "TenCon": "IELTS 4.5",
+      "TrongSoQD": 2
+    },
+    {
+      "MaCC": "IELTS",
+      "MaCon": "IELTS3",
+      "TenCon": "IELTS 5.0",
+      "TrongSoQD": 3
+    },
+    {
+      "MaCC": "IELTS",
+      "MaCon": "IELTS4",
+      "TenCon": "IELTS 5.5",
+      "TrongSoQD": 4
+    },
+    {
+      "MaCC": "IELTS",
+      "MaCon": "IELTS5",
+      "TenCon": "IELTS 6.0",
+      "TrongSoQD": 5
+    },
+    {
+      "MaCC": "IELTS",
+      "MaCon": "IELTS6",
+      "TenCon": "IELTS 6.5",
+      "TrongSoQD": 6
+    },
+    {
+      "MaCC": "IELTS",
+      "MaCon": "IELTS7",
+      "TenCon": "IELTS 7.0",
+      "TrongSoQD": 7
+    },
+    {
+      "MaCC": "IELTS",
+      "MaCon": "IELTS8",
+      "TenCon": "IELTS 7.5",
+      "TrongSoQD": 8
+    },
+    {
+      "MaCC": "IELTS",
+      "MaCon": "IELTS9",
+      "TenCon": "IELTS 8.0",
+      "TrongSoQD": 9
+    },
+    {
+      "MaCC": "JLPT",
+      "MaCon": "JLPT1",
+      "TenCon": "Nhật ngữ - JLPT N5",
+      "TrongSoQD": 1
+    },
+    {
+      "MaCC": "JLPT",
+      "MaCon": "JLPT2",
+      "TenCon": "Nhật ngữ - JLPT N4",
+      "TrongSoQD": 2
+    },
+    {
+      "MaCC": "JLPT",
+      "MaCon": "JLPT3",
+      "TenCon": "Nhật ngữ - JLPT N3",
+      "TrongSoQD": 3
+    },
+    {
+      "MaCC": "JLPT",
+      "MaCon": "JLPT4",
+      "TenCon": "Nhật ngữ - JLPT N2",
+      "TrongSoQD": 4
+    },
+    {
+      "MaCC": "JLPT",
+      "MaCon": "JLPT5",
+      "TenCon": "Nhật ngữ - JLPT N1",
+      "TrongSoQD": 5
+    },
+    {
+      "MaCC": "NAT",
+      "MaCon": "NAT01",
+      "TenCon": "Nhật ngữ- 3Kyu-B1-N4",
+      "TrongSoQD": 1
+    },
+    {
+      "MaCC": "NAT",
+      "MaCon": "NAT02",
+      "TenCon": "Nhật ngữ- 2Kyu(B)-B2-N3",
+      "TrongSoQD": 2
+    },
+    {
+      "MaCC": "NAT",
+      "MaCon": "NAT03",
+      "TenCon": "Nhật ngữ- 2Kyu(A)-C1-N2",
+      "TrongSoQD": 3
+    },
+    {
+      "MaCC": "TOEFLiBT",
+      "MaCon": null,
+      "TenCon": null,
+      "TrongSoQD": null
+    },
+    {
+      "MaCC": "TOPJ",
+      "MaCon": "TOPJ3",
+      "TenCon": "TopJ-N4",
+      "TrongSoQD": 1
+    },
+    {
+      "MaCC": "TOPJ",
+      "MaCon": "TOPJ4",
+      "TenCon": "TopJ-N3",
+      "TrongSoQD": 2
+    },
+    {
+      "MaCC": "TOPJ",
+      "MaCon": "TOPJ5",
+      "TenCon": "TopJ-N2",
+      "TrongSoQD": 3
+    },
+    {
+      "MaCC": "TOPJ",
+      "MaCon": "TOPJ6",
+      "TenCon": "TopJ-N1",
+      "TrongSoQD": 4
+    },
+    {
+      "MaCC": "VSTEP",
+      "MaCon": "VSTEP1",
+      "TenCon": "VSTEP A1",
+      "TrongSoQD": 1
+    },
+    {
+      "MaCC": "VSTEP",
+      "MaCon": "VSTEP2",
+      "TenCon": "VSTEP A2",
+      "TrongSoQD": 2
+    },
+    {
+      "MaCC": "VSTEP",
+      "MaCon": "VSTEP3",
+      "TenCon": "VSTEP B1",
+      "TrongSoQD": 3
+    },
+    {
+      "MaCC": "VSTEP",
+      "MaCon": "VSTEP4",
+      "TenCon": "VSTEP B2",
+      "TrongSoQD": 4
+    },
+    {
+      "MaCC": "VSTEP",
+      "MaCon": "VSTEP5",
+      "TenCon": "VSTEP C1",
+      "TrongSoQD": 5
+    },
+    {
+      "MaCC": "VSTEP",
+      "MaCon": "VSTEP6",
+      "TenCon": "VSTEP C2",
+      "TrongSoQD": 6
+    }
+  ],
+  "childCodeDuplicates": [],
+  "foreignResolvedCoverage": [
+    {
+      "totalRows": "11646",
+      "rowsResolvedByCatalogOrChild": "11627",
+      "unresolvedRows": "19"
+    }
+  ],
+  "unresolvedForeignCodes": [
+    {
+      "MaCC": "VEPT",
+      "rows": "5"
+    },
+    {
+      "MaCC": "TOOEFLITP",
+      "rows": "4"
+    },
+    {
+      "MaCC": "TOEIC3",
+      "rows": "4"
+    },
+    {
+      "MaCC": "Aptis2",
+      "rows": "3"
+    },
+    {
+      "MaCC": "TCF3",
+      "rows": "1"
+    },
+    {
+      "MaCC": "Camb3",
+      "rows": "1"
+    },
+    {
+      "MaCC": "PTE",
+      "rows": "1"
+    }
+  ],
+  "missingDates": [
+    {
+      "category": "foreign",
+      "totalRows": "11646",
+      "noIssueDate": "1559",
+      "futureIssueDate": "2"
+    },
+    {
+      "category": "it",
+      "totalRows": "14222",
+      "noIssueDate": "11328",
+      "futureIssueDate": "0"
+    }
+  ]
+}

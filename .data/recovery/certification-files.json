@@ -1,0 +1,68 @@
+{
+  "tests/integration/certification-reviewer.test.js": [
+    {
+      "sha": "8602349738bb69c2adcc4467bfee6bea95861635",
+      "size": 10011
+    }
+  ],
+  "tests/integration/it-certifications.test.js": [
+    {
+      "sha": "08ca590103bfaea62d2fdd608c86b838db13d2ff",
+      "size": 16884
+    }
+  ],
+  "certification-web-test/public/index.html": [
+    {
+      "sha": "e04d23cdafba57254f648f4897ea342e09189579",
+      "size": 4470
+    }
+  ],
+  "tests/integration/certification-complete.test.js": [
+    {
+      "sha": "2c15455d49da78bbdfb41676b315763d207f705a",
+      "size": 11386
+    }
+  ],
+  "tests/integration/certifications-realtime.test.js": [
+    {
+      "sha": "7ed762f24e8c8960960dbce5e71d3cfbd70f3003",
+      "size": 11767
+    }
+  ],
+  "certification-web-test/public/app.js": [
+    {
+      "sha": "0c58e42eb9a6ad4baea99d195f369707d41fd886",
+      "size": 22061
+    }
+  ],
+  "tests/support/certifications.js": [
+    {
+      "sha": "04dcc94f9e66b606399c17a7731c5341a0abd4dd",
+      "size": 5078
+    }
+  ],
+  "tests/integration/certification-web-test.test.js": [
+    {
+      "sha": "7fa32ac706d8271ceb64f0c1446a2f06e5ec20cf",
+      "size": 18059
+    }
+  ],
+  "certification-web-test/README.md": [
+    {
+      "sha": "c92c7ea5e42151f2999cdb7661acf01fcd2ba60f",
+      "size": 9646
+    }
+  ],
+  "certification-web-test/public/reviewer.js": [
+    {
+      "sha": "21313069c64fc34b896428f57b54a433b21b1f26",
+      "size": 14322
+    }
+  ],
+  "tests/support/it-certifications.js": [
+    {
+      "sha": "4bf8caf969781a9d3befbda32bda51d03290b2bd",
+      "size": 3921
+    }
+  ]
+}
