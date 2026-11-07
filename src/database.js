@@ -42,6 +42,7 @@ export {
   localDataSource,
   queryLocalDatabase,
   transactionLocalDatabase,
+  withLocalTransaction,
   disconnectLocalDatabase,
 } from "./infrastructure/database/local-sql-server.js";
 export {

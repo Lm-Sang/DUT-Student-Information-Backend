@@ -82,6 +82,8 @@ không tạo credential mới trong demo. Xem [phân quyền auth](docs/AUTH_ORG
 DB trường chỉ đọc qua SQL Server/SSH; DB local ghi theo guard và transaction hiện có.
 Refactor cấu trúc không đổi bảng/cột, không tự chạy migration hoặc đồng bộ schema.
 
+- [Quyền từng loại, giao diện tích hợp và kiểm thử](docs/GRANULAR_RBAC_NATIVE_UI.md)
+- [Phòng ban, role và API auth](docs/AUTH_ORGANIZATION.md)
 - [Kết nối database](docs/DATABASE_CONNECTIONS.md)
 - [TypeORM và entity](docs/TYPEORM_MIGRATION.md)
 - [Luồng đơn sinh viên](docs/REQUEST_WORKFLOWS.md)

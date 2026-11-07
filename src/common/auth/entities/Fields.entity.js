@@ -1,9 +1,29 @@
-import { EntitySchema } from 'typeorm';
+import {EntitySchema} from 'typeorm';
 
-// Matches the additive auth organization migration; synchronization stays disabled.
-export const auth_Fields = new EntitySchema({ name: 'auth_Fields', tableName: 'Fields', schema: 'auth', synchronize: false,
-  columns: {
-    FieldCode: { name: 'FieldCode', type: 'varchar', length: 10, primary: true },
-    FieldName: { name: 'FieldName', type: 'nvarchar', length: 150 },
-    IsActive: { name: 'IsActive', type: 'bit' },
-  } });
+// Generated from local SQL Server metadata. Database names and constraints are owned by SQL.
+export const auth_Fields=new EntitySchema({
+  "name": "auth_Fields",
+  "tableName": "Fields",
+  "schema": "auth",
+  "synchronize": false,
+  "columns": {
+    "FieldCode": {
+      "name": "FieldCode",
+      "type": "varchar",
+      "nullable": false,
+      "primary": true,
+      "length": 10
+    },
+    "FieldName": {
+      "name": "FieldName",
+      "type": "nvarchar",
+      "nullable": false,
+      "length": 150
+    },
+    "IsActive": {
+      "name": "IsActive",
+      "type": "bit",
+      "nullable": false
+    }
+  }
+});

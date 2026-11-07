@@ -248,7 +248,7 @@ export function parseList(query, defaultStatus = null) {
       invalid("Phân trang không hợp lệ.", key);
     parsed[key] = integer(Number(raw), key, 1, max);
   }
-  parsed.status = query.status ?? defaultStatus;
+  parsed.status = query.status === 'all' ? null : query.status ?? defaultStatus;
   if (
     parsed.status !== null &&
     ![

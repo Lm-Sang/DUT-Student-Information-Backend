@@ -26,7 +26,7 @@ export function createAuthRepository({query=queryLocalDatabase,
       // The staff endpoint is a compatibility channel for canonical auth specialists.
       // It never reads demo credentials, role tables or grants.
       if(channel==='staff'&&(profile.accessLevel!=='specialist'||!profile.staffAccountId))return null;
-      const account={...row,channel,organization:profile,roles:[profile.accessLevel],permissions:profile.permissions,
+      const account={...row,channel,organization:profile,roles:[profile.accessLevel,...(profile.roleNames??[])],permissions:profile.permissions,
         requestActorId:profile.staffAccountId??null,
         isActive:Boolean(row.isActive)&&profile.active&&(profile.accessLevel==='super_admin'||profile.fieldActive)};
       if(!account.displayName?.trim())throw new Error('Invalid local account');
@@ -51,7 +51,7 @@ export function createAuthRepository({query=queryLocalDatabase,
           ${reset?`IF @actor=@target OR NOT EXISTS(SELECT 1 FROM auth.AccountProfiles p WITH(UPDLOCK,HOLDLOCK)
             JOIN auth.AccountProfiles target WITH(UPDLOCK,HOLDLOCK) ON target.AccountId=@target
             JOIN auth.Fields f WITH(UPDLOCK,HOLDLOCK) ON f.FieldCode=target.FieldCode AND f.IsActive=1
-            WHERE p.AccountId=@actor AND ((p.AccessLevel='super_admin' AND target.AccessLevel='department_admin')
+            WHERE p.AccountId=@actor AND ((p.AccessLevel='super_admin' AND target.AccessLevel IN('department_admin','specialist'))
               OR(p.AccessLevel='department_admin' AND target.AccessLevel='specialist' AND p.FieldCode=target.FieldCode)))
             THROW 51202,'PASSWORD_FORBIDDEN',1;`:'IF @actor<>@target THROW 51202,\'PASSWORD_FORBIDDEN\',1;'}
           UPDATE auth.LocalAccounts SET PasswordHash=? WHERE Id=@target AND PasswordHash=? AND IsActive=1;

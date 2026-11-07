@@ -46,7 +46,8 @@
     "test:auth:requests": "node scripts/smoke-auth-requests-integration.mjs",
     "orm:entities:local": "node scripts/generate-typeorm-entities.mjs",
     "orm:entities:school": "node scripts/generate-school-typeorm-entities.mjs",
-    "test:orm:local": "node scripts/smoke-typeorm.mjs"
+    "test:orm:local": "node scripts/smoke-typeorm.mjs",
+    "auth:permissions:init": "node scripts/auth/granular-rbac-db.mjs"
   },
   "repository": {
     "type": "git",

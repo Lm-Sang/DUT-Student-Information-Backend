@@ -1,125 +1,104 @@
-# Phòng ban, tác vụ và phân quyền auth
+# Auth: phòng ban, role và quyền từng loại hồ sơ
 
-Auth là nguồn duy nhất của tài khoản, mật khẩu và quyền local. Không fallback sang
-role, permission hoặc credential của demo khi tài khoản thiếu profile auth.
+Tài khoản và quyền local lấy duy nhất từ auth. Sinh viên dùng DUT SSO; admin/staff
+dùng kênh JWT và cookie riêng. Không lấy quyền từ role demo.
 
-Luồng xử lý hồ sơ và nguồn dữ liệu:
-[chứng chỉ/nghỉ học](CERTIFICATIONS_ACADEMIC_LEAVE_WORKFLOW.md).
+| Cấp | Khả năng |
+|---|---|
+| super_admin | Quản lý phòng/tag/role/quyền; tạo/sửa/khóa/reset admin phòng và chuyên viên; đổi cấp/phòng tài khoản cấp dưới |
+| department_admin | Tạo/sửa/khóa/reset, gán role/quyền cho chuyên viên cùng phòng; theo dõi hồ sơ trong phòng |
+| specialist | Chỉ xem và xử lý đúng từng loại hồ sơ được cấp; không quản lý người dùng |
 
-| Bảng | Trách nhiệm |
-| --- | --- |
-| auth.LocalAccounts | Username, mật khẩu băm, tên hiển thị và trạng thái tài khoản |
-| auth.AccountProfiles | Vai trò, phòng, revision và liên kết định danh người xử lý |
-| auth.Fields | Danh mục phòng và trạng thái hoạt động |
-| auth.Tasks | Tác vụ số thuộc phòng |
-| auth.AccountTasks | Tác vụ được giao cho chuyên viên, FK buộc cùng phòng |
-| auth.TaskPermissions | Quyền thao tác và work scope của tác vụ |
-| auth.AccountSecurityEvents | Audit tạo/sửa tài khoản và đổi/reset mật khẩu, không lưu secret/hash |
+Admin phòng không tạo admin khác, chuyển chuyên viên sang phòng khác hoặc tự
+cấp quyền xử lý. Admin tổng không dùng quyền quản trị để duyệt hồ sơ.
+Không tạo chuyên viên CTSV trong đợt tích hợp này.
 
-## Luồng hoạt động
+## Nguồn dữ liệu
 
-| Vai trò | Được phép | Bị chặn |
-| --- | --- | --- |
-| super_admin | Quản lý phòng và tạo/sửa/khóa admin phòng | Trực tiếp xử lý hồ sơ sinh viên hoặc tạo chuyên viên vượt cấp |
-| department_admin | Tạo/sửa/khóa chuyên viên cùng phòng, giao tác vụ, xem tiến độ | Quản lý phòng khác, tự cấp quyền xử lý hoặc duyệt/sửa hồ sơ |
-| specialist | Xử lý đúng tác vụ được giao trong phòng | Quản lý tài khoản/role, xử lý tác vụ không được giao |
-| Sinh viên SSO | Tạo/xem/thao tác hồ sơ của chính mình theo trạng thái | Quản trị hoặc chọn danh tính/người sở hữu từ request |
+| Bảng/view | Vai trò |
+|---|---|
+| auth.LocalAccounts | Username, hash mật khẩu, tên, trạng thái |
+| auth.AccountProfiles | Cấp quản trị, phòng, revision, định danh workflow |
+| auth.Fields | Phòng ban |
+| auth.PermissionDefinitions | Nhãn quyền, nhóm hiển thị, tag phòng, module, trạng thái |
+| auth.AccountPermissions | Các quyền cấp riêng |
+| auth.RoleDefinitions | Role tùy chỉnh, phòng, trạng thái, revision |
+| auth.AccountRoles / auth.RolePermissions | Gán role và quyền cụ thể của role |
+| auth.vAssignedPermissions | Hợp quyền cấp riêng và role hoạt động, giới hạn cùng phòng |
+| auth.vEffectivePermissions | Thêm quyền thao tác kỹ thuật cho các phạm vi cụ thể |
+| auth.AccountSecurityEvents | Audit quản trị và mật khẩu, không lưu secret |
 
-Admin phòng DT có thể GET danh sách/chi tiết chứng chỉ và nghỉ học để theo dõi;
-mutation xét duyệt và quản lý danh mục vẫn bị chặn. Progress chỉ trả metadata trạng
-thái trong phòng, không trả mật khẩu, payload hoặc URL tải file.
+Tasks/TaskPermissions/AccountTasks còn để tương thích dữ liệu cũ. Runtime không
+lấy chúng làm nguồn cấp quyền. taskIds trả về trong phiên chỉ là nhãn module suy ra
+từ quyền thật. API từ chối taskIds khác rỗng; phải gửi permissions hoặc roleIds.
+Quyền rỗng và không role thì không xử lý được hồ sơ nào.
 
-| TaskId | TaskCode | Phòng |
-| --- | --- | --- |
-| 1 | certifications — chứng chỉ ngoại ngữ | DT |
-| 2 | it-certifications — chứng chỉ tin học | DT |
-| 3 | academic-leave — nghỉ học/tiếp tục học | DT |
-| 4 | student-requests — xử lý đơn | DT |
+Mỗi loại đơn đề nghị là work:<MaLoaiDon>, mỗi xác nhận là
+work:CONFIRMATION:<MaVanBan>. Ngoại ngữ: work:certifications:<CertificateTypes.Id>;
+tin học: work:it-certifications:<MaCC>. Học vụ có work:academic-leave:leave
+(ngừng/gia hạn) và work:academic-leave:return. Role chỉ chứa các quyền cụ thể;
+không có wildcard cấp toàn module.
 
-Danh mục phòng: KT, QC, SV, TTHL, TTTH, SSERC, DT, TC, PC. Tác vụ 4 ánh xạ sang
-quyền chức năng và work key từng loại đơn/văn bản DT. Các kiểm tra người phụ trách,
-quyền sở hữu, trạng thái, phiên bản và transaction của hồ sơ vẫn giữ nguyên.
+Tên/mã loại lấy từ DB. Root đồng bộ danh mục quyền sau khi thêm loại mới;
+loại mới không tự cấp cho tài khoản hoặc role đang có. Đổi quyền/role/tag, khóa
+tài khoản hoặc đổi/reset mật khẩu thu hồi phiên cũ.
 
-## Nguồn auth và dữ liệu workflow
+## API
 
-Admin/staff giữ hai audience và cookie path riêng. Cả hai channel đều đọc cùng
-credential từ auth.LocalAccounts, và quyền từ profile/phòng/tác vụ auth. Staff
-login chỉ dành cho specialist có định danh workflow; API đơn yêu cầu thêm task 4.
-Tài khoản thiếu profile không được đăng nhập. Đổi quyền, trạng thái phòng/tài khoản
-hoặc mật khẩu làm phiên cũ mất hiệu lực; đổi/reset mật khẩu áp dụng cả hai channel.
+Prefix /api/admin/organization, Bearer admin; login /api/admin/auth/login.
 
-Bản ghi svc_demo.TaiKhoan chỉ giữ định danh workflow và FK/lịch sử hồ sơ. Tài khoản
-mới không tạo credential trong DangNhapChuyenVien, không gán TaiKhoanVaiTro hoặc
-VaiTroQuyen. Các bảng demo cũ giữ lịch sử nhưng không cấp quyền. View tương thích
-svc_demo.vQuyenHieuLuc chỉ chiếu quyền từ auth để SQL transaction kiểm tra tại DB.
-Module demo không còn được bootstrap mặc định; API requests không mount CRUD
-account/role hay quyền demo. Các URL quản lý cũ phải chuyển sang organization.
+| Method/path | Mục đích |
+|---|---|
+| GET /catalog | Phòng, nhóm module, quyền, role trong phạm vi |
+| POST /catalog/sync | Root đồng bộ quyền từ danh mục DB |
+| GET /accounts | Root xem tài khoản cấp dưới; admin phòng thấy chuyên viên cùng phòng |
+| POST /accounts | Tạo tài khoản cấp dưới |
+| PUT /accounts/:id | Sửa thông tin/quyền/role, tùy chọn mật khẩu; cần revision |
+| DELETE /accounts/:id | Khóa và thu hồi quyền; cần revision |
+| POST /roles; PUT /roles/:id | Root tạo/sửa role; sửa cần revision |
+| PUT /permissions/:key | Root đổi fieldCode/active; key phải URL-encode |
+| PUT/DELETE /fields/:code | Root quản lý phòng; chặn xóa phòng đang dùng |
+| GET /progress/:taskId | Admin phòng theo dõi tiến độ |
 
-## Áp dụng và tạo tài khoản
+Mật khẩu: POST /api/admin/auth/change-password dùng currentPassword/newPassword;
+POST /api/admin/auth/accounts/:id/reset-password theo phân cấp. Staff có alias
+ở /api/staff/auth. Tự đổi mật khẩu xong phải đăng nhập lại.
 
-Chỉ áp dụng ở SQL local được guard cho phép:
-
-```sh
-npm run auth:db:init
-npm run auth:organization:init
-```
-
-Migration [auth-organization-schema.sql](../scripts/database/sql/auth-organization-schema.sql)
-và view quyền được áp dụng trong transaction, không đổi mật khẩu hay xóa hồ sơ.
-Khởi tạo root đầu tiên bằng auth:user:create (nhập mật khẩu ẩn) hoặc
-[bootstrap-organization.mjs](../scripts/auth/bootstrap-organization.mjs) qua stdin.
-Khi đã có root, tạo các tài khoản tiếp theo bằng API auth đúng phân cấp.
-
-CLI auth:staff:create cũng dùng cùng service organization. Cần --manager NAME,
---username NAME, --name DISPLAY, --field DT, --tasks 1,4, --env-password. Nhập bí mật
-qua biến môi trường tiến trình DUT_AUTH_MANAGER_PASSWORD và DUT_STAFF_BOOTSTRAP_PASSWORD;
-không truyền mật khẩu qua argv, không lưu vào Git. Không còn --bootstrap-admin dựa
-trên role demo. Admin tổng không dùng CLI này để tạo chuyên viên vượt cấp.
-
-Username do admin chọn, 1–64 ký tự, hỗ trợ Unicode/hoa thường/khoảng trắng bên trong;
-loại ký tự điều khiển và khoảng trắng đầu/cuối. Đăng nhập không phân biệt hoa/thường.
-Mật khẩu 9–128 ký tự, có chữ và số, không trùng username; cùng policy khi tạo/đổi/reset.
-Mật khẩu hiện có không bị đổi khi chuyển nguồn auth.
-
-## API quản lý
-
-Bật ENABLE_ADMIN_AUTH=true. Đăng nhập `/api/admin/auth/login`, dùng admin Bearer.
-
-| Method | URL | Quyền |
-| --- | --- | --- |
-| GET | /api/admin/organization/catalog | Danh mục trong phạm vi tài khoản |
-| GET | /api/admin/organization/accounts | Root thấy admin phòng; admin phòng thấy chuyên viên cùng phòng |
-| POST | /api/admin/organization/accounts | Tạo tài khoản cấp dưới đúng phòng |
-| PUT | /api/admin/organization/accounts/:id | Sửa tên, trạng thái, taskIds, tùy chọn mật khẩu; cần revision |
-| DELETE | /api/admin/organization/accounts/:id | Khóa tài khoản, thu hồi tác vụ; cần revision |
-| PUT/DELETE | /api/admin/organization/fields/:code | Admin tổng quản lý phòng; xóa phòng đang dùng trả 409 |
-| GET | /api/admin/organization/progress/:taskId | Admin phòng xem tiến độ cùng phòng |
-| POST | /api/admin/auth/change-password | Tự đổi mật khẩu, cần currentPassword và newPassword |
-| POST | /api/admin/auth/accounts/:id/reset-password | Reset theo đúng phân cấp/phòng |
-
-Hai endpoint mật khẩu có alias ở /api/staff/auth cho specialist; specialist không
-được reset tài khoản khác. Đổi mật khẩu tự thu hồi phiên và yêu cầu đăng nhập lại.
-Reset qua PUT account cũng tuân theo phân cấp và có audit.
-
-Tạo chuyên viên từ admin phòng DT:
+Ví dụ tạo chuyên viên chỉ xử lý giấy hoãn NVQS:
 
 ```json
 {
-  "username": "ChuyenvienDT03",
-  "password": "<password-do-admin-dat>",
-  "displayName": "Chuyên viên đào tạo",
+  "username": "ChuyenvienNVQS",
+  "password": "<mat-khau-do-admin-dat>",
+  "displayName": "Chuyên viên xác nhận hoãn NVQS",
   "accessLevel": "specialist",
   "fieldCode": "DT",
-  "taskIds": [1, 2],
+  "permissions": ["work:CONFIRMATION:13", "workbook.export", "workbook.import"],
+  "roleIds": [],
   "active": true
 }
 ```
 
-Root tạo admin phòng với accessLevel department_admin và taskIds rỗng. Không nhận
-permissions/roleIds tùy ý từ frontend. Sửa không đổi vai trò/phòng hoặc username;
-đổi vai trò/phòng cần migration riêng. Login/me trả user.tags gồm role, fieldCode,
-taskIds cho FE hiển thị, nhưng BE luôn kiểm tra quyền trong DB.
+Excel là quyền bổ sung, không mở thêm loại hồ sơ. Mỗi dòng vẫn kiểm tra quyền loại,
+giai đoạn, người phụ trách và phiên bản. Chuyên viên này không được mở/xử lý mười
+loại xác nhận khác, kể cả gọi trực tiếp API hoặc sửa file Excel.
 
-Kiểm tra offline: npm test và npm run check. SQL integration opt-in dùng
-AUTH_DB_TEST=1 và AUTH_ORGANIZATION_DB_TEST=1; fixture rollback/dọn theo UUID,
-không thay đổi tài khoản người dùng. test:auth:requests chạy bộ SQL integration này.
+## Nâng cấp local
+
+```powershell
+npm.cmd run auth:db:init
+npm.cmd run auth:organization:init
+# DB đã có organization thì chỉ cần:
+npm.cmd run auth:permissions:init
+```
+
+Migration chỉ chạy trên DB loopback được guard cho phép. Nó chuyển phân công
+AccountTasks cũ thành các quyền riêng đúng một lần để giữ quyền hiện có; không
+đổi mật khẩu và không cấp theo nhóm khi tạo/sửa sau đó. Không chạy trên SSH.
+
+CLI auth:staff:create dùng --manager NAME --username NAME --name DISPLAY
+--field DT --permissions work:DonSV01,work:academic-leave:leave --env-password;
+có thể dùng --roles với mã role phân cách dấu phẩy. Mật khẩu lấy từ biến môi trường
+DUT_AUTH_MANAGER_PASSWORD và DUT_STAFF_BOOTSTRAP_PASSWORD, không từ argv.
+
+Xem [báo cáo tích hợp và kiểm thử](GRANULAR_RBAC_NATIVE_UI.md).

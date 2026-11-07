@@ -77,4 +77,5 @@ export const getLocalDataSource = localDatabase.connect;
 export const connectLocalDatabase = getLocalDataSource;
 export const queryLocalDatabase = localDatabase.query;
 export const transactionLocalDatabase = localDatabase.transaction;
+export const withLocalTransaction = localDatabase.atomic;
 export const disconnectLocalDatabase = localDatabase.disconnect;

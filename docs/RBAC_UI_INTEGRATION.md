@@ -1,3 +1,5 @@
+> Bản kế tiếp: [quyền từng loại và giao diện gốc](GRANULAR_RBAC_NATIVE_UI.md). Nội dung dưới là mốc tích hợp trước đó.
+
 # Tích hợp giao diện và feat/rbac
 
 ## Phạm vi

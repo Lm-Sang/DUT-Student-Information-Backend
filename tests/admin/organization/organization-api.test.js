@@ -40,10 +40,10 @@ test('organization routes require admin authentication and enforce the managemen
   for (const token of [undefined, 'student-token', 'staff-token']) assert.equal((await request('/accounts', token)).status, 401);
   assert.equal((await request('/accounts', 'staff')).status, 403);
   assert.equal((await request('/accounts', 'root')).status, 200);
-  const edit = { displayName: 'Target', accessLevel: 'specialist', fieldCode: 'DT', taskIds: [1], revision: 1 };
+  const edit = { displayName: 'Target', accessLevel: 'specialist', fieldCode: 'DT', permissions: [], revision: 1 };
   assert.equal((await request('/accounts/' + targetId, 'dt', 'PUT', edit)).status, 200);
   assert.equal((await request('/accounts/' + targetId, 'kt', 'PUT', edit)).status, 403);
-  assert.equal((await request('/accounts/' + targetId, 'root', 'PUT', edit)).status, 403);
+  assert.equal((await request('/accounts/' + targetId, 'root', 'PUT', edit)).status, 200);
   assert.equal((await request('/fields/DT', 'dt', 'PUT', { name: 'Đào tạo' })).status, 403);
   assert.equal((await request('/fields/DT', 'root', 'PUT', { name: 'Đào tạo' })).status, 200);
   assert.equal((await request('/progress/1', 'dt')).status, 200);

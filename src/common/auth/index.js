@@ -8,6 +8,7 @@ export { parseOrganizationAccount, requireOrganizationManager } from './rules/or
 export { hashPassword } from './services/password.service.js';
 export { validateUsername, validatePassword } from './rules/credentials.js';
 export { workflowPermissionsViewSql } from './repositories/authorization-views.js';
+export {assertWorkflowScope,hasWorkflowScope,workflowScopeSql,workflowWriteGuardSql} from './rules/work-scopes.js';
 
 import { env } from '../../config/env.js';
 import { authService } from './services/auth.service.js';

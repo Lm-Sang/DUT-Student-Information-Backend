@@ -5,7 +5,11 @@ export function createOrganizationController(service) {
   };
   return {
     catalog: handle(req => service.catalog(req.user)),
+    syncPermissionCatalog:handle(req=>service.syncPermissionCatalog(req.user)),
     accounts: handle(req => service.accounts(req.user)),
+    createRole:handle(req=>service.saveRole(req.user,null,req.body)),
+    updateRole:handle(req=>service.saveRole(req.user,req.params.id,req.body)),
+    updatePermissionTag:handle(req=>service.updatePermissionTag(req.user,req.params.key,req.body)),
     create: handle(req => service.saveAccount(req.user, null, req.body)),
     update: handle(req => service.saveAccount(req.user, req.params.id, req.body)),
     remove: handle(req => service.removeAccount(req.user, req.params.id, req.body)),

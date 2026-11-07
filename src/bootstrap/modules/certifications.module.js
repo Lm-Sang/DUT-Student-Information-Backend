@@ -1,3 +1,5 @@
+import {withFeatureWorkbook} from '../../admin/modules/workbooks/index.js';
+import {env} from '../../config/env.js';
 import { certificationConfig } from "../../config/certifications.js";
 import { createR2Storage } from "../../infrastructure/storage/r2-storage.js";
 import { createDocumentImageInspector } from "../../infrastructure/images/document-image.js";
@@ -81,7 +83,7 @@ export function createCertificationsModule({
       eventHandler,
     ),
     studentRouter: createStudentCertificationsRouter(studentController, context, eventHandler),
-    adminRouter: createAdminCertificationsRouter(adminController, context, eventHandler),
+    adminRouter: withFeatureWorkbook(createAdminCertificationsRouter(adminController, context, eventHandler),{module:'certifications',service,resolveActor:req=>contextProvider?contextProvider(req,'reviewer'):reviewerAuthentication.actor(req,'reviewer'),secret:()=>env.jwt.secret}),
     service,
   };
 }
@@ -127,7 +129,7 @@ export function createItCertificationsModule({
     service,
     router: createItCertificationsRouter(controller, context, eventHandler),
     studentRouter: createStudentItCertificationsRouter(studentController, context, eventHandler),
-    adminRouter: createAdminItCertificationsRouter(adminController, context, eventHandler),
+    adminRouter: withFeatureWorkbook(createAdminItCertificationsRouter(adminController, context, eventHandler),{module:'it-certifications',service,resolveActor:req=>contextProvider?contextProvider(req,'reviewer'):reviewerAuthentication.actor(req,'reviewer'),secret:()=>env.jwt.secret}),
   };
 }
 

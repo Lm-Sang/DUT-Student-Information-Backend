@@ -1,3 +1,5 @@
+import {withFeatureWorkbook} from '../../admin/modules/workbooks/index.js';
+import {env} from '../../config/env.js';
 import {
   createDutStudentContext,
   createStudentApplicationDataService,
@@ -57,7 +59,7 @@ export function createAcademicLeaveModule({
     service,
     router: createAcademicLeaveRouter(controller, context, printContext),
     studentRouter: createStudentAcademicLeaveRouter(studentController, context, printContext),
-    adminRouter: createAdminAcademicLeaveRouter(adminController, context),
+    adminRouter: withFeatureWorkbook(createAdminAcademicLeaveRouter(adminController, context),{module:'academic-leave',service,resolveActor:reviewerContextProvider,secret:()=>env.jwt.secret}),
   };
 }
 export default createAcademicLeaveModule();

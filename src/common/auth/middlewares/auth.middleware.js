@@ -22,11 +22,11 @@ export function createLocalPermissionContext(permission, service = authService, 
     const claims = await service.verifyToken(match[1], 'admin');
     const profile = claims.organization ?? claims.identity?.organization;
     const scoped = profile?.active && profile.fieldActive && profile.accessLevel === 'specialist' && profile.taskIds.includes(taskId);
-    const monitoring = profile?.accessLevel === 'department_admin' && profile.fieldCode === 'DT'
+    const monitoring = profile?.accessLevel === 'department_admin' && (profile.availableTaskIds??(profile.fieldCode==='DT'?[1,2,3]:[])).includes(taskId)
       && ['GET', 'HEAD'].includes(req.method) && permission.endsWith(':review');
     if (claims.authMethod !== 'password' || !(monitoring || scoped && claims.permissions.includes(permission))) throw new AppError('Permission denied', 403);
     return { role: 'reviewer', source: 'auth', reference: `local-user:${claims.localUserId}`,
-      name: claims.identity.displayName, permissions: [...claims.permissions] };
+      name: claims.identity.displayName, permissions: [...claims.permissions],scopePermissions:[...claims.permissions],monitoring,accountId:profile.accountId };
   };
 }
 

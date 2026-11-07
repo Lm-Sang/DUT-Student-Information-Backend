@@ -1,3 +1,4 @@
+import {assertWorkflowScope} from '../../auth/index.js';
 import {AppError} from '../../../shared/errors/app-error.js';
 import {reasons,semester,semesterChoices,shiftSemester,validatePeriod,applicationView,academicLeaveReviewActions} from '../rules/academic-leave.rules.js';
 import {normalizeAcademicRows} from '../../students/index.js';
@@ -10,6 +11,7 @@ export function createAcademicLeaveService({repository,snapshotProvider,prefillP
   async function get(actor,id){
     const row=await repository.get(actor,id);
     if(!row)throw new AppError('Không tìm thấy đơn của tài khoản này.',404);
+    assertWorkflowScope(actor,'academic-leave',row.kind==='return'?'return':'leave');
     return row;
   }
   function expectedVersion(row,expected){if(row.rowVersion!==expected)throw new AppError('Đơn đã được cập nhật. Vui lòng tải lại.',409);}

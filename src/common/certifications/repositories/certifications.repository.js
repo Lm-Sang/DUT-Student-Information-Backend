@@ -1,3 +1,4 @@
+import {workflowScopeSql,workflowWriteGuardSql} from '../../auth/index.js';
 import { queryLocalDatabase,transactionLocalDatabase } from '../../../database.js';
 import { env } from '../../../config/env.js';
 import { AppError } from '../../../shared/errors/app-error.js';
@@ -16,6 +17,7 @@ const lockCertificate = `DECLARE @certificate uniqueidentifier=TRY_CONVERT(uniqu
  IF JSON_VALUE(@input,'$.actor.role')='student' AND NOT EXISTS(SELECT 1 FROM certification.StudentCertificates WHERE Id=@certificate
    AND ActorReference=JSON_VALUE(@input,'$.actor.reference') AND ActorSource=JSON_VALUE(@input,'$.actor.source'))
    THROW 51403,'CERT_FORBIDDEN',1;`;
+const workflowGuard=workflowWriteGuardSql('certifications','(SELECT CertificateTypeId FROM certification.StudentCertificates WHERE Id=@certificate)',51403);
 const editable = "IF @status NOT IN('uploading','needs_changes') AND NOT(@status='checking' AND @expires<=@now) THROW 51409,'CERT_CONFLICT',1;";
 const sameToken = "IF @token<>JSON_VALUE(@input,'$.expected') OR JSON_VALUE(@input,'$.expected') IS NULL THROW 51409,'CERT_CONFLICT',1;";
 const lockPolicyVersions = `DECLARE @policyCount int;
@@ -62,7 +64,7 @@ export function createCertificationsRepository({query=queryLocalDatabase,transac
       if(/invalid object name.*StudentCertificates|invalid column name.*CertificateId/i.test(message))
         throw new AppError('Cần cập nhật DB chứng chỉ sang cấu trúc gọn.',503,
           {code:'CERT_SCHEMA_MIGRATION_REQUIRED',migration:'certifications-compact.sql'});
-      const mapped=[['CERT_NOT_FOUND',404,'Không tìm thấy hồ sơ.'],['CERT_FORBIDDEN',403,'Không có quyền truy cập.'],
+      const mapped=[['WORK_SCOPE_FORBIDDEN',403,'Bạn chưa được phân công loại chứng chỉ này.'],['CERT_NOT_FOUND',404,'Không tìm thấy hồ sơ.'],['CERT_FORBIDDEN',403,'Không có quyền truy cập.'],
         ['CERT_EXPIRED',410,'Phiên upload đã hết hạn.'],['CERT_POLICY_OVERLAP',409,'Các khoảng khóa bị chồng lấn.'],
         ['CERT_',409,'Hồ sơ đã thay đổi hoặc thao tác không hợp lệ.']].find(([code])=>message.includes(code));
       if(mapped)throw new AppError(mapped[2],mapped[1],{code:mapped[0]});
@@ -175,7 +177,7 @@ export function createCertificationsRepository({query=queryLocalDatabase,transac
       return run('SELECT ('+applicationSql+') AS Json;',{applicationId});
     },
     list(input) {
-      const filter=`(JSON_VALUE(@input,'$.actor.role')<>'student' OR
+      const filter=`${workflowScopeSql('certifications','c.CertificateTypeId')} AND (JSON_VALUE(@input,'$.actor.role')<>'student' OR
         (c.ActorReference=JSON_VALUE(@input,'$.actor.reference') AND c.ActorSource=JSON_VALUE(@input,'$.actor.source')))
         AND(JSON_VALUE(@input,'$.status') IS NULL OR
           CASE WHEN c.Status='checking' THEN 'uploading' ELSE c.Status END=JSON_VALUE(@input,'$.status'))`;
@@ -212,7 +214,7 @@ export function createCertificationsRepository({query=queryLocalDatabase,transac
           JSON_VALUE(@input,'$.bucket'),JSON_VALUE(f.value,'$.objectKey'),@now FROM OPENJSON(@input,'$.files') f;`);
     },
     claimSubmission(input) {
-      return mutate(input,`${lockCertificate}${sameToken}
+      return mutate(input,`${lockCertificate}${workflowGuard}${sameToken}
         IF @expires<=@now THROW 51410,'CERT_EXPIRED',1;
         IF @status<>'uploading' THROW 51409,'CERT_CONFLICT',1;
         IF NOT EXISTS(SELECT 1 FROM certification.EvidenceFiles WHERE CertificateId=@certificate)
@@ -221,7 +223,7 @@ export function createCertificationsRepository({query=queryLocalDatabase,transac
           UpdatedAt=@now WHERE Id=@certificate;`);
     },
     finishSubmission(input) {
-      return mutate(input,`${lockCertificate}${sameToken}${lockPolicyVersions}
+      return mutate(input,`${lockCertificate}${workflowGuard}${sameToken}${lockPolicyVersions}
         IF @expires<=@now THROW 51410,'CERT_EXPIRED',1;
         IF @status<>'checking' OR NOT EXISTS(SELECT 1 FROM certification.StudentCertificates WHERE Id=@certificate
           AND ClaimToken=TRY_CONVERT(uniqueidentifier,JSON_VALUE(@input,'$.claimToken'))) THROW 51409,'CERT_CONFLICT',1;
@@ -236,12 +238,12 @@ export function createCertificationsRepository({query=queryLocalDatabase,transac
           CatalogSnapshotJson=JSON_QUERY(@input,'$.snapshot') WHERE Id=@certificate;`);
     },
     releaseSubmission(input) {
-      return mutate(input,`${lockCertificate}
+      return mutate(input,`${lockCertificate}${workflowGuard}
         UPDATE certification.StudentCertificates SET Status='uploading',ClaimToken=NULL,UpdatedAt=@now WHERE Id=@certificate
           AND Status='checking' AND ClaimToken=TRY_CONVERT(uniqueidentifier,JSON_VALUE(@input,'$.claimToken'));`);
     },
     review(input) {
-      return mutate(input,`${lockCertificate}${sameToken}
+      return mutate(input,`${lockCertificate}${workflowGuard}${sameToken}
         IF NOT((@status='submitted' AND JSON_VALUE(@input,'$.decision') IN('processing','rejected','needs_changes'))
           OR (@status='processing' AND JSON_VALUE(@input,'$.decision') IN('verified','rejected')))
           THROW 51409,'CERT_CONFLICT',1;

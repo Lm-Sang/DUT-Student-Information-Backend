@@ -10,6 +10,7 @@ export function createTypeOrmConnection({
   createSource = (value) => new DataSource(value),
 }) {
   let pending;
+  const units = new AsyncLocalStorage();
   const source = createSource({
     ...options,
     synchronize: false,
@@ -48,11 +49,12 @@ export function createTypeOrmConnection({
   }
   async function run(statement, parameters = [], transactional = false) {
     if (readOnly) assertReadOnlySql(statement);
+    const inherited=units.getStore();
     const dataSource = await connect(),
-      runner = dataSource.createQueryRunner(),
+      runner = inherited?.runner??dataSource.createQueryRunner(),
       context = { runner };
     try {
-      if (transactional) {
+      if (transactional && !inherited) {
         beforeWrite?.();
         await runner.startTransaction("READ COMMITTED");
       }
@@ -67,15 +69,23 @@ export function createTypeOrmConnection({
           rowsAffected: context.raw?.rowsAffected ?? [result.affected ?? 0],
         };
       });
-      if (transactional) await runner.commitTransaction();
+      if (transactional && !inherited) await runner.commitTransaction();
       return output;
     } catch (error) {
-      if (transactional && runner.isTransactionActive)
+      if (transactional && !inherited && runner.isTransactionActive)
         await runner.rollbackTransaction().catch(() => {});
       throw error;
     } finally {
-      await runner.release();
+      if(!inherited)await runner.release();
     }
+  }
+  async function atomic(work){
+    beforeWrite?.();if(readOnly)throw new Error('Read-only connection cannot start a write unit');
+    if(units.getStore())return work();
+    const runner=(await connect()).createQueryRunner();
+    try{await runner.startTransaction('READ COMMITTED');const result=await units.run({runner},work);await runner.commitTransaction();return result;}
+    catch(error){if(runner.isTransactionActive)await runner.rollbackTransaction().catch(()=>{});throw error;}
+    finally{await runner.release();}
   }
   async function disconnect() {
     const connection = pending;
@@ -90,6 +100,7 @@ export function createTypeOrmConnection({
     connect,
     query: (sql, params) => run(sql, params),
     transaction: (sql, params) => run(sql, params, true),
+    atomic,
     disconnect,
   };
 }

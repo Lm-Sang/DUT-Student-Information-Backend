@@ -29,7 +29,10 @@ if (!files.length) {
   process.exit(1);
 }
 
-const result = spawnSync(process.execPath, ['--test', ...files], {
+// SQL fixtures share one guarded local database. Serialize opt-in integration
+// suites so their broad rollback/cleanup locks do not deadlock each other.
+const sqlFixtures = ['AUTH_DB_TEST','AUTH_ORGANIZATION_DB_TEST','RBAC_WORKFLOW_DB_TEST','GRANULAR_RBAC_DB_TEST'].some(key=>process.env[key]==='1');
+const result = spawnSync(process.execPath, ['--test', ...(sqlFixtures?['--test-concurrency=1']:[]), ...files], {
   cwd: projectRoot,
   stdio: 'inherit',
 });

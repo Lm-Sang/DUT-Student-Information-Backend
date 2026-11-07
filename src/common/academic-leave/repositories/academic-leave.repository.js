@@ -1,3 +1,4 @@
+import {workflowScopeSql,workflowWriteGuardSql} from '../../auth/index.js';
 import {queryLocalDatabase,transactionLocalDatabase,connectDatabase} from '../../../database.js';
 import {AppError} from '../../../shared/errors/app-error.js';
 
@@ -8,7 +9,7 @@ const columns=`c.Id AS id,c.RequestCode AS requestCode,c.StudentCode AS studentC
  CONVERT(varchar(33),c.ReviewedAt,126)+'Z' AS reviewedAt,CONVERT(varchar(33),c.ReceivedAt,126)+'Z' AS receivedAt,
  CONVERT(varchar(33),c.PaperDeadlineAt,126)+'Z' AS paperDeadlineAt,CONVERT(varchar(33),c.PaperReceivedAt,126)+'Z' AS paperReceivedAt,
  CONVERT(varchar(33),c.CreatedAt,126)+'Z' AS createdAt,CONVERT(varchar(33),c.UpdatedAt,126)+'Z' AS updatedAt,CONVERT(varchar(16),CONVERT(binary(8),c.RowVersion),2) AS rowVersion`;
-const scope=`(JSON_VALUE(@input,'$.actor.role')='reviewer' OR
+const scope=`${workflowScopeSql('academic-leave',"CASE c.Kind WHEN 'return' THEN 'return' ELSE 'leave' END")} AND (JSON_VALUE(@input,'$.actor.role')='reviewer' OR
  (c.StudentCode=JSON_VALUE(@input,'$.actor.studentCode') AND c.ActorSource=JSON_VALUE(@input,'$.actor.source')
  AND c.ActorReference=JSON_VALUE(@input,'$.actor.reference')))`;
 const selectOne=`SELECT ${columns} FROM ${table} c WHERE c.Id=@id FOR JSON PATH,INCLUDE_NULL_VALUES,WITHOUT_ARRAY_WRAPPER`;
@@ -17,7 +18,7 @@ const lock=`DECLARE @id int=TRY_CONVERT(int,JSON_VALUE(@input,'$.id')),@status v
  WHERE c.Id=@id AND ${scope};
  IF @status IS NULL THROW 51504,'AL_NOT_FOUND',1;
  IF NOT EXISTS(SELECT 1 FROM ${table} WHERE Id=@id AND CONVERT(varchar(16),CONVERT(binary(8),RowVersion),2)=JSON_VALUE(@input,'$.expected'))
- THROW 51509,'AL_CONFLICT',1;`;
+ THROW 51509,'AL_CONFLICT',1;${workflowWriteGuardSql('academic-leave',"(SELECT CASE Kind WHEN 'return' THEN 'return' ELSE 'leave' END FROM academic_leave.Applications WHERE Id=@id)",51503)}`;
 const fields=`Kind=JSON_VALUE(@input,'$.data.kind'),ParentApplicationId=TRY_CONVERT(int,JSON_VALUE(@input,'$.data.parentApplicationId')),
  ReasonCode=JSON_VALUE(@input,'$.data.reasonCode'),StartSemesterCode=JSON_VALUE(@input,'$.data.startSemesterCode'),
  SemesterCount=TRY_CONVERT(tinyint,JSON_VALUE(@input,'$.data.semesterCount')),Content=JSON_VALUE(@input,'$.data.content')`;
@@ -54,6 +55,7 @@ export function createAcademicLeaveRepository({query=queryLocalDatabase,transact
       return JSON.parse(result.first?.[0]?.Json??'null');
     }catch(error){
       const message=String(error.message??error);
+      if(message.includes('WORK_SCOPE_FORBIDDEN'))throw new AppError('Bạn chưa được phân công loại đơn học vụ này.',403);
       if(/invalid column name.*ReceivedAt/i.test(message))throw new AppError('Cần nâng cấp workflow chứng chỉ/nghỉ học trên DB local.',503,
         {code:'REVIEW_WORKFLOW_MIGRATION_REQUIRED',command:'npm run db:review-workflow:upgrade'});
       if(message.includes('AL_NOT_FOUND'))throw new AppError('Không tìm thấy đơn của tài khoản này.',404);

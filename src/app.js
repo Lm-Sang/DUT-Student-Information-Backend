@@ -14,6 +14,7 @@ export function createApp(moduleOverrides = {}) {
   app.disable("x-powered-by");
   app.use(helmet());
   app.use(corsMiddleware);
+  app.use(['/api/admin/certifications/workbook','/api/admin/it-certifications/workbook','/api/admin/academic-leave/workbook'],express.json({limit:'7mb'}));
   app.use(express.json());
 
   const modules = createModuleRegistry(moduleOverrides);

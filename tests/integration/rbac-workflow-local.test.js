@@ -16,10 +16,12 @@ import {queryLocalDatabase as query,transactionLocalDatabase as transaction,disc
 import {assertLocalDemoTarget,localDatabaseGuardSql} from '../../src/infrastructure/database/local-write-guard.js';
 import {renderAcademicLeavePrint} from '../../src/common/academic-leave/mappers/academic-leave-print.mapper.js';
 import {pdfRenderer} from '../../src/infrastructure/pdf/chromium-pdf.js';
+import {createAcademicLeaveModule} from '../../src/bootstrap/modules/academic-leave.module.js';
+import {isolatedApp,listen} from '../support/frontend-areas.js';
 
 test('local SQL: certificate upload/supplement/review/catalogs and academic leave lifecycle with isolated fixtures',{
  skip:process.env.RBAC_WORKFLOW_DB_TEST!=='1',timeout:240000,
-},async()=>{
+},async t=>{
  assertLocalDemoTarget();
  const reference='rbac-e2e:'+randomUUID(),studentCode='9'+String(randomInt(10000000,99999999));
  const student={role:'student',source:'auth',reference,studentCode,cohortYear:2023,name:'Sinh viên kiểm thử tích hợp'};
@@ -74,9 +76,22 @@ test('local SQL: certificate upload/supplement/review/catalogs and academic leav
   let term='2610';
   const leaveRepo=createAcademicLeaveRepository({connect:async()=>({request:()=>({query:async()=>({recordset:[{code:term}]})})})});
   const leave=createAcademicLeaveService({repository:leaveRepo,prefillProvider:async()=>({student:profile}),snapshotProvider:async()=>({student:profile,academicRows:[]})});
+  const leaveModule=createAcademicLeaveModule({repository:leaveRepo,studentContextProvider:async req=>req.headers.authorization==='Bearer fixture-owner'?student:another,
+    prefillProvider:async()=>({student:profile}),snapshotProvider:async()=>({student:profile,academicRows:[]})});
+  const httpBase=await listen(t,isolatedApp({academicLeaveModule:leaveModule}));
+  async function checkPdf(application){
+    const path='/api/student/academic-leave/print?'+new URLSearchParams({MADN:application.requestCode});
+    const response=await fetch(httpBase+path,{headers:{Authorization:'Bearer fixture-owner',Accept:'application/pdf'}});
+    assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/^application\/pdf/);
+    assert.equal(Buffer.from(await response.arrayBuffer()).subarray(0,5).toString(),'%PDF-');
+    assert.equal((await fetch(httpBase+path,{headers:{Authorization:'Bearer fixture-other'}})).status,404);
+  }
   const input=kind=>({kind,reasonCode:'medical',parentApplicationId:null,startSemesterCode:term,semesterCount:1,content:'Integration fixture'});
   let draft=await leave.save(student,input('leave'));draft=await leave.save(student,{...input('leave'),content:'Edited'},draft.id,draft.rowVersion);draft=await leave.cancel(student,draft.id,draft.rowVersion);assert.equal(draft.status,'cancelled');
   let row=await leave.save(student,input('leave'));row=await leave.confirm(student,row.id,row.rowVersion);assert.equal(row.status,'submitted');
+  await checkPdf(row);
+  const htmlPreview=await fetch(httpBase+'/api/student/academic-leave/applications/'+row.id+'/print',{headers:{Authorization:'Bearer fixture-owner'}});
+  assert.match(htmlPreview.headers.get('content-type'),/^text\/html/,'HTML preview must not be treated as PDF');
   await assert.rejects(()=>leave.cancel(student,row.id,row.rowVersion),e=>e.statusCode===409);
   row=await leave.review(reviewer,row.id,row.rowVersion,{decision:'needs_changes',note:'Bổ sung fixture'});row=await leave.save(student,input('leave'),row.id,row.rowVersion);row=await leave.confirm(student,row.id,row.rowVersion);
   row=await leave.review(reviewer,row.id,row.rowVersion,{decision:'received'});assert.equal(Date.parse(row.paperDeadlineAt)-Date.parse(row.receivedAt),3*86400000);
@@ -85,8 +100,8 @@ test('local SQL: certificate upload/supplement/review/catalogs and academic leav
   row=await leave.review(reviewer,row.id,row.rowVersion,{decision:'approved'});const parent=row;
   const printable=await leave.printable(student,row.id),html=renderAcademicLeavePrint(printable);assert(html.includes(studentCode));
   const pdf=await pdfRenderer.render(html);assert.equal(pdf.subarray(0,5).toString(),'%PDF-');
-  term='2620';let extension=await leave.save(student,{...input('extension'),parentApplicationId:parent.id});extension=await leave.confirm(student,extension.id,extension.rowVersion);extension=await leave.review(reviewer,extension.id,extension.rowVersion,{decision:'rejected',note:'Reject fixture'});assert.equal(extension.status,'rejected');
-  let returning=await leave.save(student,{...input('return'),parentApplicationId:parent.id,semesterCount:0});returning=await leave.confirm(student,returning.id,returning.rowVersion);returning=await leave.review(reviewer,returning.id,returning.rowVersion,{decision:'received'});returning=await leave.receivePaper(reviewer,returning.id,returning.rowVersion);returning=await leave.review(reviewer,returning.id,returning.rowVersion,{decision:'approved'});assert.equal(returning.status,'approved');
+  term='2620';let extension=await leave.save(student,{...input('extension'),parentApplicationId:parent.id});extension=await leave.confirm(student,extension.id,extension.rowVersion);await checkPdf(extension);extension=await leave.review(reviewer,extension.id,extension.rowVersion,{decision:'rejected',note:'Reject fixture'});assert.equal(extension.status,'rejected');
+  let returning=await leave.save(student,{...input('return'),parentApplicationId:parent.id,semesterCount:0});returning=await leave.confirm(student,returning.id,returning.rowVersion);await checkPdf(returning);returning=await leave.review(reviewer,returning.id,returning.rowVersion,{decision:'received'});returning=await leave.receivePaper(reviewer,returning.id,returning.rowVersion);returning=await leave.review(reviewer,returning.id,returning.rowVersion,{decision:'approved'});assert.equal(returning.status,'approved');
   assert((await leave.applicationHistory(student,row.id,{page:1,pageSize:100})).items.length>=7);
   console.log(JSON.stringify({storage:'memory adapter; no external requests',sql:'real local SQL',catalogKinds:4,certificateKinds:2,itMultipleFiles:true,supplement:true,rejection:true,optimisticConcurrency:true,ownership:true,academicLeave:true,extension:true,returnToStudy:true,pdf:true}));
  }finally{

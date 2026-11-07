@@ -60,7 +60,7 @@ export function createCertificationEvents({
       };
       for (const entry of recipients) {
         try {
-          entry.onEvent(event);
+          entry.onEvent(entry.actor.role==='reviewer'&&entry.actor.scopePermissions!==undefined?{kind:event.kind}:event);
         } catch {
           entry.detach();
           try {

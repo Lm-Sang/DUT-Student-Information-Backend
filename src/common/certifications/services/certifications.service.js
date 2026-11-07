@@ -1,3 +1,4 @@
+import {assertWorkflowScope} from '../../auth/index.js';
 import { randomUUID } from "node:crypto";
 import { AppError } from "../../../shared/errors/app-error.js";
 import { inspectEvidenceFiles } from "./evidence-inspection.service.js";
@@ -63,6 +64,7 @@ export function createCertificationsService({
         application.ActorSource !== actor.source)
     )
       throw new AppError("Không được truy cập hồ sơ này.", 403);
+    assertWorkflowScope(actor,'certifications',application.CertificateTypeId);
     return application;
   }
   function lookup(catalog, typeId, cohortYear) {

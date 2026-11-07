@@ -13,9 +13,9 @@ try {
   if (positionals.length !== 1 || !['init', 'tag'].includes(positionals[0])) throw new Error('Usage: organization-db.mjs init | tag --username NAME --level super_admin|department_admin|specialist [--field DT] [--tasks 1,2] [--staff STAFF_ID]');
   if (positionals[0] === 'init') {
     const sql = await readFile(new URL('../database/sql/auth-organization-schema.sql', import.meta.url), 'utf8');
-    // DDL and the request permission view are installed together, or rolled back together.
-    await transactionLocalDatabase(`${localDatabaseGuardSql}${sql}
-      EXEC(N'${organizationPermissionsViewSql.replaceAll("'", "''")}');`);
+    await transactionLocalDatabase(localDatabaseGuardSql+sql);
+    const {upgradeGranularRbac}=await import('./granular-rbac-db.mjs');
+    await upgradeGranularRbac();
     console.log('Local auth organization schema and request permission view are ready. No account roles were changed.');
   } else {
     const taskIds = values.tasks ? values.tasks.split(',').map(Number) : [];

@@ -12,7 +12,7 @@ const auth = { verifyToken: async (token, channel) => {
   return { authMethod: 'password', localUserId: token, identity: { displayName: token },
     organization: { active: true, fieldActive: true, fieldCode: 'DT',
       accessLevel: token === 'department' ? 'department_admin' : 'specialist', taskIds: [1, 2, 3] },
-    permissions: ['certifications:review', 'academic-leave:review'] };
+    permissions: ['certifications:review','academic-leave:review','work:certifications:1','work:it-certifications:TEST','work:academic-leave:leave','work:academic-leave:return'] };
 } };
 const id = '00000000-0000-4000-8000-000000000001';
 const version = n => n.toString(16).padStart(16, '0').toUpperCase();
@@ -23,7 +23,7 @@ test('both certificate HTTP APIs require intake before acceptance, preserve alia
     [createItCertificationsModule, 'it-certifications', 'itCertificationsModule', 2],
   ]) {
     let sequence = 1;
-    const row = { Id: id, Status: 'submitted', VersionToken: version(sequence), Files: [], Submissions: [] };
+    const row = { Id: id, CertificateTypeId:1, Submissions:[{Certificate:{MaCC:'TEST'}}], Status: 'submitted', VersionToken: version(sequence), Files: [] };
     const module = factory({ config: { r2: {} }, storage: {}, inspectImage: async () => ({}),
       reviewerAuthentication: { actor: createLocalPermissionContext('certifications:review', auth, task) },
       repository: { get: async () => ({ ...row }), review: async input => {

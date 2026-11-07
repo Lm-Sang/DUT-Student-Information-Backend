@@ -32,7 +32,7 @@ export function visibleTerms(terms, currentCode) {
 
 export function canRead(actor, request) {
   return actor.role === 'ADMIN' || (actor.role === 'STUDENT' ? request.studentId === actor.id
-    : actor.role === 'STAFF' && hasPermission(actor,'requests.view') && (request.assignedStaffId === actor.id || canWork(actor, request)));
+    : actor.role === 'STAFF' && hasPermission(actor,'requests.view') && canWork(actor, request));
 }
 
 export function canPrintConfirmation(actor, row) {

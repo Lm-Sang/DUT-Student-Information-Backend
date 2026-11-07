@@ -24,7 +24,7 @@ test('passwords require more than eight characters and both letters and digits',
 });
 
 test('creation and password changes use the same policy without restricting existing login passwords', () => {
-  const input = { username: 'Đào tạo #01', password: 'abcdefg12', displayName: 'Test', accessLevel: 'specialist', fieldCode: 'DT', taskIds: [1] };
+  const input = { username: 'Đào tạo #01', password: 'abcdefg12', displayName: 'Test', accessLevel: 'specialist', fieldCode: 'DT', permissions: ['work:DonSV01'] };
   assert.equal(parseOrganizationAccount(input).username, input.username);
   assert.throws(() => parseOrganizationAccount({ ...input, password: input.username }), e => e.statusCode === 400);
   assert.equal(parsePasswordUpdate({ currentPassword: 'old', newPassword: 'abcdefg12' }).newPassword, 'abcdefg12');
@@ -39,5 +39,5 @@ test('editing checks new password against the stored username and never writes i
     saveAccount: () => assert.fail('invalid password must not reach the database'),
   });
   const actor = { authorizationStatus: 'active', organization: { active: true, fieldActive: true, accessLevel: 'department_admin', fieldCode: 'DT' } };
-  await assert.rejects(() => service.saveAccount(actor, id, { displayName: 'Test', accessLevel: 'specialist', fieldCode: 'DT', taskIds: [1], revision: 1, password: 'chuyenvienDT01' }), e => e.statusCode === 400);
+  await assert.rejects(() => service.saveAccount(actor, id, { displayName: 'Test', accessLevel: 'specialist', fieldCode: 'DT', permissions: ['work:DonSV01'], revision: 1, password: 'chuyenvienDT01' }), e => e.statusCode === 400);
 });

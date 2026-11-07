@@ -31,7 +31,7 @@ test('local organization FKs and effective workflow grants enforce scope; all fi
         (?,N'Organization fixture','STAFF',NULL,'LOCAL',1);
       INSERT auth.AccountProfiles(AccountId,StaffAccountId,AccessLevel,FieldCode) VALUES
         (@specialist,?,'specialist','DT'),(@manager,?,'department_admin','DT'),(@root,?,'super_admin',NULL);
-      INSERT auth.AccountTasks(AccountId,TaskId,FieldCode) VALUES(@specialist,4,'DT');
+      INSERT auth.AccountTasks(AccountId,TaskId,FieldCode) VALUES(@specialist,4,'DT');INSERT auth.AccountPermissions(AccountId,PermissionName)SELECT @specialist,PermissionName FROM auth.PermissionDefinitions WHERE TaskId=4 AND FieldCode='DT';
       IF NOT EXISTS(SELECT 1 FROM svc_demo.vQuyenHieuLuc WHERE MaHS=? AND MaQuyen='requests.receive') THROW 51990,'Missing specialist grant',1;
       IF EXISTS(SELECT 1 FROM svc_demo.vQuyenHieuLuc WHERE MaHS IN(?,?)) THROW 51990,'Administrator received workflow grants',1;
       UPDATE auth.LocalAccounts SET IsActive=0 WHERE Id=@specialist;
@@ -74,7 +74,7 @@ test('local provisioning, linked audiences, read-only monitoring and session rev
     const manager = await service.saveAccount(root, null, { username: managerName, password, displayName: 'Fixture manager', accessLevel: 'department_admin', fieldCode: 'DT' });
     assert(manager?.accountId, 'created manager is returned');
     const managerClaims = { authorizationStatus: 'active', organization: await repository.authorization(manager.accountId) };
-    const specialist = await service.saveAccount(managerClaims, null, { username: specialistName, password, displayName: 'Fixture specialist', accessLevel: 'specialist', fieldCode: 'DT', taskIds: [1, 4] });
+    const specialist = await service.saveAccount(managerClaims, null, { username: specialistName, password, displayName: 'Fixture specialist', accessLevel: 'specialist', fieldCode: 'DT', permissions: ['work:DonSV01','work:certifications:3'] });
     assert(specialist?.accountId, 'created specialist is returned');
     assert.equal((await queryLocalDatabase('SELECT COUNT(*) AS n FROM svc_demo.DangNhapChuyenVien WHERE MaHS=?',[specialist.staffAccountId])).first[0].n,0,'provisioning must not create demo credentials');
     assert.equal(specialist.username, specialistName, 'Unicode, uppercase and punctuation are preserved in SQL');
@@ -85,13 +85,13 @@ test('local provisioning, linked audiences, read-only monitoring and session rev
     assert(staff.data.user.permissions.includes('requests.receive'));
     await assert.rejects(() => auth.verifyToken(admin.data.accessToken, 'staff'), e => e.statusCode === 401);
     for (const id of [1, 2, 3, 4]) assert(Array.isArray((await service.progress(managerClaims, id)).items));
-    const changed = await service.saveAccount(managerClaims, specialist.accountId, { displayName: 'Fixture specialist', accessLevel: 'specialist', fieldCode: 'DT', taskIds: [3], revision: specialist.revision });
+    const changed = await service.saveAccount(managerClaims, specialist.accountId, { displayName: 'Fixture specialist', accessLevel: 'specialist', fieldCode: 'DT', permissions: ['work:academic-leave:leave'], revision: specialist.revision });
     for (const [bundle, channel] of [[admin, 'admin'], [staff, 'staff']])
       await assert.rejects(() => auth.verifyToken(bundle.data.accessToken, channel), e => e.statusCode === 401);
     for (const channel of ['admin', 'staff'])
       assert.deepEqual((await auth.loginWithPassword(channel, { username: specialistName, password })).data.user.tags.taskIds, [3]);
     clock += 900001; // Separate credential checks into a fresh login rate-limit window.
-    await service.saveAccount(managerClaims, specialist.accountId, { displayName: 'Fixture specialist', accessLevel: 'specialist', fieldCode: 'DT', taskIds: [3], revision: changed.revision, password: replacement });
+    await service.saveAccount(managerClaims, specialist.accountId, { displayName: 'Fixture specialist', accessLevel: 'specialist', fieldCode: 'DT', permissions: ['work:academic-leave:leave'], revision: changed.revision, password: replacement });
     for (const channel of ['admin', 'staff']) {
       await assert.rejects(() => auth.loginWithPassword(channel, { username: specialistName, password }), e => e.statusCode === 401);
       assert.deepEqual((await auth.loginWithPassword(channel, { username: specialistName, password: replacement })).data.user.tags.taskIds, [3]);
@@ -107,6 +107,7 @@ test('local provisioning, linked audiences, read-only monitoring and session rev
       DECLARE @fixtures TABLE(Id uniqueidentifier,StaffId nvarchar(40));
       INSERT @fixtures SELECT a.Id,p.StaffAccountId FROM auth.LocalAccounts a LEFT JOIN auth.AccountProfiles p ON p.AccountId=a.Id WHERE a.Username IN(?,?,?);
       DELETE auth.AccountSecurityEvents WHERE ActorId IN(SELECT Id FROM @fixtures) OR TargetId IN(SELECT Id FROM @fixtures);
+      DELETE auth.AccountPermissions WHERE AccountId IN(SELECT Id FROM @fixtures);DELETE auth.AccountRoles WHERE AccountId IN(SELECT Id FROM @fixtures);
       DELETE auth.AccountTasks WHERE AccountId IN(SELECT Id FROM @fixtures);
       DELETE auth.AccountProfiles WHERE AccountId IN(SELECT Id FROM @fixtures);
       DELETE svc_demo.LichSuRBAC WHERE MaTaiKhoan IN(SELECT StaffId FROM @fixtures);

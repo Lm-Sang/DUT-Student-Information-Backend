@@ -16,6 +16,7 @@ const studentId='sv:'+randomUUID(),staffId='cv:'+randomUUID(),accountId=randomUU
 const studentCode=String(Math.floor(Math.random()*900_000_000)+100_000_000);
 const write=(sql,params=[])=>query(localDatabaseGuardSql+sql,params);
 try{
+ const grants=(await query("SELECT PermissionName FROM auth.PermissionDefinitions WHERE TaskId=4 AND FieldCode='DT' AND IsActive=1")).first;
  const source=await getLocalDataSource();assert.equal(source.entityMetadatas.length,localEntities.length);
  assert.equal(source.options.synchronize,false);assert.equal(source.options.migrationsRun,false);
 
@@ -28,6 +29,7 @@ try{
   await manager.getRepository(entitySchema('auth.LocalAccounts')).insert({Id:accountId,Username:'orm-fixture-'+accountId,DisplayName:'ORM fixture staff',PasswordHash:'fixture-only-no-login',Channel:'admin',IsActive:true});
   await manager.getRepository(entitySchema('auth.AccountProfiles')).insert({AccountId:accountId,StaffAccountId:staffId,AccessLevel:'specialist',FieldCode:'DT',Revision:1});
   await manager.getRepository(entitySchema('auth.AccountTasks')).insert({AccountId:accountId,TaskId:4,FieldCode:'DT'});
+  await manager.getRepository(entitySchema('auth.AccountPermissions')).insert(grants.map(p=>({AccountId:accountId,PermissionName:p.PermissionName})));
  });
  const repository=createRequestsRepository(),service=createRequestsService(repository);
  const student=await service.sessionActor(studentId),staff=await service.sessionActor(staffId),catalog=await service.catalogs();
@@ -86,7 +88,7 @@ try{
   DELETE svc_demo.DonDeNghi WHERE MaHS=?;
   DELETE svc_demo.LichSuRBAC WHERE MaNguoiThucHien=?;
   DELETE svc_demo.TaiKhoanVaiTro WHERE MaHS=?;
-  DELETE auth.AccountTasks WHERE AccountId='${accountId}';DELETE auth.AccountProfiles WHERE AccountId='${accountId}';DELETE auth.LocalAccounts WHERE Id='${accountId}';
+  DELETE auth.AccountPermissions WHERE AccountId='${accountId}';DELETE auth.AccountRoles WHERE AccountId='${accountId}';DELETE auth.AccountTasks WHERE AccountId='${accountId}';DELETE auth.AccountProfiles WHERE AccountId='${accountId}';DELETE auth.LocalAccounts WHERE Id='${accountId}';
   DELETE svc_demo.NhanThan WHERE MaHS=?;DELETE svc_demo.TaiKhoan WHERE MaHS IN(?,?);COMMIT;`,
   ['orm:'+studentId,'orm:'+studentId,studentId,studentId,studentId,studentId,staffId,studentId,studentId,studentId,studentId,studentId,staffId,staffId,studentId,studentId,staffId]);
  await disconnectLocalDatabase();

@@ -1,3 +1,4 @@
+import {assertWorkflowScope} from '../../auth/index.js';
 import { randomUUID } from "node:crypto";
 import { AppError } from "../../../shared/errors/app-error.js";
 import { validateItData } from "../dto/it-certifications.request.dto.js";
@@ -39,6 +40,8 @@ export function createItCertificationsService({
         application.ActorSource !== actor.source)
     )
       throw new AppError("Không được truy cập hồ sơ này.", 403);
+    const current=application.Submissions?.find(s=>s.Id?.toLowerCase()===application.CurrentSubmissionId?.toLowerCase())??application.Submissions?.[0];
+    assertWorkflowScope(actor,'it-certifications',current?.Certificate?.MaCC);
     return application;
   }
   return Object.freeze({

@@ -10,8 +10,10 @@ function fixture({profile=true,level='specialist'}={}) {
     queries.push(sql);
     if(sql.includes('PasswordHash AS passwordHash'))return {first:[{id:'11111111-1111-4111-8111-111111111111',username:'Auth User',displayName:'Auth user',passwordHash:'auth-hash',storedChannel:'admin',isActive:1,accountVersion:'0x0000000000000001'}]};
     if(sql.includes('AS accountId'))return {first:profile?[{accountId:'11111111-1111-4111-8111-111111111111',staffAccountId:'cv:workflow',accessLevel:level,fieldCode:'DT',active:1,fieldActive:1,revision:1}]:[]};
-    if(sql.includes('auth.TaskPermissions'))return {first:[{taskId:4,permission:'requests.view'},{taskId:4,permission:'work:STUDENT_CARD'}]};
-    if(sql.includes('auth.AccountTasks'))return {first:[{id:4,fieldCode:'DT',active:1}]};
+    if(sql.includes('auth.AccountRoles'))return {first:[]};
+    if(sql.includes('auth.PermissionDefinitions')&&!sql.includes('vEffectivePermissions'))return {first:[{id:4}]};
+    if(sql.includes('vEffectivePermissions'))return {first:[{taskId:4,permission:'requests.view'},{taskId:4,permission:'work:STUDENT_CARD'}]};
+
     assert.fail('Unexpected repository query');
   };
   return {repository:createAuthRepository({query}),queries};
@@ -23,7 +25,7 @@ test('admin and staff channels read the same canonical auth credential with sepa
   assert.equal(staff.id,admin.id);assert.equal(staff.passwordHash,'auth-hash');
   assert.equal(admin.channel,'admin');assert.equal(staff.channel,'staff');assert.notEqual(admin.version,staff.version);
   assert.deepEqual(staff.permissions,['requests.view','work:STUDENT_CARD']);assert.equal(staff.requestActorId,'cv:workflow');
-  assert(queries.every(sql=>!sql.includes('svc_demo')&&!sql.includes('AccountRoles')&&!sql.includes('AccountPermissions')));
+  assert(queries.every(sql=>!sql.includes('svc_demo')&&!sql.includes('VaiTroRBAC')));
 });
 
 test('missing auth profile never falls back to legacy roles and managers cannot log in as staff',async()=>{

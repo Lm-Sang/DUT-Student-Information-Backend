@@ -16,7 +16,7 @@ export const svc_demo_vQuyenHieuLuc=new EntitySchema({
     "MaQuyen": {
       "name": "MaQuyen",
       "type": "varchar",
-      "nullable": false,
+      "nullable": true,
       "length": 100
     }
   },

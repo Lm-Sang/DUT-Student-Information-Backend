@@ -1,3 +1,4 @@
+import {workflowScopeSql,workflowWriteGuardSql} from '../../auth/index.js';
 import { queryLocalDatabase,transactionLocalDatabase } from '../../../database.js';
 import { env } from '../../../config/env.js';
 import { AppError } from '../../../shared/errors/app-error.js';
@@ -5,7 +6,7 @@ import { AppError } from '../../../shared/errors/app-error.js';
 const fileTable = 'certification.tmCNTTChungChi_File';
 const certificateTable = 'certification.tmCNTTChungChi_SV';
 const summarySql = `SELECT g.ApplicationId AS Id,f.ActorReference,f.ActorSource,
- c.MaHS AS StudentCode,f.CertificateId,f.StudentSnapshotJson,
+ c.MaHS AS StudentCode,COALESCE((SELECT MaCC FROM certification.tmCNTTChungChi_SV WHERE ID=done.CertificateId),c.MaCC) AS CertificateCode,f.CertificateId,f.StudentSnapshotJson,
  CASE WHEN done.Id IS NULL THEN 'uploading' ELSE COALESCE(JSON_VALUE(done.ReviewJson,'$.Decision'),'submitted') END AS Status,
  done.SubmissionId AS CurrentSubmissionId,done.CompletedAt AS SubmittedAt,
  JSON_VALUE(done.ReviewJson,'$.ReviewedAt') AS ReviewedAt,g.CreatedAt,g.UpdatedAt,
@@ -33,6 +34,7 @@ const lockApplication = `DECLARE @application uniqueidentifier=TRY_CONVERT(uniqu
  IF JSON_VALUE(@input,'$.actor.role')='student' AND NOT EXISTS(SELECT 1 FROM ${fileTable} WHERE ApplicationId=@application
    AND ActorReference=JSON_VALUE(@input,'$.actor.reference') AND ActorSource=JSON_VALUE(@input,'$.actor.source'))
    THROW 51803,'ITCERT_FORBIDDEN',1;`;
+const workflowGuard=workflowWriteGuardSql('it-certifications',"(SELECT CertificateCode FROM ("+summarySql+") activeApplication WHERE Id=@application)",51803);
 const editable = "IF @status NOT IN('uploading','needs_changes') THROW 51809,'ITCERT_CONFLICT',1;";
 const sameToken = "IF @token<>JSON_VALUE(@input,'$.expected') OR JSON_VALUE(@input,'$.expected') IS NULL THROW 51809,'ITCERT_CONFLICT',1;";
 const nativeFields = ['MaHS','MaCC','SoHieu','SoVaoSo','SoNgayQD','GhiChu','CoSoCapCC','NgayCC','MaHS_SoVaoSo'];
@@ -80,6 +82,7 @@ export function createItCertificationsRepository({query=queryLocalDatabase,trans
       if (/invalid object name.*tmCNTTChungChi/i.test(message))
         throw new AppError('DB chứng chỉ tin học chưa được khởi tạo.',503,{code:'ITCERT_SCHEMA_REQUIRED'});
       const mapped = [
+        ['WORK_SCOPE_FORBIDDEN',403,'Bạn chưa được phân công loại chứng chỉ này.'],
         ['ITCERT_NOT_FOUND',404,'Không tìm thấy hồ sơ tin học.'],
         ['ITCERT_FORBIDDEN',403,'Không có quyền truy cập hồ sơ.'],
         ['ITCERT_CATALOG',400,'Mã chứng chỉ không có trong danh mục tin học.'],
@@ -108,16 +111,16 @@ export function createItCertificationsRepository({query=queryLocalDatabase,trans
     // Also exposes imported original records that have no uploaded file yet.
     records({actor,page,pageSize}) {
       return run(`SELECT(SELECT (SELECT COUNT(*) FROM ${certificateTable} c
-          WHERE JSON_VALUE(@input,'$.actor.role')='reviewer' OR c.MaHS=JSON_VALUE(@input,'$.actor.studentCode')) AS totalRecords,
+          WHERE ${workflowScopeSql('it-certifications','c.MaCC')} AND (JSON_VALUE(@input,'$.actor.role')='reviewer' OR c.MaHS=JSON_VALUE(@input,'$.actor.studentCode'))) AS totalRecords,
         JSON_QUERY(COALESCE((SELECT c.*,JSON_QUERY((SELECT TOP(1) f.StudentSnapshotJson FROM ${fileTable} f
           WHERE f.CertificateId=c.ID ORDER BY f.Sequence DESC,f.UpdatedAt DESC,f.Id)) AS StudentSnapshot FROM ${certificateTable} c
-          WHERE JSON_VALUE(@input,'$.actor.role')='reviewer' OR c.MaHS=JSON_VALUE(@input,'$.actor.studentCode')
+          WHERE ${workflowScopeSql('it-certifications','c.MaCC')} AND (JSON_VALUE(@input,'$.actor.role')='reviewer' OR c.MaHS=JSON_VALUE(@input,'$.actor.studentCode'))
           ORDER BY c.ID OFFSET (TRY_CONVERT(int,JSON_VALUE(@input,'$.page'))-1)*TRY_CONVERT(int,JSON_VALUE(@input,'$.pageSize')) ROWS
           FETCH NEXT TRY_CONVERT(int,JSON_VALUE(@input,'$.pageSize')) ROWS ONLY
           FOR JSON PATH,INCLUDE_NULL_VALUES),'[]')) AS items FOR JSON PATH,WITHOUT_ARRAY_WRAPPER) AS Json;`,{actor,page,pageSize});
     },
     list(input) {
-      const filter = `(JSON_VALUE(@input,'$.actor.role')<>'student' OR
+      const filter = `${workflowScopeSql('it-certifications','a.CertificateCode')} AND (JSON_VALUE(@input,'$.actor.role')<>'student' OR
         (a.ActorReference=JSON_VALUE(@input,'$.actor.reference') AND a.ActorSource=JSON_VALUE(@input,'$.actor.source')))
         AND(JSON_VALUE(@input,'$.status') IS NULL OR a.Status=JSON_VALUE(@input,'$.status'))`;
       return run(`SELECT(SELECT TRY_CONVERT(int,JSON_VALUE(@input,'$.page')) AS page,
@@ -162,7 +165,7 @@ export function createItCertificationsRepository({query=queryLocalDatabase,trans
           FROM OPENJSON(@input,'$.files') f;`);
     },
     claimSubmission(input) {
-      return mutate(input,`${lockApplication}${editable}${sameToken}
+      return mutate(input,`${lockApplication}${workflowGuard}${editable}${sameToken}
         IF EXISTS(SELECT 1 FROM ${fileTable} WHERE SubmissionId=TRY_CONVERT(uniqueidentifier,JSON_VALUE(@input,'$.submissionId')) AND ExpiresAt<=@now)
           THROW 51810,'ITCERT_EXPIRED',1;
         IF EXISTS(SELECT 1 FROM ${fileTable} WHERE SubmissionId=TRY_CONVERT(uniqueidentifier,JSON_VALUE(@input,'$.submissionId')) AND Status<>'pending')
@@ -172,7 +175,7 @@ export function createItCertificationsRepository({query=queryLocalDatabase,trans
         IF @@ROWCOUNT=0 THROW 51809,'ITCERT_CONFLICT',1;`);
     },
     finishSubmission(input) {
-      return mutate(input,`${lockApplication}${editable}${sameToken}
+      return mutate(input,`${lockApplication}${workflowGuard}${editable}${sameToken}
         DECLARE @submission uniqueidentifier=TRY_CONVERT(uniqueidentifier,JSON_VALUE(@input,'$.submissionId'));
         IF NOT EXISTS(SELECT 1 FROM ${fileTable} WHERE SubmissionId=@submission AND ApplicationId=@application)
           OR EXISTS(SELECT 1 FROM ${fileTable} WHERE SubmissionId=@submission AND
@@ -188,13 +191,13 @@ export function createItCertificationsRepository({query=queryLocalDatabase,trans
         IF @@ROWCOUNT<>(SELECT COUNT(*) FROM OPENJSON(@input,'$.files')) THROW 51809,'ITCERT_CONFLICT',1;`);
     },
     releaseSubmission(input) {
-      return mutate(input,`${lockApplication}
+      return mutate(input,`${lockApplication}${workflowGuard}
         UPDATE ${fileTable} SET Status='pending',ClaimToken=NULL,UpdatedAt=@now
         WHERE SubmissionId=TRY_CONVERT(uniqueidentifier,JSON_VALUE(@input,'$.submissionId')) AND ApplicationId=@application AND Status='checking'
           AND ClaimToken=TRY_CONVERT(uniqueidentifier,JSON_VALUE(@input,'$.claimToken'));`);
     },
     review(input) {
-      return mutate(input,`${lockApplication}${sameToken}
+      return mutate(input,`${lockApplication}${workflowGuard}${sameToken}
         IF NOT((@status='submitted' AND JSON_VALUE(@input,'$.decision') IN('processing','rejected','needs_changes'))
           OR (@status='processing' AND JSON_VALUE(@input,'$.decision') IN('verified','rejected')))
           THROW 51809,'ITCERT_CONFLICT',1;
