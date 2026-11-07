@@ -12,6 +12,13 @@ const actor = { id:'sv-a', role:'STUDENT' };
 const row = { Id:'test',TypeCode:type.code,StudentId:actor.id,StudentNumber:'0001',Department:'CTSV',Status:'SUBMITTED',Version:1,
   Number:1,CreatedAt:'2026-11-03T00:00:00Z',Payload:{reasonCode:'CHANGE_INFO',changeDescription:'Sửa tên'} };
 
+test('frontend catalog exposes the transcript period for documents loaded directly from SQL',async()=>{
+  const service=createRequestsService({catalogs:async()=>({types:[],settings:[{SettingKey:'currentTerm',SettingValue:'2610'}],
+    terms:[{code:'2610',sortOrder:1}],programs:[],documents:[{code:'04',termCode:'2610'},{code:'05',termCode:'2610'},{code:'01',termCode:'2610'}]})});
+  const catalog=await service.catalogs();
+  assert.deepEqual(catalog.documents.map(doc=>[doc.code,doc.period]),[['04','TERM'],['05','YEAR'],['01','NONE']]);
+});
+
 test('catalog repository returns typed DB metadata and ordered form fields',async()=>{
   const sql=[];
   const repo=createRequestCatalogRepository({guard:()=>{},query:async statement=>{

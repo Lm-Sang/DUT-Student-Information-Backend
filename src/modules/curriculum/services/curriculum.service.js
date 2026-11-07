@@ -3,25 +3,26 @@ import { AppError } from '../../../shared/errors/app-error.js';
 import { createCurriculumResponseDto } from '../dto/curriculum.response.dto.js';
 import { toAcademicProgramDto, toCurriculumCourseDto, toCourseRequirementDto } from '../mappers/curriculum.mapper.js';
 
-async function readSource(operation) {
+async function readSource(operation, message='Public curriculum data is temporarily unavailable.') {
   try {
     return await operation();
   } catch {
     // SQL errors can include hostnames, account names and connection details.
-    throw new AppError('Public curriculum data is temporarily unavailable.', 503);
+    throw new AppError(message, 503);
   }
 }
 
 export function createCurriculumService(repository) {
   return {
+    listFaculties: () => readSource(() => repository.listFaculties()),
     async listPrograms(filters) {
       const programs = await readSource(() => repository.listPrograms(filters));
       return programs.map(toAcademicProgramDto);
     },
 
-    async getCurriculum(programId) {
-      const source = await readSource(() => repository.getCurriculum(programId));
-      if (!source) throw new AppError('Public academic program not found.', 404);
+    async getCurriculum(programId, {publicOnly=true}={}) {
+      const source = await readSource(() => repository.getCurriculum(programId,{publicOnly}),publicOnly?undefined:'Chưa đọc được khung chương trình từ dữ liệu trường. Vui lòng thử lại.');
+      if (!source) throw new AppError(publicOnly?'Public academic program not found.':'Chưa có khung chương trình của ngành hiện hành trong dữ liệu trường.', 404);
       const program = toAcademicProgramDto(source.program);
       const courses = source.courses.map(toCurriculumCourseDto);
       const requirements = source.requirements.map(toCourseRequirementDto);

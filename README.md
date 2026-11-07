@@ -63,12 +63,13 @@ Chay bo kiem thu API bang `npm test`.
 ## Cau hinh moi truong
 
 Sao chep `.env.example` thanh `.env` va dien cac gia tri bi mat. Backend chay
-tai cong `3003`. Hai web co origin rieng:
+tai cong `3003`. File `.env.example` dùng chung FE React tại cổng `5173` cho ba kênh tài khoản; có thể cấu hình origin riêng khi triển khai:
 
 | Web | URL local | CORS env | JWT audience | SSO callback env |
 | --- | --- | --- | --- | --- |
 | Student | `http://localhost:5173` | `CORS_STUDENT_ORIGINS` | `JWT_STUDENT_AUDIENCE` | `MICROSOFT_SSO_STUDENT_CALLBACK_URL` |
-| Admin | `http://localhost:5174` | `CORS_ADMIN_ORIGINS` | `JWT_ADMIN_AUDIENCE` | `MICROSOFT_SSO_ADMIN_CALLBACK_URL` |
+| Staff (đơn/xác nhận/LMS) | `http://localhost:5173` | `STAFF_FRONTEND_URL` | `JWT_STAFF_AUDIENCE` | Không dùng SSO |
+| Admin local (chứng chỉ/ngừng học) | `http://localhost:5173` | `CORS_ADMIN_ORIGINS` | `JWT_ADMIN_AUDIENCE` | Không dùng SSO để cấp quyền admin |
 
 Moi bien CORS nhan danh sach origin phan cach bang dau phay. Can dien URL that
 cua hai web khi deploy. CORS chi gioi han request tu trinh duyet; API admin van
@@ -115,12 +116,13 @@ Microsoft SSO trong `D:\res\course-registration` su dung cong SSO cua truong
 Entra ID. Hai bien callback phia tren la redirect URL gui den cong SSO, can
 duoc cong SSO chap nhan. Repo tham khao khong cung cap tenant ID, client ID hay
 SSO signing secret that. `MICROSOFT_SSO_JWT_SECRET` can duoc cap rieng truoc khi
-co the xac thuc token SSO. Da dung khung login/callback/me/logout cho sinh vien;
-state dung mot lan, logout thu hoi JWT ngay qua kho SQLite. Callback frontend
-de trong (`STUDENT_SSO_FRONTEND_CALLBACK_URL=`) cho doi frontend ghep sau;
-API doi code mot lan thanh JWT da san sang. Phan quyen de `pending`
-cho ban bo sung sau. Auth admin tach rieng tai `src/modules/auth/admin/` va tat
-mac dinh (`ENABLE_ADMIN_AUTH=false`). Xem [khung SSO va note phan quyen](docs/SSO_SCAFFOLD.md).
+co the xac thuc token SSO. FE React đã nối login, callback, refresh và logout;
+`STUDENT_SSO_FRONTEND_CALLBACK_URL=http://localhost:5173/auth/callback` trong cấu hình mẫu.
+Code handoff dùng một lần, refresh token ở cookie HttpOnly, access token giữ trong memory FE.
+Sinh viên dùng kênh SSO student; chuyên viên đơn dùng kênh staff và RBAC SQL;
+reviewer chứng chỉ/ngừng học dùng tài khoản local admin có permission tương ứng.
+Auth admin tách riêng và tắt mặc định (`ENABLE_ADMIN_AUTH=false`); bật khi dùng reviewer.
+Xem [hợp đồng auth hiện hành](docs/AUTHENTICATION.md). Các ghi chú `pending`/chưa nối FE trong tài liệu scaffold cũ là thông tin lịch sử.
 
 ## Cau truc source
 

@@ -36,3 +36,10 @@ test('school database failures stay retriable and do not leak raw SQL or connect
   const service=createSchoolStudentService({syncSchoolStudent:async()=>assert.fail('must not cache')},{readProfile:async()=>{throw Error('private SQL connection data');}});
   await assert.rejects(()=>service.signIn({identity}),e=>e.statusCode===503&&e.details.code==='STUDENT_PROFILE_UNAVAILABLE'&&!e.message.includes('private'));
 });
+
+test('local storage failure after a verified school lookup is a service dependency error, not an SSO failure',async()=>{
+  let available=false;
+  const service=createSchoolStudentService({syncSchoolStudent:async()=>{if(!available)throw Error('private ODBC connection details');return 'sso:qa';}},{readProfile:async()=>[{MaHS:'qa',SoTheSV:'000000001'}]});
+  await assert.rejects(()=>service.signIn({identity}),e=>e.statusCode===503&&e.details.code==='STUDENT_REQUESTS_STORAGE_UNAVAILABLE'&&e.details.dependency==='local-database'&&!e.message.includes('ODBC'));
+  available=true;assert.equal(await service.signIn({identity}),'sso:qa');
+});

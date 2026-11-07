@@ -13,6 +13,8 @@ của trường. Việc bật kết nối local không chuyển các API hiện 
 
 ## Cấu hình local
 
+Khi DBeaver kết nối được nhưng BE trả `ELOGIN`, đối chiếu **SQL host của tunnel** trước khi thay mật khẩu. `SSH_HOST` là máy nhảy; `DB_HOST` là đích SQL mà máy nhảy truy cập. Nếu DBeaver dùng SQL host riêng nhưng `.env` đặt `DB_HOST=127.0.0.1`, BE sẽ đăng nhập vào SQL trên chính máy SSH và có thể nhận `Login failed` từ một instance khác. Trong DBeaver, so sánh Host ở tab chính và Host ở tab SSH; không dùng cổng tunnel tạm trên máy cá nhân làm cổng SQL từ máy SSH. Sau khi đổi `.env`, khởi động lại BE hoặc để Node watch khởi động lại khi source thay đổi.
+
 Máy Windows cần Node.js >=24, SQL Server và ODBC driver đã cài. Project khai báo
 `msnodesqlv8` là dependency tùy chọn để các máy chỉ dùng DB trường vẫn có thể
 chạy. Nếu chưa có native driver, chạy `npm install --include=optional`.

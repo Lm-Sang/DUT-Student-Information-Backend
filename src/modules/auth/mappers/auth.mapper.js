@@ -13,7 +13,7 @@ export function toSsoIdentityDto(claims) {
   return {
     id: textClaim(claims.sub) ?? microsoftId.toLowerCase(),
     microsoftId: microsoftId.toLowerCase(),
-    displayName: textClaim(claims.name),
+    displayName: textClaim(claims.fullName) ?? textClaim(claims.name),
     email: textClaim(claims.email),
     provider: 'microsoft-sso',
   };

@@ -10,3 +10,6 @@ export function createCurriculumModule({ repository = createCurriculumRepository
 }
 
 export default createCurriculumModule();
+export function createCurriculumReader(options) {
+  return createCurriculumService(createCurriculumRepository(options));
+}

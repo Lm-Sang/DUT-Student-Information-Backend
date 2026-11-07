@@ -27,6 +27,6 @@ export function createSchoolAcademicsReader({connect=connectDatabase}={}){
   if(identities.length!==1||String(identities[0].MaHS).trim()!==String(MaHS).trim()||String(identities[0].SoTheSV).trim()!==String(SoTheSV).trim())throw new AppError('Hồ sơ học vụ không khớp mã hồ sơ và MSSV đã xác minh.',409,{code:'STUDENT_PROFILE_MISMATCH'});
   // MaNganh in the current academic registry changes after registration/transfer.
   // Never fall back to DATA_GVien1's admission program or a second-program code.
-  return {...mapSchoolAcademics({summary,terms,catalog}),ProgramName:String(identities[0].ProgramName??'').trim()};
+  return {...mapSchoolAcademics({summary,terms,catalog}),ProgramName:String(identities[0].ProgramName??'').trim(),ProgramCode:String(identities[0].MaNganh??'').trim()};
  };
 }

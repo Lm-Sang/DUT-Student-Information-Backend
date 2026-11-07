@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from 'node:crypto';
+import { createStudentGradesReader } from '../repositories/student-grades.repository.js';
 import { AppError } from '../../../shared/errors/app-error.js';
 import { supplementFields, parsePayload } from '../dto/requests.dto.js';
-import { documentSnapshot, schoolYears } from '../domain/document-rules.js';
+import { documentSnapshot, documentPeriod, schoolYears } from '../domain/document-rules.js';
 import { canRead, statuses, transition, typeOf, visibleTerms, isPaperRequest } from '../domain/request-rules.js';
 import { createRequestCatalogRepository } from '../repositories/catalog.repository.js';
 import { actorDto, eventDto, requestDto } from '../mappers/requests.mapper.js';
@@ -11,7 +12,7 @@ import { cancellationReasons, cancellationFeedback } from '../domain/staff-workf
 
 function hash(value) { return createHash('sha256').update(JSON.stringify(value)).digest('hex'); }
 
-export function createRequestsService(repository, { paperFiles = createPaperFilesService(repository), confirmationFiles = createConfirmationFilesService(repository), now = () => new Date(), loadProfile=id=>repository.profile(id), loadTypes = () => createRequestCatalogRepository().list({ includeInactive: true }) } = {}) {
+export function createRequestsService(repository, { paperFiles = createPaperFilesService(repository), confirmationFiles = createConfirmationFilesService(repository), now = () => new Date(), loadProfile=id=>repository.profile(id), loadGrades = createStudentGradesReader(), loadTypes = () => createRequestCatalogRepository().list({ includeInactive: true }) } = {}) {
   async function allTypes(data) { return data?.types ?? await loadTypes(); }
   async function typeFor(code, data) { return typeOf(code, await allTypes(data)); }
   async function get(actor, id) {
@@ -26,7 +27,8 @@ export function createRequestsService(repository, { paperFiles = createPaperFile
     if (!current) throw new AppError('Chưa khởi tạo danh mục. Chạy npm.cmd run db:demo:setup.', 503);
     const terms = visibleTerms(data.terms, current.SettingValue);
     return { types: (await allTypes(data)).filter(type => type.active !== false), statuses, cancellationReasons, terms, years: schoolYears(terms), programs: data.programs,
-      documents: (data.documents ?? []).filter(doc => doc.termCode === current.SettingValue),
+      documents: (data.documents ?? []).filter(doc => doc.termCode === current.SettingValue)
+        .map(doc => ({ ...doc, period: documentPeriod(doc.code) })),
       supportSystems: (data.supportSystems ?? []).filter(system => system.code === '3'), currentTerm: current.SettingValue,
       nextTerm: terms.find(t => t.isNext)?.code ?? null, observedAt: current.ObservedAt,
       source: source?.SettingValue ?? 'local demo', isSimulation: true,
@@ -62,6 +64,10 @@ export function createRequestsService(repository, { paperFiles = createPaperFile
     // The actor resolver has just synced new SSO links. Avoid immediately doing
     // the same school read again; PDF/create paths retain forced refreshes.
     profile: async actor => actor.role === 'STUDENT' ? loadProfile(actor.id,{maxAgeMs:30_000}) : null,
+    async grades(actor) {
+      if (actor.role !== 'STUDENT' || actor.identitySource !== 'SSO') throw new AppError('Cần phiên sinh viên SSO để xem bảng điểm.', 403);
+      return loadGrades(actor.studentNumber);
+    },
     download: (actor, id) => paperFiles.download(actor, id),
     printConfirmation: (actor, id, input) => confirmationFiles.print(actor, id, input),
     list: async actor => {

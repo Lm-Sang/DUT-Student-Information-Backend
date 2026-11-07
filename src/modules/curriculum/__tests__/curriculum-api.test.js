@@ -21,6 +21,7 @@ const course = {
 async function fixture(t, overrides = {}) {
   const calls = [];
   const repository = {
+    listFaculties: async () => [{id:'102',name:'Công nghệ Thông tin'}],
     listPrograms: async (filters) => { calls.push(filters); return [program]; },
     getCurriculum: async (id) => {
       calls.push(id);
@@ -38,6 +39,13 @@ async function fixture(t, overrides = {}) {
   });
   return { base: `http://127.0.0.1:${server.address().port}/api/public`, calls };
 }
+
+test('curriculum faculties are read from the school source independently of registration upstream', async t => {
+  const {base} = await fixture(t);
+  const response = await fetch(base + '/curriculum-faculties');
+  assert.equal(response.status, 200);
+  assert.deepEqual((await response.json()).data, [{id:'102',name:'Công nghệ Thông tin'}]);
+});
 
 test('public program list accepts no authentication and preserves required credits and null dates', async (t) => {
   const { base, calls } = await fixture(t);
@@ -150,6 +158,18 @@ function poolFixture(handler, calls) {
     },
   };
 }
+
+test('only the internal registered-program read can omit the public visibility filter', async () => {
+  const calls=[];
+  const repository=createCurriculumRepository({
+    connect:async(account,database)=>database==='DATA_SV2'?poolFixture(()=>({recordset:[]}),[]):account==='primary'?poolFixture(statement=>({recordsets:/n\.PubWeb = 1/.test(statement)?[[],[]]:[[program],[course]]}),calls):poolFixture(()=>({recordset:[]}),[]),
+  });
+  assert.equal(await repository.getCurriculum('1024045'),null);
+  assert.equal((await repository.getCurriculum('1024045',{publicOnly:false})).courses.length,1);
+  assert.match(calls[0].statement,/n\.PubWeb = 1 AND n\.InUse = 1/);
+  assert(!/n\.PubWeb = 1/.test(calls[1].statement));
+  assert.deepEqual(calls[1].inputs,{programId:'1024045'});
+});
 
 test('SQL repository enforces public scope and supplements metadata without replacing curriculum rows', async () => {
   const primaryCalls = [];

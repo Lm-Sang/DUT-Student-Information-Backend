@@ -5,6 +5,7 @@ export function createRequestsController(service) {
     actors: async (_req, res) => res.json({ data: await service.actors() }),
     catalogs: async (_req, res) => res.json({ data: await service.catalogs() }),
     me: (req, res) => res.json({ data: req.demoActor }),
+    grades: async (req, res) => res.json({ data: await service.grades(req.demoActor) }),
     profile: async (req, res) => { const profile = await service.profile(req.demoActor); if (profile) delete profile.photoBase64; res.json({ data: profile }); },
     download: async (req, res) => {
       const file = await service.download(req.demoActor, parseId(req.params.id));

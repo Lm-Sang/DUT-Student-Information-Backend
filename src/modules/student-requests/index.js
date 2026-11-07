@@ -1,4 +1,8 @@
 import {createStudentProfileService} from './services/student-profile.service.js';
+// Read-only school adapters shared with the student portal; no local cache write is required.
+export { createSchoolStudentReader } from './repositories/school-student.repository.js';
+export { createStudentGradesReader } from './repositories/student-grades.repository.js';
+export { studentNumberFromIdentity } from './domain/student-identity.js';
 import {createPaperFilesService} from './services/paper-files.service.js';
 import {createConfirmationFilesService} from './services/confirmation-files.service.js';
 import {createRbacRepository} from './repositories/rbac.repository.js';

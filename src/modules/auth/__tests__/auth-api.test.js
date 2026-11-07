@@ -10,6 +10,7 @@ import { createAuthController } from '../controllers/auth.controller.js';
 import { createAuthRouter } from '../routes/auth.routes.js';
 import { verifyPassword, hashPassword } from '../services/password.service.js';
 import { errorHandler } from '../../../shared/middlewares/error-handler.middleware.js';
+import {createSchoolStudentService} from '../../student-requests/services/school-student.service.js';
 
 const secret = 'test-only-shared-sso-key-at-least-32-bytes';
 const password = 'fixture-password-long-enough';
@@ -29,6 +30,23 @@ function fixture() {
   return {config,account,store,service,advance:ms=>clock+=ms};
 }
 const ssoToken=()=>jwt.sign({unique_name:'123456789@sv.dut.udn.vn',name:'Student'},secret,{algorithm:'HS256',issuer:'test-sso',audience:'test-sso-client',subject:'student-1',expiresIn:3600});
+
+test('student SSO identity and me stay available when school SQL cannot load service records',async()=>{
+ const f=fixture(),app=express();
+ app.use('/api/student/auth',createAuthRouter('student',createAuthController('student',f.service,{frontendOrigin:'http://localhost:5173'}),f.service));app.use(errorHandler);
+ const server=createServer(app);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const upstream=jwt.sign({unique_name:'000000001@sv1.dut.udn.vn',name:'000000001@sv1.dut.udn.vn',fullName:'Sinh viên đã xác thực'},secret,{algorithm:'HS256',subject:'student-1',expiresIn:3600});
+  const pending=await f.service.exchangeToken('student',upstream),handoff=f.service.createHandoff('student',pending);
+  const session=f.service.redeemHandoff('student',handoff.code,handoff.binding);
+  const claims=await f.service.verifyToken(session.data.accessToken,'student');
+  assert.equal(claims.identity.displayName,'Sinh viên đã xác thực');
+  const school=createSchoolStudentService({syncSchoolStudent:async()=>assert.fail('No cache writes after a school failure')},{readProfile:async()=>{throw Error('SQL credentials and internal connection details');}});
+  await assert.rejects(()=>school.signIn(claims),e=>e.statusCode===503&&e.details.code==='STUDENT_PROFILE_UNAVAILABLE'&&e.details.dependency==='school-database'&&!e.message.includes('credentials'));
+  const response=await fetch(`http://127.0.0.1:${server.address().port}/api/student/auth/me`,{headers:{Authorization:'Bearer '+session.data.accessToken}});
+  assert.equal(response.status,200);const body=await response.json();assert.equal(body.data.authMethod,'sso');assert.equal(body.data.user.displayName,'Sinh viên đã xác thực');
+ }finally{await new Promise(resolve=>{server.close(resolve);server.closeAllConnections();});f.store.close();}
+});
 
 test('legacy SSO needs only a valid signature and expiry; issuer/audience configuration is not required',async()=>{
  const f=fixture();delete f.config.microsoftSso.jwtIssuer;delete f.config.microsoftSso.jwtAudience;

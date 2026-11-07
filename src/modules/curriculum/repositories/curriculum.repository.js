@@ -90,6 +90,14 @@ export function createCurriculumRepository({
   }
 
   return {
+    async listFaculties() {
+      const { primary } = await getConnections();
+      const result = await primary.request().query(`
+        SELECT DISTINCT LEFT(n.MaNganh,3) AS id,d.TenDV AS name FROM dbo.tmNganh n
+        LEFT JOIN dbo.DonVi d ON d.MaDV=LEFT(n.MaNganh,3)
+        WHERE n.PubWeb=1 AND n.InUse=1 AND n.CapDT='CD01' ORDER BY id;`);
+      return result.recordset.map(row => ({ id: trim(row.id), name: trim(row.name) || trim(row.id) }));
+    },
     async listPrograms({ facultyId, educationLevelCode }) {
       const { primary, secondary } = await getConnections();
       const result = await primary.request()
@@ -102,12 +110,13 @@ export function createCurriculumRepository({
       return supplementPrograms(secondary, result.recordset);
     },
 
-    async getCurriculum(programId) {
+    async getCurriculum(programId, {publicOnly=true}={}) {
       const { primary, secondary } = await getConnections();
+      const visibility=publicOnly?' AND n.PubWeb = 1 AND n.InUse = 1':'';
       // The primary source defines which programs and curriculum rows are public.
       const result = await primary.request().input('programId', sql.NVarChar(7), programId).query(`
         ${programSelect}
-        WHERE n.MaNganh = @programId AND n.PubWeb = 1 AND n.InUse = 1;
+        WHERE n.MaNganh = @programId${visibility};
 
         SELECT ct.ID, ct.MaHP, ct.MaHPTT, ct.Hocky, ct.Kyhoc, ct.STT,
                ct.Tuchon, ct.HTDA, ct.TQDA, ct.DATN, ct.Note, ct.LoaiKT, ct.NhomKT,
@@ -115,7 +124,7 @@ export function createCurriculumRepository({
         FROM dbo.tmKhungCT ct
         JOIN dbo.tmNganh n ON n.MaNganh = ct.MaKhung
         LEFT JOIN dbo.tmHocPhan hp ON hp.MaHP = ct.MaHP
-        WHERE ct.MaKhung = @programId AND n.PubWeb = 1 AND n.InUse = 1
+        WHERE ct.MaKhung = @programId${visibility}
         ORDER BY ct.Hocky, ct.STT, ct.ID;
       `);
       const [programs, courses] = result.recordsets;

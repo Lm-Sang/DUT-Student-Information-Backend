@@ -4,6 +4,10 @@ import { parseProgramsListQuery, parseCurriculumDetailRequest } from '../dto/cur
 
 export function createCurriculumController(service) {
   return {
+    listFaculties: asyncHandler(async (_req, res) => {
+      res.setHeader('Cache-Control', 'no-store');
+      return sendSuccess(res, await service.listFaculties());
+    }),
     listPrograms: asyncHandler(async (req, res) => {
       const query = parseProgramsListQuery(req.query);
       const data = await service.listPrograms(query);

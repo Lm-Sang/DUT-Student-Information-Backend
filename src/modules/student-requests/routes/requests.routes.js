@@ -65,6 +65,7 @@ export function createRequestsRouter(controller, service, { admin, workbook, sch
   }
   router.get('/me', controller.me);
   router.get('/profile', controller.profile);
+  router.get('/grades', controller.grades);
   router.get('/catalogs', controller.catalogs);
   if(admin){
     router.get('/admin/staff',async(req,res)=>res.json({data:await admin.overview(req.demoActor)}));

@@ -12,13 +12,17 @@ export function createSchoolStudentService(repository,{connect,readProfile=creat
     while(map.size>maxEntries)map.delete(map.keys().next().value);
   }
   async function sync(profile){
-    const id=await repository.syncSchoolStudent(profile);
+    let id;
+    try{id=await repository.syncSchoolStudent(profile);}catch(error){
+      if(error instanceof AppError)throw error;
+      throw new AppError('Tài khoản Microsoft đã được xác thực, nhưng kho hồ sơ dịch vụ chưa sẵn sàng. Vui lòng thử lại sau.',503,{code:'STUDENT_REQUESTS_STORAGE_UNAVAILABLE',dependency:'local-database',retryable:true});
+    }
     remember(recentSync,id,{at:now(),schoolId:String(profile.MaHS).trim(),number:String(profile.SoTheSV).trim()});
     return id;
   }
   async function load(studentNumber){
     let rows;
-    try{rows=await readProfile(studentNumber);}catch(error){if(error instanceof AppError)throw error;throw new AppError('Chưa đọc được hồ sơ sinh viên từ hệ thống trường. Vui lòng thử liên kết lại.',503,{code:'STUDENT_PROFILE_UNAVAILABLE'});}
+    try{rows=await readProfile(studentNumber);}catch(error){if(error instanceof AppError)throw error;throw new AppError('Đã xác thực tài khoản Microsoft, nhưng dịch vụ hồ sơ chưa kết nối được dữ liệu của trường. Vui lòng thử lại sau.',503,{code:'STUDENT_PROFILE_UNAVAILABLE',dependency:'school-database',retryable:true});}
     if(!rows.length)throw new AppError('Đã xác minh SSO nhưng chưa tìm thấy hồ sơ theo MSSV trong dữ liệu trường. Vui lòng liên hệ bộ phận quản lý hồ sơ.',403,{code:'STUDENT_PROFILE_NOT_FOUND'});
     if(rows.length!==1)throw new AppError('Có nhiều hồ sơ cùng MSSV. Cần kiểm tra dữ liệu trước khi mở hồ sơ sinh viên.',403,{code:'STUDENT_PROFILE_AMBIGUOUS'});
     if(!rows[0].MaHS||String(rows[0].SoTheSV).trim()!==studentNumber)throw new AppError('Hồ sơ trả về không khớp MSSV đã xác minh từ SSO.',403,{code:'STUDENT_PROFILE_MISMATCH'});
