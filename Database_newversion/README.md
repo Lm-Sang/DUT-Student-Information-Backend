@@ -1,29 +1,55 @@
-# Database_newversion
+# Database_newversion — 07/11/2026
 
-Bản xuất SQL Server local để thành viên khác dựng môi trường backend. `01-schema.sql` giữ cấu trúc DB thực tế; `02-catalogs.sql` chứa danh mục cấu hình, không chứa tài khoản, hồ sơ sinh viên hoặc URL minh chứng. Không chứa login SQL Server hay mật khẩu kết nối.
+Bản mới nhất xuất từ DB ứng dụng local Studentpage_Integration_20261103, dùng với
+nhánh feat/granular-rbac-native-ui. Máy thành viên có thể dựng dưới tên sv_dut.
+Schema có 56 bảng, 4 view; giữ index, constraint, collation, procedure và dấu phiên
+bản migration. Danh mục có 50 quyền riêng, 4 role, 11 xác nhận, LMS, 19 chứng chỉ
+ngoại ngữ, 47 cơ sở cấp, danh mục chương trình/học kỳ và cấu hình cần thiết.
 
-## Dựng DB mới
+## Dựng DB sạch
 
-Cần SQL Server 2019 trở lên, `sqlcmd`, quyền tạo database. Chạy từ thư mục gốc repo, trên database mới và rỗng; lệnh không ghi đè DB hiện có:
+Cần SQL Server 2019 trở lên và sqlcmd. Chỉ chạy trên DB mới/rỗng ở local.
+Không chạy script lên DB đang có dữ liệu hoặc DB trường.
 
 ```powershell
-sqlcmd -S localhost,1433 -E -C -b -Q "CREATE DATABASE [sv_dut];"
+sqlcmd -S localhost,1433 -E -C -b -Q "IF DB_ID(N'sv_dut') IS NOT NULL THROW 51000,'Database already exists',1; CREATE DATABASE [sv_dut] COLLATE SQL_Latin1_General_CP1_CI_AS;"
 sqlcmd -S localhost,1433 -E -C -b -f 65001 -d sv_dut -i Database_newversion/01-schema.sql
 sqlcmd -S localhost,1433 -E -C -b -f 65001 -d sv_dut -i Database_newversion/02-catalogs.sql
 ```
 
-Nếu máy đã có `sv_dut`, dùng SQL instance khác hoặc tên local được guard hỗ trợ `Studentpage_Integration_20261103` và đổi `LOCAL_DB_NAME` tương ứng. Không chạy bộ này lên DB trường.
+Sau đó sao chép .env.example thành .env, dùng LOCAL_DB_HOST=localhost,
+LOCAL_DB_PORT=1433, LOCAL_DB_NAME=sv_dut, Windows authentication và npm.cmd ci.
+Tạo admin riêng theo [hướng dẫn auth](../docs/AUTH_ORGANIZATION.md).
+Nếu đã có sv_dut, dùng instance local khác hoặc DB local được guard hỗ trợ;
+không ghi đè DB cũ. Đây là snapshot dựng mới, không phải migration cho DB đang chạy.
 
-Sau đó sao chép [cấu hình mẫu](../.env.example) thành `.env`, đặt `LOCAL_DB_HOST=localhost`, `LOCAL_DB_PORT=1433`, `LOCAL_DB_NAME=sv_dut`, rồi `npm ci`. Tạo tài khoản quản trị riêng theo [hướng dẫn tổ chức và phân quyền](../docs/AUTH_ORGANIZATION.md); không có tài khoản/mật khẩu dùng chung trong bản xuất. Các chức năng đọc DB trường và file R2 vẫn cần cấu hình kết nối riêng; SQL không chứa file upload.
+## Dữ liệu chia sẻ
 
-## Xuất lại từ DB local
+01-schema.sql chứa schema, 02-catalogs.sql chỉ chứa danh mục theo allowlist.
+Không có tài khoản, hash mật khẩu, hồ sơ sinh viên, lịch sử hoặc file minh chứng.
+CauHinh chỉ xuất các key được cho phép. Key ký Excel được sinh mới khi import;
+không mang key thật của DB nguồn sang môi trường khác. Các marker migration được
+xuất để chạy lại CLI không diễn giải nhầm trạng thái workflow đã nâng cấp.
 
-Script dùng Windows authentication và thư viện SMO cài cùng SQL Server/SSMS. Truyền đúng thư mục chứa các DLL SMO trên máy:
+Bản .bak đầy đủ được lưu riêng ngoài Git cho chuyển nội bộ, có cả dữ liệu/tài khoản
+local. Restore .bak thay cho bộ SQL này, không chạy 02-catalogs.sql chồng lên backup.
+Backup SQL không gồm file R2; kết nối DB trường, DUT SSO, R2 vẫn cần cấu hình riêng.
+
+## Xuất lại
+
+Script dùng Windows authentication, chỉ chấp nhận SQL loopback và hai DB local
+được hỗ trợ. Dùng Windows PowerShell cùng các DLL SMO cài bởi SQL Server/SSMS:
 
 ```powershell
-powershell -NoProfile -File scripts/database/export-local-db.ps1 -Database sv_dut -SmoDirectory "C:/Program Files/Microsoft SQL Server/150/Setup Bootstrap/SQL2019/x64" -IncludePrivateData
+powershell -NoProfile -File scripts/database/export-local-db.ps1 -Database Studentpage_Integration_20261103 -SmoDirectory "C:/Program Files/Microsoft SQL Server/150/Setup Bootstrap/SQL2019/x64"
 ```
 
-`local-data.private.sql` là toàn bộ dữ liệu local, chỉ lưu trên máy và bị Git bỏ qua. Muốn khôi phục bản đầy đủ vào DB mới, chạy `01-schema.sql` rồi `local-data.private.sql` **thay cho** `02-catalogs.sql`. Bản dữ liệu này có thông tin cá nhân/tài khoản, chỉ chuyển qua kênh riêng phù hợp. Tạm dừng ghi vào ứng dụng khi xuất để các bảng có dữ liệu nhất quán; đây là script chuyển dữ liệu, không thay thế backup transaction của SQL Server.
+Có thể truyền -OutputDirectory để chọn thư mục xuất. Không dùng -IncludePrivateData
+cho file đưa lên Git; file local-data.private.sql được gitignore trong thư mục này.
+Script chỉ đọc DB nguồn, không tự chạy migration hoặc seed. Nên tạm dừng thay đổi
+catalog khi xuất. Bản .bak dùng COPY_ONLY/CHECKSUM là bản phục hồi dữ liệu nhất quán.
 
-Các bản xuất phản ánh DB local tại thời điểm chạy, không tự áp dụng migration. Xem [quy tắc thời hạn](../docs/REQUEST_REGULATIONS.md) cho thay đổi API tính hạn mà không đổi schema.
+Xem [VALIDATION.md](VALIDATION.md) và [manifest.json](manifest.json) cho kết quả/hash.
+
+Hash trong manifest tính theo văn bản UTF-8 với xuống dòng LF; chuẩn hóa CRLF
+của Windows sang LF trước khi so sánh hash.

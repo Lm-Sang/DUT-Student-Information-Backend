@@ -22,7 +22,11 @@ ALTER TABLE [auth].[Fields] NOCHECK CONSTRAINT ALL;
 GO
 ALTER TABLE [auth].[LocalAccounts] NOCHECK CONSTRAINT ALL;
 GO
+ALTER TABLE [auth].[PermissionDefinitions] NOCHECK CONSTRAINT ALL;
+GO
 ALTER TABLE [auth].[Permissions] NOCHECK CONSTRAINT ALL;
+GO
+ALTER TABLE [auth].[RoleDefinitions] NOCHECK CONSTRAINT ALL;
 GO
 ALTER TABLE [auth].[RolePermissions] NOCHECK CONSTRAINT ALL;
 GO
@@ -113,7 +117,6 @@ GO
 ALTER TABLE [svc_demo].[VaiTroRBAC] NOCHECK CONSTRAINT ALL;
 GO
 SET IDENTITY_INSERT [certification].[Languages] ON
-
 GO
 INSERT [certification].[Languages] ([Id], [Code], [DisplayName], [IsPublished], [IsSchoolProvided], [Revision], [CreatedAt], [UpdatedAt]) VALUES (1, N'LN001', N'Tiếng Anh', 1, 1, 1, CAST(N'2026-10-24T18:21:34.7460000' AS DateTime2), CAST(N'2026-10-24T18:21:34.7460000' AS DateTime2))
 GO
@@ -126,7 +129,6 @@ GO
 SET IDENTITY_INSERT [certification].[Languages] OFF
 GO
 SET IDENTITY_INSERT [certification].[CertificateTypes] ON
-
 GO
 INSERT [certification].[CertificateTypes] ([Id], [LanguageId], [Code], [DisplayName], [FormSchemaJson], [IsPublished], [IsSchoolProvided], [SchoolId], [ConversionFlag], [Notes], [ImportedAt], [BaseCertificateTypeId], [Revision], [CreatedAt], [UpdatedAt]) VALUES (1, 1, N'TOEFLiBT', N'Anh ngữ - TOEFL iBT', N'{"fields":[{"key":"overall","label":"Điểm tổng","type":"number","required":true,"min":0,"max":9999999.99,"step":0.01}]}', 0, 1, 1, 1, N'', CAST(N'2026-10-24T18:12:19.4630000+00:00' AS DateTimeOffset), NULL, 1, CAST(N'2026-10-24T18:21:34.7540000' AS DateTime2), CAST(N'2026-10-24T18:21:34.7540000' AS DateTime2))
 GO
@@ -169,7 +171,6 @@ GO
 SET IDENTITY_INSERT [certification].[CertificateTypes] OFF
 GO
 SET IDENTITY_INSERT [certification].[RecognitionPolicies] ON
-
 GO
 INSERT [certification].[RecognitionPolicies] ([Id], [LanguageId], [CertificateTypeId], [CohortFrom], [CohortTo], [IsRecognized], [Reason], [DocumentReference], [Revision], [CreatedAt], [UpdatedAt]) VALUES (1, 1, NULL, 1900, NULL, 1, NULL, N'Điều kiện tiếp nhận do người dùng xác nhận ngày 25/10/2026', 2, CAST(N'2026-10-25T03:39:07.0010000' AS DateTime2), CAST(N'2026-10-25T04:45:51.3720000' AS DateTime2))
 GO
@@ -186,7 +187,6 @@ GO
 SET IDENTITY_INSERT [certification].[RecognitionPolicies] OFF
 GO
 SET IDENTITY_INSERT [certification].[CertificateLevels] ON
-
 GO
 INSERT [certification].[CertificateLevels] ([Id], [CertificateTypeId], [Code], [DisplayName], [Weight], [Notes], [SchoolId], [IsSchoolProvided], [SortOrder], [ImportedAt]) VALUES (1, 2, N'VSTEP1', N'VSTEP A1', 1, N'', 1, 1, 1, CAST(N'2026-10-24T18:12:19.4630000+00:00' AS DateTimeOffset))
 GO
@@ -339,7 +339,6 @@ GO
 SET IDENTITY_INSERT [certification].[CertificateLevels] OFF
 GO
 SET IDENTITY_INSERT [certification].[IssuingOrganizations] ON
-
 GO
 INSERT [certification].[IssuingOrganizations] ([Id], [Code], [DisplayName], [IsActive], [SourceUrl], [VerifiedOn], [Revision], [CreatedAt], [UpdatedAt]) VALUES (1, N'BRITISH_COUNCIL', N'British Council (Hội đồng Anh)', 1, N'https://www.britishcouncil.vn/thi/aptis/ket-qua', CAST(N'2026-11-02' AS Date), 1, CAST(N'2026-11-02T09:45:57.4880000' AS DateTime2), CAST(N'2026-11-02T09:45:57.4880000' AS DateTime2))
 GO
@@ -545,19 +544,19 @@ INSERT [certification].[CertificateTypeIssuers] ([CertificateTypeId], [IssuingOr
 GO
 INSERT [svc_demo].[LoaiDon] ([MaLoaiDon], [TenLoaiDon], [Nhom], [MaDV], [CachNop], [MaMauDuLieu], [MaMauIn], [BieuTuong], [MoTa], [HieuLuc], [ThuTu]) VALUES (N'CONFIRMATION', N'Cấp văn bản xác nhận', N'CONFIRMATION', N'BY_DOCUMENT', N'WEB', N'CONFIRMATION', NULL, N'file', N'Bảng điểm, xác nhận sinh viên, vay vốn, hoãn NVQS và kết quả rèn luyện.', 1, 6)
 GO
-INSERT [svc_demo].[LoaiDon] ([MaLoaiDon], [TenLoaiDon], [Nhom], [MaDV], [CachNop], [MaMauDuLieu], [MaMauIn], [BieuTuong], [MoTa], [HieuLuc], [ThuTu]) VALUES (N'DonSV01', N'Cấp lại thẻ sinh viên', N'PETITION', N'120', N'PAPER_FORM', N'DonSV01', N'DonSV01', N'card', N'Mất, hỏng thẻ hoặc cần thay đổi thông tin.', 1, 0)
+INSERT [svc_demo].[LoaiDon] ([MaLoaiDon], [TenLoaiDon], [Nhom], [MaDV], [CachNop], [MaMauDuLieu], [MaMauIn], [BieuTuong], [MoTa], [HieuLuc], [ThuTu]) VALUES (N'DonSV01', N'Cấp lại thẻ sinh viên', N'PETITION', N'115', N'PAPER_FORM', N'DonSV01', N'DonSV01', N'card', N'Mất, hỏng thẻ hoặc cần thay đổi thông tin.', 1, 0)
 GO
 INSERT [svc_demo].[LoaiDon] ([MaLoaiDon], [TenLoaiDon], [Nhom], [MaDV], [CachNop], [MaMauDuLieu], [MaMauIn], [BieuTuong], [MoTa], [HieuLuc], [ThuTu]) VALUES (N'DonSV03', N'Xét công nhận tốt nghiệp', N'PETITION', N'115', N'PAPER_FORM', N'DonSV03', N'DonSV03', N'graduation', N'Đăng ký học kỳ dự kiến tốt nghiệp.', 1, 1)
 GO
 INSERT [svc_demo].[LoaiDon] ([MaLoaiDon], [TenLoaiDon], [Nhom], [MaDV], [CachNop], [MaMauDuLieu], [MaMauIn], [BieuTuong], [MoTa], [HieuLuc], [ThuTu]) VALUES (N'DonSV04', N'Hoãn công nhận tốt nghiệp', N'PETITION', N'115', N'PAPER_FORM', N'DonSV04', N'DonSV04', N'calendar', N'Đơn theo mẫu cố định để học cải thiện; tự động điền hồ sơ sinh viên.', 1, 2)
 GO
-INSERT [svc_demo].[LoaiDon] ([MaLoaiDon], [TenLoaiDon], [Nhom], [MaDV], [CachNop], [MaMauDuLieu], [MaMauIn], [BieuTuong], [MoTa], [HieuLuc], [ThuTu]) VALUES (N'DonSV05', N'Xét học bổng khuyến học', N'PETITION', N'120', N'PAPER_FORM', N'DonSV05', N'DonSV05', N'award', N'Đề nghị xét học bổng theo học kỳ, kèm lý do.', 1, 3)
+INSERT [svc_demo].[LoaiDon] ([MaLoaiDon], [TenLoaiDon], [Nhom], [MaDV], [CachNop], [MaMauDuLieu], [MaMauIn], [BieuTuong], [MoTa], [HieuLuc], [ThuTu]) VALUES (N'DonSV05', N'Xét học bổng khuyến học', N'PETITION', N'115', N'PAPER_FORM', N'DonSV05', N'DonSV05', N'award', N'Đề nghị xét học bổng theo học kỳ, kèm lý do.', 1, 3)
 GO
 INSERT [svc_demo].[LoaiDon] ([MaLoaiDon], [TenLoaiDon], [Nhom], [MaDV], [CachNop], [MaMauDuLieu], [MaMauIn], [BieuTuong], [MoTa], [HieuLuc], [ThuTu]) VALUES (N'DonSV06', N'Giải quyết thủ tục thôi học', N'PETITION', N'115', N'PAPER_FORM', N'DonSV06', N'DonSV06', N'file', N'Đề nghị thôi học theo nguyện vọng hoặc chuyển trường.', 1, 5)
 GO
 INSERT [svc_demo].[LoaiDon] ([MaLoaiDon], [TenLoaiDon], [Nhom], [MaDV], [CachNop], [MaMauDuLieu], [MaMauIn], [BieuTuong], [MoTa], [HieuLuc], [ThuTu]) VALUES (N'DonSV07', N'Đăng ký chương trình 2', N'PETITION', N'115', N'PAPER_FORM', N'DonSV07', N'DonSV07', N'books', N'Chọn chương trình đào tạo và kỳ bắt đầu.', 1, 4)
 GO
-INSERT [svc_demo].[LoaiDon] ([MaLoaiDon], [TenLoaiDon], [Nhom], [MaDV], [CachNop], [MaMauDuLieu], [MaMauIn], [BieuTuong], [MoTa], [HieuLuc], [ThuTu]) VALUES (N'LMS_SUPPORT', N'Cấp lại mật khẩu DUT-LMS', N'LMS', N'IT', N'WEB', N'LMS_SUPPORT', NULL, N'card', N'Bấm gửi yêu cầu. Chuyên viên sẽ phản hồi mật khẩu trong chi tiết yêu cầu.', 1, 7)
+INSERT [svc_demo].[LoaiDon] ([MaLoaiDon], [TenLoaiDon], [Nhom], [MaDV], [CachNop], [MaMauDuLieu], [MaMauIn], [BieuTuong], [MoTa], [HieuLuc], [ThuTu]) VALUES (N'LMS_SUPPORT', N'Cấp lại mật khẩu DUT-LMS', N'LMS', N'115', N'WEB', N'LMS_SUPPORT', NULL, N'card', N'Bấm gửi yêu cầu. Chuyên viên sẽ phản hồi mật khẩu trong chi tiết yêu cầu.', 1, 7)
 GO
 INSERT [svc_demo].[TruongLoaiDon] ([MaLoaiDon], [TenTruong], [BatBuoc], [ThuTu]) VALUES (N'CONFIRMATION', N'academicYear', 0, 6)
 GO
@@ -597,11 +596,13 @@ INSERT [svc_demo].[TruongLoaiDon] ([MaLoaiDon], [TenTruong], [BatBuoc], [ThuTu])
 GO
 INSERT [auth].[Roles] ([RoleName]) VALUES (N'reviewer')
 GO
-INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'academic-leave:review')
+INSERT [auth].[Roles] ([RoleName]) VALUES (N'role:07460fdf-68b2-48d7-bcc9-9a5205cd64c0')
 GO
-INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'certifications:catalog:manage')
+INSERT [auth].[Roles] ([RoleName]) VALUES (N'role:277c2fcd-5604-40c2-8d7c-320011b5615e')
 GO
-INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'certifications:review')
+INSERT [auth].[Roles] ([RoleName]) VALUES (N'role:6231cd8b-b00a-4938-a489-03f47a68db7b')
+GO
+INSERT [auth].[Roles] ([RoleName]) VALUES (N'role:8e594441-b6fd-4cce-bac5-b682904e6575')
 GO
 INSERT [auth].[Fields] ([FieldCode], [FieldName], [IsActive]) VALUES (N'DT', N'Đào tạo', 1)
 GO
@@ -621,6 +622,142 @@ INSERT [auth].[Fields] ([FieldCode], [FieldName], [IsActive]) VALUES (N'TTHL', N
 GO
 INSERT [auth].[Fields] ([FieldCode], [FieldName], [IsActive]) VALUES (N'TTTH', N'Trung Tâm Tin học', 1)
 GO
+INSERT [auth].[RoleDefinitions] ([RoleName], [DisplayName], [Description], [FieldCode], [IsActive], [Revision]) VALUES (N'role:07460fdf-68b2-48d7-bcc9-9a5205cd64c0', N'Chuyên viên Anh ngữ - IELTS', N'Role mẫu chỉ cấp đúng loại hồ sơ và Excel tương ứng.', N'DT', 1, 1)
+GO
+INSERT [auth].[RoleDefinitions] ([RoleName], [DisplayName], [Description], [FieldCode], [IsActive], [Revision]) VALUES (N'role:277c2fcd-5604-40c2-8d7c-320011b5615e', N'Chuyên viên xác nhận hoãn NVQS', N'Role mẫu chỉ cấp đúng loại hồ sơ và Excel tương ứng.', N'DT', 1, 1)
+GO
+INSERT [auth].[RoleDefinitions] ([RoleName], [DisplayName], [Description], [FieldCode], [IsActive], [Revision]) VALUES (N'role:6231cd8b-b00a-4938-a489-03f47a68db7b', N'Chuyên viên trở lại học', N'Role mẫu chỉ cấp đúng loại hồ sơ và Excel tương ứng.', N'DT', 1, 1)
+GO
+INSERT [auth].[RoleDefinitions] ([RoleName], [DisplayName], [Description], [FieldCode], [IsActive], [Revision]) VALUES (N'role:8e594441-b6fd-4cce-bac5-b682904e6575', N'Chuyên viên ngừng học / gia hạn', N'Role mẫu chỉ cấp đúng loại hồ sơ và Excel tương ứng.', N'DT', 1, 1)
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'academic-leave:review')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'academic-leave:workbook:export')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'academic-leave:workbook:import')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'certifications:catalog:manage')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'certifications:review')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'certifications:workbook:export')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'certifications:workbook:import')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'it-certifications:workbook:export')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'it-certifications:workbook:import')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:academic-leave:leave')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:academic-leave:return')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:1')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:10')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:11')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:12')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:13')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:14')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:15')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:16')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:17')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:18')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:19')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:2')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:3')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:4')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:5')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:6')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:7')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:8')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:certifications:9')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:CONFIRMATION:01')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:CONFIRMATION:02')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:CONFIRMATION:03')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:CONFIRMATION:04')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:CONFIRMATION:05')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:CONFIRMATION:06')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:CONFIRMATION:08')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:CONFIRMATION:09')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:CONFIRMATION:10')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:CONFIRMATION:13')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:CONFIRMATION:18')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:DonSV01')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:DonSV03')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:DonSV04')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:DonSV05')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:DonSV06')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:DonSV07')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:it-certifications:CNTT01')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:it-certifications:CNTT02')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'work:LMS_SUPPORT')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'workbook.export')
+GO
+INSERT [auth].[Permissions] ([PermissionName]) VALUES (N'workbook.import')
+GO
+INSERT [auth].[RolePermissions] ([RoleName], [PermissionName]) VALUES (N'role:07460fdf-68b2-48d7-bcc9-9a5205cd64c0', N'certifications:workbook:export')
+GO
+INSERT [auth].[RolePermissions] ([RoleName], [PermissionName]) VALUES (N'role:07460fdf-68b2-48d7-bcc9-9a5205cd64c0', N'certifications:workbook:import')
+GO
+INSERT [auth].[RolePermissions] ([RoleName], [PermissionName]) VALUES (N'role:07460fdf-68b2-48d7-bcc9-9a5205cd64c0', N'work:certifications:3')
+GO
+INSERT [auth].[RolePermissions] ([RoleName], [PermissionName]) VALUES (N'role:277c2fcd-5604-40c2-8d7c-320011b5615e', N'work:CONFIRMATION:13')
+GO
+INSERT [auth].[RolePermissions] ([RoleName], [PermissionName]) VALUES (N'role:277c2fcd-5604-40c2-8d7c-320011b5615e', N'workbook.export')
+GO
+INSERT [auth].[RolePermissions] ([RoleName], [PermissionName]) VALUES (N'role:277c2fcd-5604-40c2-8d7c-320011b5615e', N'workbook.import')
+GO
+INSERT [auth].[RolePermissions] ([RoleName], [PermissionName]) VALUES (N'role:6231cd8b-b00a-4938-a489-03f47a68db7b', N'academic-leave:workbook:export')
+GO
+INSERT [auth].[RolePermissions] ([RoleName], [PermissionName]) VALUES (N'role:6231cd8b-b00a-4938-a489-03f47a68db7b', N'academic-leave:workbook:import')
+GO
+INSERT [auth].[RolePermissions] ([RoleName], [PermissionName]) VALUES (N'role:6231cd8b-b00a-4938-a489-03f47a68db7b', N'work:academic-leave:return')
+GO
+INSERT [auth].[RolePermissions] ([RoleName], [PermissionName]) VALUES (N'role:8e594441-b6fd-4cce-bac5-b682904e6575', N'academic-leave:workbook:export')
+GO
+INSERT [auth].[RolePermissions] ([RoleName], [PermissionName]) VALUES (N'role:8e594441-b6fd-4cce-bac5-b682904e6575', N'academic-leave:workbook:import')
+GO
+INSERT [auth].[RolePermissions] ([RoleName], [PermissionName]) VALUES (N'role:8e594441-b6fd-4cce-bac5-b682904e6575', N'work:academic-leave:leave')
+GO
 INSERT [auth].[Tasks] ([TaskId], [TaskCode], [TaskName], [FieldCode], [IsActive]) VALUES (1, N'certifications', N'Chứng chỉ ngoại ngữ', N'DT', 1)
 GO
 INSERT [auth].[Tasks] ([TaskId], [TaskCode], [TaskName], [FieldCode], [IsActive]) VALUES (2, N'it-certifications', N'Chứng chỉ tin học', N'DT', 1)
@@ -629,116 +766,105 @@ INSERT [auth].[Tasks] ([TaskId], [TaskCode], [TaskName], [FieldCode], [IsActive]
 GO
 INSERT [auth].[Tasks] ([TaskId], [TaskCode], [TaskName], [FieldCode], [IsActive]) VALUES (4, N'student-requests', N'Lập và xử lý đơn', N'DT', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (1, N'certifications:catalog:manage')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'academic-leave:workbook:export', N'Xuất Excel học vụ', N'Excel', N'DT', 3, N'academic-leave', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (1, N'certifications:review')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'academic-leave:workbook:import', N'Nhập Excel học vụ', N'Excel', N'DT', 3, N'academic-leave', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (2, N'certifications:catalog:manage')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'certifications:catalog:manage', N'Quản lý danh mục chứng chỉ', N'Danh mục', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (2, N'certifications:review')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'certifications:workbook:export', N'Xuất Excel chứng chỉ ngoại ngữ', N'Excel', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (3, N'academic-leave:review')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'certifications:workbook:import', N'Nhập Excel chứng chỉ ngoại ngữ', N'Excel', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'requests.cancel')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'it-certifications:workbook:export', N'Xuất Excel chứng chỉ tin học', N'Excel', N'DT', 2, N'it-certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'requests.complete')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'it-certifications:workbook:import', N'Nhập Excel chứng chỉ tin học', N'Excel', N'DT', 2, N'it-certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'requests.print')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:academic-leave:leave', N'Xử lý ngừng học và gia hạn ngừng học', N'Học vụ', N'DT', 3, N'academic-leave', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'requests.receive')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:academic-leave:return', N'Xử lý trở lại học', N'Học vụ', N'DT', 3, N'academic-leave', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'requests.view')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:1', N'Xử lý: Anh ngữ - TOEFL iBT', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:04')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:10', N'Xử lý: Anh ngữ - Aptis Esol', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:05')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:11', N'Xử lý: Nhật ngữ - NAT-test', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:06')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:12', N'Xử lý: Nhật ngữ - TOPJ', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:08')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:13', N'Xử lý: XXX', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:09')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:14', N'Xử lý: Anh ngữ - TOEIC 4 kỹ năng', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:10')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:15', N'Xử lý: Tiếng Pháp - DALF', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:DonSV03')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:16', N'Xử lý: Tiếng Trung - HSKK', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:DonSV04')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:17', N'Xử lý: Nhật ngữ - J-TEST', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:DonSV06')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:18', N'Xử lý: Tiếng Pháp - TCF', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:DonSV07')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:19', N'Xử lý: Tiếng Trung - TOCFL', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'workbook.export')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:2', N'Xử lý: VSTEP và tương đương', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'workbook.import')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:3', N'Xử lý: Anh ngữ - IELTS', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-SET IDENTITY_INSERT [certification].[tmCNTTChungChi] ON
-
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:4', N'Xử lý: Anh ngữ - TOEFL CBT', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [certification].[tmCNTTChungChi] ([ID], [MaCC], [TenCC]) VALUES (1, N'CNTT01', N'Chứng chỉ CNTT cơ bản')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:5', N'Xử lý: Nhật ngữ - JLPT', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [certification].[tmCNTTChungChi] ([ID], [MaCC], [TenCC]) VALUES (2, N'CNTT02', N'Chứng chỉ CNTT nâng cao')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:6', N'Xử lý: Anh ngữ - TOEIC', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-SET IDENTITY_INSERT [certification].[tmCNTTChungChi] OFF
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:7', N'Xử lý: Tiếng Trung - HSK', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'rbac.permissions.delegate', N'Cấp quyền khác phạm vi xử lý của mình', N'Quản trị')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:8', N'Xử lý: Tiếng Pháp', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'rbac.roles.manage', N'Tạo và chỉnh sửa role', N'Quản trị')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:certifications:9', N'Xử lý: Anh ngữ - TOEFL_ITP', N'Chứng chỉ ngoại ngữ', N'DT', 1, N'certifications', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'rbac.staff.manage', N'Tạo tài khoản và gán role', N'Quản trị')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:CONFIRMATION:01', N'Xử lý: Xác nhận sinh viên', N'Đơn xác nhận', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'requests.cancel', N'Hủy đơn và phản hồi', N'Hồ sơ')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:CONFIRMATION:02', N'Xử lý: Xác nhận SV vay tiền', N'Đơn xác nhận', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'requests.complete', N'Đánh dấu đã xử lý / phản hồi LMS', N'Hồ sơ')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:CONFIRMATION:03', N'Xử lý: Kết quả rèn luyện', N'Đơn xác nhận', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'requests.print', N'In đơn', N'Hồ sơ')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:CONFIRMATION:04', N'Xử lý: Bảng điểm học kỳ', N'Đơn xác nhận', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'requests.reassign', N'Bàn giao người phụ trách', N'Quản trị')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:CONFIRMATION:05', N'Xử lý: Bảng điểm năm học', N'Đơn xác nhận', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'requests.receive', N'Tiếp nhận đơn', N'Hồ sơ')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:CONFIRMATION:06', N'Xử lý: Bảng điểm quá trình', N'Đơn xác nhận', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'requests.view', N'Xem hồ sơ', N'Hồ sơ')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:CONFIRMATION:08', N'Xử lý: Bảng điểm học kỳ (tiếng Anh)', N'Đơn xác nhận', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:01', N'Xác nhận sinh viên', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:CONFIRMATION:09', N'Xử lý: Bảng điểm năm học (tiếng Anh)', N'Đơn xác nhận', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:02', N'Xác nhận SV vay tiền', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:CONFIRMATION:10', N'Xử lý: Bảng điểm quá trình (tiếng Anh)', N'Đơn xác nhận', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:03', N'Kết quả rèn luyện', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:CONFIRMATION:13', N'Xử lý: Xác nhận hoãn NVQS', N'Đơn xác nhận', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:04', N'Bảng điểm học kỳ', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:CONFIRMATION:18', N'Xử lý: SV học quá KHĐT chuẩn - Xác nhận hoãn NVQS', N'Đơn xác nhận', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:05', N'Bảng điểm năm học', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:DonSV01', N'Xử lý: Cấp lại thẻ sinh viên', N'Đơn đề nghị', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:06', N'Bảng điểm quá trình', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:DonSV03', N'Xử lý: Xét công nhận tốt nghiệp', N'Đơn đề nghị', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:08', N'Bảng điểm học kỳ (tiếng Anh)', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:DonSV04', N'Xử lý: Hoãn công nhận tốt nghiệp', N'Đơn đề nghị', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:09', N'Bảng điểm năm học (tiếng Anh)', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:DonSV05', N'Xử lý: Xét học bổng khuyến học', N'Đơn đề nghị', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:10', N'Bảng điểm quá trình (tiếng Anh)', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:DonSV06', N'Xử lý: Giải quyết thủ tục thôi học', N'Đơn đề nghị', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:13', N'Xác nhận hoãn NVQS', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:DonSV07', N'Xử lý: Đăng ký chương trình 2', N'Đơn đề nghị', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:18', N'SV học quá KHĐT chuẩn - Xác nhận hoãn NVQS', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:it-certifications:CNTT01', N'Xử lý: Chứng chỉ CNTT cơ bản', N'Chứng chỉ tin học', N'DT', 2, N'it-certifications', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:DonSV01', N'Cấp lại thẻ sinh viên', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:it-certifications:CNTT02', N'Xử lý: Chứng chỉ CNTT nâng cao', N'Chứng chỉ tin học', N'DT', 2, N'it-certifications', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:DonSV03', N'Xét công nhận tốt nghiệp', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'work:LMS_SUPPORT', N'Xử lý yêu cầu cấp lại mật khẩu LMS', N'Hỗ trợ LMS', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:DonSV04', N'Hoãn công nhận tốt nghiệp', N'Phạm vi loại đơn')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'workbook.export', N'Xuất Excel đơn đề nghị / xác nhận', N'Excel', N'DT', 4, N'student-requests', 1)
 GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:DonSV05', N'Xét học bổng khuyến học', N'Phạm vi loại đơn')
-GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:DonSV06', N'Giải quyết thủ tục thôi học', N'Phạm vi loại đơn')
-GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:DonSV07', N'Đăng ký chương trình 2', N'Phạm vi loại đơn')
-GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:LMS_SUPPORT', N'Cấp lại mật khẩu DUT-LMS', N'Phạm vi loại đơn')
-GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'workbook.export', N'Xuất Excel', N'Excel')
-GO
-INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'workbook.import', N'Nhập Excel và lưu xử lý', N'Excel')
+INSERT [auth].[PermissionDefinitions] ([PermissionName], [DisplayName], [GroupName], [FieldCode], [TaskId], [ModuleCode], [IsActive]) VALUES (N'workbook.import', N'Nhập Excel xử lý đơn đề nghị / xác nhận', N'Excel', N'DT', 4, N'student-requests', 1)
 GO
 INSERT [svc_demo].[tmKehoach] ([IDCode], [TenKH], [ThuTu], [Hientai], [NgayDongBo]) VALUES (N'0610', N'Học kỳ 1 năm học 2006 - 2007  ', 61, 0, CAST(N'2026-10-25T05:04:21.8910000' AS DateTime2))
 GO
@@ -869,6 +995,160 @@ GO
 INSERT [svc_demo].[tmKehoach] ([IDCode], [TenKH], [ThuTu], [Hientai], [NgayDongBo]) VALUES (N'2610', N'Học kỳ 1 năm học 2026-2027', 261, 1, CAST(N'2026-10-25T05:04:21.8970000' AS DateTime2))
 GO
 INSERT [svc_demo].[tmKehoach] ([IDCode], [TenKH], [ThuTu], [Hientai], [NgayDongBo]) VALUES (N'2620', N'Học kỳ 2 năm học 2026-2027', 262, 1, CAST(N'2026-10-25T05:04:21.8970000' AS DateTime2))
+GO
+INSERT [svc_demo].[Sys_VanBan] ([IDCode], [MaVanBan], [ID], [TenVanBan], [MaDVcap], [ThongTinDinhKem], [LePhiThuong], [LePhiNhanh], [KhongMienPhi], [SoLuongMien_Ngay], [KhongCapNeuKhongHoc], [HieuLuc], [NgayDongBo]) VALUES (N'2610', N'01', 387, N'Xác nhận sinh viên', N'115', N'Cần nhập lý do đề nghị giấy xác nhận', CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), 0, 1000, 0, 1, CAST(N'2026-10-25T05:04:21.9010000' AS DateTime2))
+GO
+INSERT [svc_demo].[Sys_VanBan] ([IDCode], [MaVanBan], [ID], [TenVanBan], [MaDVcap], [ThongTinDinhKem], [LePhiThuong], [LePhiNhanh], [KhongMienPhi], [SoLuongMien_Ngay], [KhongCapNeuKhongHoc], [HieuLuc], [NgayDongBo]) VALUES (N'2610', N'02', 389, N'Xác nhận SV vay tiền', N'115', N'', CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), 0, 1000, 0, 1, CAST(N'2026-10-25T05:04:21.9010000' AS DateTime2))
+GO
+INSERT [svc_demo].[Sys_VanBan] ([IDCode], [MaVanBan], [ID], [TenVanBan], [MaDVcap], [ThongTinDinhKem], [LePhiThuong], [LePhiNhanh], [KhongMienPhi], [SoLuongMien_Ngay], [KhongCapNeuKhongHoc], [HieuLuc], [NgayDongBo]) VALUES (N'2610', N'03', 385, N'Kết quả rèn luyện', N'115', N'', CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), 0, 1000, 0, 1, CAST(N'2026-10-25T05:04:21.9000000' AS DateTime2))
+GO
+INSERT [svc_demo].[Sys_VanBan] ([IDCode], [MaVanBan], [ID], [TenVanBan], [MaDVcap], [ThongTinDinhKem], [LePhiThuong], [LePhiNhanh], [KhongMienPhi], [SoLuongMien_Ngay], [KhongCapNeuKhongHoc], [HieuLuc], [NgayDongBo]) VALUES (N'2610', N'04', 390, N'Bảng điểm học kỳ', N'115', N'Ghi rõ Học kỳ xin cấp bảng điểm, VD: HK 1/20224-2025', CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), 0, 1000, 0, 1, CAST(N'2026-10-25T05:04:21.9010000' AS DateTime2))
+GO
+INSERT [svc_demo].[Sys_VanBan] ([IDCode], [MaVanBan], [ID], [TenVanBan], [MaDVcap], [ThongTinDinhKem], [LePhiThuong], [LePhiNhanh], [KhongMienPhi], [SoLuongMien_Ngay], [KhongCapNeuKhongHoc], [HieuLuc], [NgayDongBo]) VALUES (N'2610', N'05', 388, N'Bảng điểm năm học', N'115', N'Ghi rõ năm học nào, ví dụ: năm học 2024-2025', CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), 0, 1000, 0, 1, CAST(N'2026-10-25T05:04:21.9010000' AS DateTime2))
+GO
+INSERT [svc_demo].[Sys_VanBan] ([IDCode], [MaVanBan], [ID], [TenVanBan], [MaDVcap], [ThongTinDinhKem], [LePhiThuong], [LePhiNhanh], [KhongMienPhi], [SoLuongMien_Ngay], [KhongCapNeuKhongHoc], [HieuLuc], [NgayDongBo]) VALUES (N'2610', N'06', 391, N'Bảng điểm quá trình', N'115', N'Bảng điểm tất cả các kỳ', CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), 0, 1000, 0, 1, CAST(N'2026-10-25T05:04:21.9010000' AS DateTime2))
+GO
+INSERT [svc_demo].[Sys_VanBan] ([IDCode], [MaVanBan], [ID], [TenVanBan], [MaDVcap], [ThongTinDinhKem], [LePhiThuong], [LePhiNhanh], [KhongMienPhi], [SoLuongMien_Ngay], [KhongCapNeuKhongHoc], [HieuLuc], [NgayDongBo]) VALUES (N'2610', N'08', 393, N'Bảng điểm học kỳ (tiếng Anh)', N'115', N'Cần ghi rõ học kỳ cần xin cấp bảng điểm', CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), 0, 1000, 0, 1, CAST(N'2026-10-25T05:04:21.9010000' AS DateTime2))
+GO
+INSERT [svc_demo].[Sys_VanBan] ([IDCode], [MaVanBan], [ID], [TenVanBan], [MaDVcap], [ThongTinDinhKem], [LePhiThuong], [LePhiNhanh], [KhongMienPhi], [SoLuongMien_Ngay], [KhongCapNeuKhongHoc], [HieuLuc], [NgayDongBo]) VALUES (N'2610', N'09', 394, N'Bảng điểm năm học (tiếng Anh)', N'115', N'Ghi rõ năm học nào', CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), 0, 1000, 0, 1, CAST(N'2026-10-25T05:04:21.9010000' AS DateTime2))
+GO
+INSERT [svc_demo].[Sys_VanBan] ([IDCode], [MaVanBan], [ID], [TenVanBan], [MaDVcap], [ThongTinDinhKem], [LePhiThuong], [LePhiNhanh], [KhongMienPhi], [SoLuongMien_Ngay], [KhongCapNeuKhongHoc], [HieuLuc], [NgayDongBo]) VALUES (N'2610', N'10', 395, N'Bảng điểm quá trình (tiếng Anh)', N'115', N'tất cả các kỳ', CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), 0, 1000, 0, 1, CAST(N'2026-10-25T05:04:21.9010000' AS DateTime2))
+GO
+INSERT [svc_demo].[Sys_VanBan] ([IDCode], [MaVanBan], [ID], [TenVanBan], [MaDVcap], [ThongTinDinhKem], [LePhiThuong], [LePhiNhanh], [KhongMienPhi], [SoLuongMien_Ngay], [KhongCapNeuKhongHoc], [HieuLuc], [NgayDongBo]) VALUES (N'2610', N'13', 386, N'Xác nhận hoãn NVQS', N'115', N'Chỉ cấp nếu sinh viên đã đăng ký học, nhập lý do đăng ký', CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), 0, 1000, 1, 1, CAST(N'2026-10-25T05:04:21.9010000' AS DateTime2))
+GO
+INSERT [svc_demo].[Sys_VanBan] ([IDCode], [MaVanBan], [ID], [TenVanBan], [MaDVcap], [ThongTinDinhKem], [LePhiThuong], [LePhiNhanh], [KhongMienPhi], [SoLuongMien_Ngay], [KhongCapNeuKhongHoc], [HieuLuc], [NgayDongBo]) VALUES (N'2610', N'18', 398, N'SV học quá KHĐT chuẩn - Xác nhận hoãn NVQS', N'115', N'VD: kế hoạch ĐT chuẩn 8 học kỳ, SV đang học HK thứ 9', CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), NULL, 1000, 1, 1, CAST(N'2026-10-25T05:04:21.9010000' AS DateTime2))
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (1, N'certifications:catalog:manage')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (1, N'certifications:review')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (2, N'certifications:catalog:manage')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (2, N'certifications:review')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (3, N'academic-leave:review')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'requests.cancel')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'requests.complete')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'requests.print')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'requests.receive')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'requests.view')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:01')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:02')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:03')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:04')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:05')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:06')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:08')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:09')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:10')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:13')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:CONFIRMATION:18')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:DonSV01')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:DonSV03')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:DonSV04')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:DonSV05')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:DonSV06')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:DonSV07')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'work:LMS_SUPPORT')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'workbook.export')
+GO
+INSERT [auth].[TaskPermissions] ([TaskId], [PermissionName]) VALUES (4, N'workbook.import')
+GO
+SET IDENTITY_INSERT [certification].[tmCNTTChungChi] ON
+GO
+INSERT [certification].[tmCNTTChungChi] ([ID], [MaCC], [TenCC]) VALUES (1, N'CNTT01', N'Chứng chỉ CNTT cơ bản')
+GO
+INSERT [certification].[tmCNTTChungChi] ([ID], [MaCC], [TenCC]) VALUES (2, N'CNTT02', N'Chứng chỉ CNTT nâng cao')
+GO
+SET IDENTITY_INSERT [certification].[tmCNTTChungChi] OFF
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'rbac.permissions.delegate', N'Cấp quyền khác phạm vi xử lý của mình', N'Quản trị')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'rbac.roles.manage', N'Tạo và chỉnh sửa role', N'Quản trị')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'rbac.staff.manage', N'Tạo tài khoản và gán role', N'Quản trị')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'requests.cancel', N'Hủy đơn và phản hồi', N'Hồ sơ')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'requests.complete', N'Đánh dấu đã xử lý / phản hồi LMS', N'Hồ sơ')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'requests.print', N'In đơn', N'Hồ sơ')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'requests.reassign', N'Bàn giao người phụ trách', N'Quản trị')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'requests.receive', N'Tiếp nhận đơn', N'Hồ sơ')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'requests.view', N'Xem hồ sơ', N'Hồ sơ')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:01', N'Xác nhận sinh viên', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:02', N'Xác nhận SV vay tiền', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:03', N'Kết quả rèn luyện', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:04', N'Bảng điểm học kỳ', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:05', N'Bảng điểm năm học', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:06', N'Bảng điểm quá trình', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:08', N'Bảng điểm học kỳ (tiếng Anh)', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:09', N'Bảng điểm năm học (tiếng Anh)', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:10', N'Bảng điểm quá trình (tiếng Anh)', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:13', N'Xác nhận hoãn NVQS', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:CONFIRMATION:18', N'SV học quá KHĐT chuẩn - Xác nhận hoãn NVQS', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:DonSV01', N'Cấp lại thẻ sinh viên', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:DonSV03', N'Xét công nhận tốt nghiệp', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:DonSV04', N'Hoãn công nhận tốt nghiệp', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:DonSV05', N'Xét học bổng khuyến học', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:DonSV06', N'Giải quyết thủ tục thôi học', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:DonSV07', N'Đăng ký chương trình 2', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'work:LMS_SUPPORT', N'Cấp lại mật khẩu DUT-LMS', N'Phạm vi loại đơn')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'workbook.export', N'Xuất Excel', N'Excel')
+GO
+INSERT [svc_demo].[QuyenRBAC] ([MaQuyen], [TenQuyen], [Nhom]) VALUES (N'workbook.import', N'Nhập Excel và lưu xử lý', N'Excel')
+GO
+INSERT [svc_demo].[Sys_Email] ([MaEmail], [TenDenghi], [HieuLuc], [NgayDongBo]) VALUES (N'1', N'Tài khoản Office365 Trường cấp', 1, CAST(N'2026-10-25T05:04:21.9020000' AS DateTime2))
+GO
+INSERT [svc_demo].[Sys_Email] ([MaEmail], [TenDenghi], [HieuLuc], [NgayDongBo]) VALUES (N'2', N'Tài khoản email Trường cấp (*)', 0, CAST(N'2026-10-25T05:04:21.9020000' AS DateTime2))
+GO
+INSERT [svc_demo].[Sys_Email] ([MaEmail], [TenDenghi], [HieuLuc], [NgayDongBo]) VALUES (N'3', N'Tài khoản DUT-LMS', 1, CAST(N'2026-10-25T05:04:21.9020000' AS DateTime2))
 GO
 INSERT [svc_demo].[tmNganhTQ] ([MaNganhTQ], [TenNganhTQ], [HieuLuc], [NgayDongBo]) VALUES (N'101_2_CODIENTU', N'CH_Kỹ thuật cơ điện tử', 0, CAST(N'2026-10-25T05:04:21.8970000' AS DateTime2))
 GO
@@ -1036,6 +1316,16 @@ INSERT [svc_demo].[tmNganhTQ] ([MaNganhTQ], [TenNganhTQ], [HieuLuc], [NgayDongBo
 GO
 INSERT [svc_demo].[tmNganhTQ] ([MaNganhTQ], [TenNganhTQ], [HieuLuc], [NgayDongBo]) VALUES (N'123_PFIEV3', N'ĐH_PFIEV - Sản xuất tự động', 1, CAST(N'2026-10-25T05:04:21.9000000' AS DateTime2))
 GO
+INSERT svc_demo.CauHinh(MaCauHinh,GiaTri,NgayDongBo) VALUES(N'catalogSource',N'School SELECT: DATA_GVien1.tmKehoach, tmNganhTQ, Sys_VanBan, Sys_Email; DATA_SV1.KSoat_Sys',CONVERT(datetime2,N'2026-10-25T05:04:21.9020000',126));
+GO
+INSERT svc_demo.CauHinh(MaCauHinh,GiaTri,NgayDongBo) VALUES(N'currentTerm',N'2610',CONVERT(datetime2,N'2026-10-25T05:04:21.9020000',126));
+GO
+INSERT svc_demo.CauHinh(MaCauHinh,GiaTri,NgayDongBo) VALUES(N'rbacInitialized',N'1',CONVERT(datetime2,N'2026-10-26T11:10:56.8050000',126));
+GO
+INSERT svc_demo.CauHinh(MaCauHinh,GiaTri,NgayDongBo) VALUES(N'workflowPermissionsInitialized',N'1',CONVERT(datetime2,N'2026-10-26T08:28:12.5140000',126));
+GO
+INSERT svc_demo.CauHinh(MaCauHinh,GiaTri) VALUES('workbookSigningKey',CONVERT(varchar(64),CRYPT_GEN_RANDOM(32),2));
+GO
 ALTER TABLE [academic_leave].[ApplicationHistory] WITH CHECK CHECK CONSTRAINT ALL;
 GO
 ALTER TABLE [academic_leave].[Applications] WITH CHECK CHECK CONSTRAINT ALL;
@@ -1054,7 +1344,11 @@ ALTER TABLE [auth].[Fields] WITH CHECK CHECK CONSTRAINT ALL;
 GO
 ALTER TABLE [auth].[LocalAccounts] WITH CHECK CHECK CONSTRAINT ALL;
 GO
+ALTER TABLE [auth].[PermissionDefinitions] WITH CHECK CHECK CONSTRAINT ALL;
+GO
 ALTER TABLE [auth].[Permissions] WITH CHECK CHECK CONSTRAINT ALL;
+GO
+ALTER TABLE [auth].[RoleDefinitions] WITH CHECK CHECK CONSTRAINT ALL;
 GO
 ALTER TABLE [auth].[RolePermissions] WITH CHECK CHECK CONSTRAINT ALL;
 GO

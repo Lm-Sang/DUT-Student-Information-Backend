@@ -10,19 +10,80 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE TABLE [svc_demo].[TaiKhoan](
-	[MaHS] [nvarchar](40) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-	[Hoten] [nvarchar](150) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-	[VaiTro] [varchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-	[MaDV] [varchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	[SoThe] [nvarchar](30) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
-	[HieuLuc] [bit] NOT NULL,
-	[PhienBanQuyen] [int] NOT NULL,
-	[NguonDanhTinh] [varchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-	[MaHSTruong] [nvarchar](40) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
- CONSTRAINT [PK__Actor__3214EC077EB22276] PRIMARY KEY CLUSTERED
+CREATE TABLE [auth].[PermissionDefinitions](
+	[PermissionName] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[DisplayName] [nvarchar](250) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[GroupName] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[FieldCode] [varchar](10) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[TaskId] [int] NOT NULL,
+	[ModuleCode] [varchar](40) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[IsActive] [bit] NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[MaHS] ASC
+	[PermissionName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [auth].[RoleDefinitions](
+	[RoleName] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[DisplayName] [nvarchar](150) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[Description] [nvarchar](1000) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[FieldCode] [varchar](10) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[Revision] [int] NOT NULL,
+PRIMARY KEY CLUSTERED
+(
+	[RoleName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [auth].[AccountRoles](
+	[AccountId] [uniqueidentifier] NOT NULL,
+	[RoleName] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+PRIMARY KEY CLUSTERED
+(
+	[AccountId] ASC,
+	[RoleName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [auth].[AccountPermissions](
+	[AccountId] [uniqueidentifier] NOT NULL,
+	[PermissionName] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+PRIMARY KEY CLUSTERED
+(
+	[AccountId] ASC,
+	[PermissionName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [auth].[RolePermissions](
+	[RoleName] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[PermissionName] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+PRIMARY KEY CLUSTERED
+(
+	[RoleName] ASC,
+	[PermissionName] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -46,32 +107,6 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE TABLE [auth].[Tasks](
-	[TaskId] [int] NOT NULL,
-	[TaskCode] [varchar](64) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-	[TaskName] [nvarchar](150) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-	[FieldCode] [varchar](10) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-	[IsActive] [bit] NOT NULL,
-PRIMARY KEY CLUSTERED
-(
-	[TaskId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
-UNIQUE NONCLUSTERED
-(
-	[TaskCode] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
- CONSTRAINT [UQ_AuthTaskField] UNIQUE NONCLUSTERED
-(
-	[TaskId] ASC,
-	[FieldCode] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-
-GO
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 CREATE TABLE [auth].[AccountProfiles](
 	[AccountId] [uniqueidentifier] NOT NULL,
 	[StaffAccountId] [nvarchar](40) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
@@ -86,37 +121,6 @@ PRIMARY KEY CLUSTERED
 (
 	[AccountId] ASC,
 	[FieldCode] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-
-GO
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [auth].[AccountTasks](
-	[AccountId] [uniqueidentifier] NOT NULL,
-	[TaskId] [int] NOT NULL,
-	[FieldCode] [varchar](10) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-PRIMARY KEY CLUSTERED
-(
-	[AccountId] ASC,
-	[TaskId] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-
-GO
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [auth].[TaskPermissions](
-	[TaskId] [int] NOT NULL,
-	[PermissionName] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-PRIMARY KEY CLUSTERED
-(
-	[TaskId] ASC,
-	[PermissionName] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -149,15 +153,66 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE   VIEW svc_demo.vQuyenHieuLuc AS
- SELECT a.MaHS,CONVERT(varchar(100),tp.PermissionName) AS MaQuyen FROM auth.AccountProfiles p
- JOIN auth.LocalAccounts la ON la.Id=p.AccountId AND la.IsActive=1
- JOIN svc_demo.TaiKhoan a ON a.MaHS=p.StaffAccountId AND a.HieuLuc=1 AND a.NguonDanhTinh='LOCAL' AND a.VaiTro='STAFF'
+CREATE   VIEW auth.vAssignedPermissions AS
+ SELECT p.AccountId,d.PermissionName,d.TaskId,d.ModuleCode FROM auth.AccountProfiles p
+ JOIN auth.LocalAccounts a ON a.Id=p.AccountId AND a.IsActive=1
  JOIN auth.Fields f ON f.FieldCode=p.FieldCode AND f.IsActive=1
- JOIN auth.AccountTasks assigned ON assigned.AccountId=p.AccountId AND assigned.FieldCode=p.FieldCode
- JOIN auth.Tasks t ON t.TaskId=assigned.TaskId AND t.FieldCode=p.FieldCode AND t.IsActive=1
- JOIN auth.TaskPermissions tp ON tp.TaskId=t.TaskId
+ JOIN auth.AccountPermissions ap ON ap.AccountId=p.AccountId
+ JOIN auth.PermissionDefinitions d ON d.PermissionName=ap.PermissionName AND d.FieldCode=p.FieldCode AND d.IsActive=1
  WHERE p.AccessLevel='specialist'
+ UNION
+ SELECT p.AccountId,d.PermissionName,d.TaskId,d.ModuleCode FROM auth.AccountProfiles p
+ JOIN auth.LocalAccounts a ON a.Id=p.AccountId AND a.IsActive=1
+ JOIN auth.Fields f ON f.FieldCode=p.FieldCode AND f.IsActive=1
+ JOIN auth.AccountRoles ar ON ar.AccountId=p.AccountId
+ JOIN auth.RoleDefinitions r ON r.RoleName=ar.RoleName AND r.FieldCode=p.FieldCode AND r.IsActive=1
+ JOIN auth.RolePermissions rp ON rp.RoleName=r.RoleName
+ JOIN auth.PermissionDefinitions d ON d.PermissionName=rp.PermissionName AND d.FieldCode=p.FieldCode AND d.IsActive=1
+ WHERE p.AccessLevel='specialist'
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   VIEW auth.vEffectivePermissions AS
+ SELECT AccountId,PermissionName FROM auth.vAssignedPermissions
+ UNION SELECT a.AccountId,v.permission FROM auth.vAssignedPermissions a
+ CROSS JOIN(VALUES(N'requests.view'),(N'requests.receive'),(N'requests.print'),(N'requests.complete'),(N'requests.cancel'))v(permission)
+ WHERE a.ModuleCode='student-requests' AND a.PermissionName LIKE N'work:%'
+ UNION SELECT AccountId,N'certifications:review' FROM auth.vAssignedPermissions
+ WHERE ModuleCode IN('certifications','it-certifications') AND PermissionName LIKE N'work:%'
+ UNION SELECT AccountId,N'academic-leave:review' FROM auth.vAssignedPermissions
+ WHERE ModuleCode='academic-leave' AND PermissionName LIKE N'work:%'
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [svc_demo].[TaiKhoan](
+	[MaHS] [nvarchar](40) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[Hoten] [nvarchar](150) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[VaiTro] [varchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[MaDV] [varchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[SoThe] [nvarchar](30) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	[HieuLuc] [bit] NOT NULL,
+	[PhienBanQuyen] [int] NOT NULL,
+	[NguonDanhTinh] [varchar](20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[MaHSTruong] [nvarchar](40) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+ CONSTRAINT [PK__Actor__3214EC077EB22276] PRIMARY KEY CLUSTERED
+(
+	[MaHS] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   VIEW svc_demo.vQuyenHieuLuc AS
+ SELECT t.MaHS,CONVERT(varchar(100),e.PermissionName) MaQuyen FROM auth.vEffectivePermissions e
+ JOIN auth.AccountProfiles p ON p.AccountId=e.AccountId
+ JOIN svc_demo.TaiKhoan t ON t.MaHS=p.StaffAccountId AND t.HieuLuc=1 AND t.NguonDanhTinh='LOCAL' AND t.VaiTro='STAFF'
 GO
 SET ANSI_NULLS ON
 GO
@@ -240,36 +295,6 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE TABLE [auth].[AccountPermissions](
-	[AccountId] [uniqueidentifier] NOT NULL,
-	[PermissionName] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-PRIMARY KEY CLUSTERED
-(
-	[AccountId] ASC,
-	[PermissionName] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-
-GO
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [auth].[AccountRoles](
-	[AccountId] [uniqueidentifier] NOT NULL,
-	[RoleName] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-PRIMARY KEY CLUSTERED
-(
-	[AccountId] ASC,
-	[RoleName] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-
-GO
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 CREATE TABLE [auth].[AccountSecurityEvents](
 	[Id] [bigint] IDENTITY(1,1) NOT NULL,
 	[ActorId] [uniqueidentifier] NOT NULL,
@@ -279,6 +304,22 @@ CREATE TABLE [auth].[AccountSecurityEvents](
 PRIMARY KEY CLUSTERED
 (
 	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [auth].[AccountTasks](
+	[AccountId] [uniqueidentifier] NOT NULL,
+	[TaskId] [int] NOT NULL,
+	[FieldCode] [varchar](10) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+PRIMARY KEY CLUSTERED
+(
+	[AccountId] ASC,
+	[TaskId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -300,12 +341,25 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE TABLE [auth].[RolePermissions](
+CREATE TABLE [auth].[Roles](
 	[RoleName] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+PRIMARY KEY CLUSTERED
+(
+	[RoleName] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [auth].[TaskPermissions](
+	[TaskId] [int] NOT NULL,
 	[PermissionName] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 PRIMARY KEY CLUSTERED
 (
-	[RoleName] ASC,
+	[TaskId] ASC,
 	[PermissionName] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
@@ -315,11 +369,24 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE TABLE [auth].[Roles](
-	[RoleName] [nvarchar](100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+CREATE TABLE [auth].[Tasks](
+	[TaskId] [int] NOT NULL,
+	[TaskCode] [varchar](64) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[TaskName] [nvarchar](150) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[FieldCode] [varchar](10) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[IsActive] [bit] NOT NULL,
 PRIMARY KEY CLUSTERED
 (
-	[RoleName] ASC
+	[TaskId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+UNIQUE NONCLUSTERED
+(
+	[TaskCode] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+ CONSTRAINT [UQ_AuthTaskField] UNIQUE NONCLUSTERED
+(
+	[TaskId] ASC,
+	[FieldCode] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -662,7 +729,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [svc_demo].[DangNhapChuyenVien](
 	[MaHS] [nvarchar](40) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-	[TenDangNhap] [nvarchar](64) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	[TenDangNhap] [varchar](64) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	[MatKhauBam] [varchar](200) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	[NgayTao] [datetime2](3) NOT NULL,
  CONSTRAINT [PK__DangNhap__2725A6EFB17F1429] PRIMARY KEY CLUSTERED
@@ -1396,6 +1463,14 @@ ALTER TABLE [auth].[LocalAccounts] ADD  CONSTRAINT [DF_AuthActive]  DEFAULT ((1)
 GO
 ALTER TABLE [auth].[LocalAccounts] ADD  CONSTRAINT [DF_AuthCreated]  DEFAULT (sysutcdatetime()) FOR [CreatedAt]
 GO
+ALTER TABLE [auth].[PermissionDefinitions] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [auth].[RoleDefinitions] ADD  DEFAULT (N'') FOR [Description]
+GO
+ALTER TABLE [auth].[RoleDefinitions] ADD  DEFAULT ((1)) FOR [IsActive]
+GO
+ALTER TABLE [auth].[RoleDefinitions] ADD  DEFAULT ((1)) FOR [Revision]
+GO
 ALTER TABLE [auth].[Tasks] ADD  DEFAULT ((1)) FOR [IsActive]
 GO
 ALTER TABLE [certification].[CertificateLevels] ADD  DEFAULT ((0)) FOR [IsSchoolProvided]
@@ -1570,6 +1645,21 @@ REFERENCES [auth].[AccountProfiles] ([AccountId], [FieldCode])
 GO
 ALTER TABLE [auth].[AccountTasks]  WITH CHECK ADD FOREIGN KEY([TaskId], [FieldCode])
 REFERENCES [auth].[Tasks] ([TaskId], [FieldCode])
+GO
+ALTER TABLE [auth].[PermissionDefinitions]  WITH CHECK ADD FOREIGN KEY([FieldCode])
+REFERENCES [auth].[Fields] ([FieldCode])
+GO
+ALTER TABLE [auth].[PermissionDefinitions]  WITH CHECK ADD FOREIGN KEY([PermissionName])
+REFERENCES [auth].[Permissions] ([PermissionName])
+GO
+ALTER TABLE [auth].[PermissionDefinitions]  WITH CHECK ADD FOREIGN KEY([TaskId])
+REFERENCES [auth].[Tasks] ([TaskId])
+GO
+ALTER TABLE [auth].[RoleDefinitions]  WITH CHECK ADD FOREIGN KEY([FieldCode])
+REFERENCES [auth].[Fields] ([FieldCode])
+GO
+ALTER TABLE [auth].[RoleDefinitions]  WITH CHECK ADD FOREIGN KEY([RoleName])
+REFERENCES [auth].[Roles] ([RoleName])
 GO
 ALTER TABLE [auth].[RolePermissions]  WITH CHECK ADD FOREIGN KEY([PermissionName])
 REFERENCES [auth].[Permissions] ([PermissionName])
@@ -1816,6 +1906,14 @@ ALTER TABLE [academic_leave].[Applications]  WITH CHECK ADD  CONSTRAINT [CK_Acad
 GO
 ALTER TABLE [academic_leave].[Applications] CHECK CONSTRAINT [CK_AcademicLeave_Confirmed]
 GO
+ALTER TABLE [academic_leave].[Applications]  WITH CHECK ADD  CONSTRAINT [CK_AcademicLeave_IntakeV3] CHECK  (([ReceivedAt] IS NULL AND [PaperDeadlineAt] IS NULL AND NOT ([Status]='approved' OR [Status]='processing' OR [Status]='received') OR [ReceivedAt] IS NOT NULL AND [PaperDeadlineAt] IS NOT NULL AND [PaperDeadlineAt]=dateadd(day,(3),[ReceivedAt]) AND ([Status]='rejected' OR [Status]='approved' OR [Status]='processing' OR [Status]='received')))
+GO
+ALTER TABLE [academic_leave].[Applications] CHECK CONSTRAINT [CK_AcademicLeave_IntakeV3]
+GO
+ALTER TABLE [academic_leave].[Applications]  WITH CHECK ADD  CONSTRAINT [CK_AcademicLeave_PaperV3] CHECK  (([PaperReceivedAt] IS NULL AND [PaperReceivedBy] IS NULL AND NOT ([Status]='approved' OR [Status]='processing') OR [PaperReceivedAt] IS NOT NULL AND [PaperReceivedBy] IS NOT NULL AND [ReceivedAt] IS NOT NULL AND [PaperReceivedAt]>=[ReceivedAt] AND ([Status]='rejected' OR [Status]='approved' OR [Status]='processing')))
+GO
+ALTER TABLE [academic_leave].[Applications] CHECK CONSTRAINT [CK_AcademicLeave_PaperV3]
+GO
 ALTER TABLE [academic_leave].[Applications]  WITH CHECK ADD  CONSTRAINT [CK_AcademicLeave_Reason] CHECK  (([ReasonCode]='maternity' OR [ReasonCode]='military' OR [ReasonCode]='accident' OR [ReasonCode]='medical'))
 GO
 ALTER TABLE [academic_leave].[Applications] CHECK CONSTRAINT [CK_AcademicLeave_Reason]
@@ -1832,11 +1930,7 @@ ALTER TABLE [academic_leave].[Applications]  WITH CHECK ADD  CONSTRAINT [CK_Acad
 GO
 ALTER TABLE [academic_leave].[Applications] CHECK CONSTRAINT [CK_AcademicLeave_Snapshot]
 GO
-ALTER TABLE [academic_leave].[Applications]  WITH CHECK ADD  CONSTRAINT [CK_AcademicLeave_StageV3] CHECK  ((([ReceivedAt] IS NULL AND [PaperDeadlineAt] IS NULL OR [ReceivedAt] IS NOT NULL AND [PaperDeadlineAt] IS NOT NULL AND [PaperDeadlineAt]=dateadd(day,(2),[ReceivedAt])) AND (NOT ([Status]='failed' OR [Status]='verified' OR [Status]='processing' OR [Status]='received') OR [ReceivedAt] IS NOT NULL) AND (NOT ([Status]='failed' OR [Status]='verified' OR [Status]='processing') OR [PaperReceivedAt] IS NOT NULL AND [PaperReceivedBy] IS NOT NULL AND [PaperReceivedAt]>=[ReceivedAt]) AND ([Status]='failed' OR [Status]='verified' OR [Status]='processing' OR [PaperReceivedAt] IS NULL AND [PaperReceivedBy] IS NULL) AND (([Status]='failed' OR [Status]='verified') AND [CompletedAt] IS NOT NULL OR NOT ([Status]='failed' OR [Status]='verified') AND [CompletedAt] IS NULL)))
-GO
-ALTER TABLE [academic_leave].[Applications] CHECK CONSTRAINT [CK_AcademicLeave_StageV3]
-GO
-ALTER TABLE [academic_leave].[Applications]  WITH CHECK ADD  CONSTRAINT [CK_AcademicLeave_Status] CHECK  (([Status]='cancelled' OR [Status]='rejected' OR [Status]='needs_changes' OR [Status]='failed' OR [Status]='verified' OR [Status]='processing' OR [Status]='received' OR [Status]='submitted' OR [Status]='draft'))
+ALTER TABLE [academic_leave].[Applications]  WITH CHECK ADD  CONSTRAINT [CK_AcademicLeave_Status] CHECK  (([Status]='cancelled' OR [Status]='rejected' OR [Status]='approved' OR [Status]='needs_changes' OR [Status]='processing' OR [Status]='received' OR [Status]='submitted' OR [Status]='draft'))
 GO
 ALTER TABLE [academic_leave].[Applications] CHECK CONSTRAINT [CK_AcademicLeave_Status]
 GO
@@ -1844,7 +1938,7 @@ ALTER TABLE [academic_leave].[Applications]  WITH CHECK ADD  CONSTRAINT [CK_Acad
 GO
 ALTER TABLE [academic_leave].[Applications] CHECK CONSTRAINT [CK_AcademicLeave_Student]
 GO
-ALTER TABLE [academic_leave].[Applications]  WITH NOCHECK ADD  CONSTRAINT [CK_AcademicLeave_WorkflowV2] CHECK  (([Kind]='leave' AND [ParentApplicationId] IS NULL AND ([SemesterCount]>=(1) AND [SemesterCount]<=(4)) AND ([ReasonCode]='military' OR [SemesterCount]=(1)) OR [Kind]='extension' AND [ParentApplicationId] IS NOT NULL AND [ParentApplicationId]<>[Id] AND ([SemesterCount]>=(1) AND [SemesterCount]<=(4)) AND ([ReasonCode]='military' OR [SemesterCount]=(1)) OR [Kind]='return' AND [ParentApplicationId] IS NOT NULL AND [ParentApplicationId]<>[Id] AND [SemesterCount]=(0)))
+ALTER TABLE [academic_leave].[Applications]  WITH CHECK ADD  CONSTRAINT [CK_AcademicLeave_WorkflowV2] CHECK  (([Kind]='leave' AND [ParentApplicationId] IS NULL AND ([SemesterCount]>=(1) AND [SemesterCount]<=(4)) AND ([ReasonCode]='military' OR [SemesterCount]=(1)) OR [Kind]='extension' AND [ParentApplicationId] IS NOT NULL AND [ParentApplicationId]<>[Id] AND ([SemesterCount]>=(1) AND [SemesterCount]<=(4)) AND ([ReasonCode]='military' OR [SemesterCount]=(1)) OR [Kind]='return' AND [ParentApplicationId] IS NOT NULL AND [ParentApplicationId]<>[Id] AND [SemesterCount]=(0)))
 GO
 ALTER TABLE [academic_leave].[Applications] CHECK CONSTRAINT [CK_AcademicLeave_WorkflowV2]
 GO
@@ -1940,6 +2034,10 @@ ALTER TABLE [certification].[StudentCertificates]  WITH CHECK ADD  CONSTRAINT [C
 GO
 ALTER TABLE [certification].[StudentCertificates] CHECK CONSTRAINT [CK_Certification_Cccd]
 GO
+ALTER TABLE [certification].[StudentCertificates]  WITH CHECK ADD  CONSTRAINT [CK_Certification_ReviewStatusV3] CHECK  (([Status]='rejected' OR [Status]='verified' OR [Status]='needs_changes' OR [Status]='processing' OR [Status]='submitted' OR [Status]='checking' OR [Status]='uploading'))
+GO
+ALTER TABLE [certification].[StudentCertificates] CHECK CONSTRAINT [CK_Certification_ReviewStatusV3]
+GO
 ALTER TABLE [certification].[StudentCertificates]  WITH CHECK ADD  CONSTRAINT [CK_Certification_WorkflowHistory] CHECK  ((isjson([WorkflowHistoryJson])=(1)))
 GO
 ALTER TABLE [certification].[StudentCertificates] CHECK CONSTRAINT [CK_Certification_WorkflowHistory]
@@ -1975,6 +2073,37 @@ GO
 ALTER TABLE [certification].[tmCNTTChungChi_File] CHECK CONSTRAINT [CK_ItCertification_StudentSnapshot]
 GO
 ALTER TABLE [svc_demo].[LoaiDon]  WITH CHECK ADD CHECK  (([CachNop]='WEB' OR [CachNop]='PAPER_FORM'))
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE   PROCEDURE auth.RefreshPermissionCatalog AS BEGIN SET NOCOUNT ON;DECLARE @catalog TABLE(PermissionName nvarchar(100),DisplayName nvarchar(250),GroupName nvarchar(100),FieldCode varchar(10),TaskId int,ModuleCode varchar(40));
+INSERT @catalog
+ SELECT CONCAT(N'work:',MaLoaiDon),CONCAT(N'Xử lý: ',TenLoaiDon),N'Đơn đề nghị','DT',4,'student-requests'
+ FROM svc_demo.LoaiDon WHERE MaLoaiDon NOT IN('CONFIRMATION','LMS_SUPPORT');
+INSERT @catalog
+ SELECT CONCAT(N'work:CONFIRMATION:',MaVanBan),CONCAT(N'Xử lý: ',TenVanBan),N'Đơn xác nhận','DT',4,'student-requests' FROM svc_demo.Sys_VanBan;
+INSERT @catalog VALUES('work:LMS_SUPPORT',N'Xử lý yêu cầu cấp lại mật khẩu LMS',N'Hỗ trợ LMS','DT',4,'student-requests');
+INSERT @catalog
+ SELECT CONCAT(N'work:certifications:',Id),CONCAT(N'Xử lý: ',COALESCE(NULLIF(DisplayName,N''),Code)),N'Chứng chỉ ngoại ngữ','DT',1,'certifications' FROM certification.CertificateTypes;
+INSERT @catalog
+ SELECT CONCAT(N'work:it-certifications:',MaCC),CONCAT(N'Xử lý: ',TenCC),N'Chứng chỉ tin học','DT',2,'it-certifications' FROM certification.tmCNTTChungChi;
+INSERT @catalog VALUES
+ ('work:academic-leave:leave',N'Xử lý ngừng học và gia hạn ngừng học',N'Học vụ','DT',3,'academic-leave'),
+ ('work:academic-leave:return',N'Xử lý trở lại học',N'Học vụ','DT',3,'academic-leave'),
+ ('certifications:catalog:manage',N'Quản lý danh mục chứng chỉ',N'Danh mục','DT',1,'certifications'),
+ ('workbook.export',N'Xuất Excel đơn đề nghị / xác nhận',N'Excel','DT',4,'student-requests'),
+ ('workbook.import',N'Nhập Excel xử lý đơn đề nghị / xác nhận',N'Excel','DT',4,'student-requests');
+INSERT @catalog
+ SELECT CONCAT(m.code,':workbook:',a.code),CONCAT(a.name,N' Excel ',m.name),N'Excel','DT',m.taskId,m.code
+ FROM (VALUES('certifications',N'chứng chỉ ngoại ngữ',1),('it-certifications',N'chứng chỉ tin học',2),('academic-leave',N'học vụ',3))m(code,name,taskId)
+ CROSS JOIN(VALUES('export',N'Xuất'),('import',N'Nhập'))a(code,name);
+INSERT auth.Permissions(PermissionName) SELECT DISTINCT c.PermissionName FROM @catalog c WHERE NOT EXISTS(SELECT 1 FROM auth.Permissions p WHERE p.PermissionName=c.PermissionName);
+INSERT auth.PermissionDefinitions(PermissionName,DisplayName,GroupName,FieldCode,TaskId,ModuleCode)
+ SELECT c.* FROM @catalog c WHERE NOT EXISTS(SELECT 1 FROM auth.PermissionDefinitions p WHERE p.PermissionName=c.PermissionName);
+UPDATE p SET DisplayName=c.DisplayName,GroupName=c.GroupName FROM auth.PermissionDefinitions p JOIN @catalog c ON c.PermissionName=p.PermissionName;
+ END
 GO
 SET ANSI_NULLS ON
 GO
@@ -2034,4 +2163,8 @@ CREATE TRIGGER [certification].[TR_CertPolicies_NoOverlap] ON [certification].[R
  END
 GO
 ALTER TABLE [certification].[RecognitionPolicies] ENABLE TRIGGER [TR_CertPolicies_NoOverlap]
+GO
+EXEC sys.sp_addextendedproperty @name=N'ReviewWorkflowVersion', @value=3 , @level0type=N'SCHEMA',@level0name=N'academic_leave', @level1type=N'TABLE',@level1name=N'Applications'
+GO
+EXEC sys.sp_addextendedproperty @name=N'GranularRbacVersion', @value=1 , @level0type=N'SCHEMA',@level0name=N'auth', @level1type=N'TABLE',@level1name=N'PermissionDefinitions'
 GO

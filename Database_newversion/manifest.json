@@ -1,0 +1,43 @@
+{
+  "generatedAt": "2026-11-07T03:37:17.085Z",
+  "sourceDatabase": "Studentpage_Integration_20261103",
+  "sqlServerVersion": "15.0.2000.5",
+  "collation": "SQL_Latin1_General_CP1_CI_AS",
+  "shared": {
+    "tables": 56,
+    "views": 4,
+    "accounts": 0,
+    "permissions": 50,
+    "roles": 4,
+    "confirmations": 11,
+    "certificateTypes": 19,
+    "issuers": 47,
+    "badConstraints": 0
+  },
+  "files": {
+    "01-schema.sql": {
+      "bytes": 98952,
+      "sha256": "a693a3ad8dd476f3f4658f7b3d902c14f37db3b0ba6a69456130d7efb20a583f"
+    },
+    "02-catalogs.sql": {
+      "bytes": 152061,
+      "sha256": "c330713a303cf25a85de3c02f9f72e7efae2a695c3035c01740e63cf139bd871"
+    }
+  },
+  "validation": {
+    "sharedImport": true,
+    "fullBackupVerifyChecksum": true,
+    "fullRestoreCheckDb": true,
+    "newSharedWorkbookKey": true,
+    "validatedAt": "2026-11-07T03:39:50.558Z"
+  },
+  "excluded": [
+    "local accounts and password hashes",
+    "student profiles and request history",
+    "evidence/files",
+    "source workbook signing key",
+    "server SQL logins",
+    "environment credentials"
+  ],
+  "hashFormat": "sha256 of UTF-8 text normalized to LF"
+}
