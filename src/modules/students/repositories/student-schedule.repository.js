@@ -1,38 +1,29 @@
-import { sqlTypes as sql } from "../../../infrastructure/database/typeorm-types.js";
-import { connectDatabase } from "../../../database.js";
-import { AppError } from "../../../shared/errors/app-error.js";
-import { parseSchoolSchedule } from "../domain/school-schedule.js";
+import { sqlTypes as sql } from '../../../infrastructure/database/typeorm-types.js';
+import { connectDatabase } from '../../../database.js';
+import { AppError } from '../../../shared/errors/app-error.js';
+import { parseSchoolSchedule } from '../domain/school-schedule.js';
 
-const text = (value) => String(value ?? "").trim() || null;
+const text = (value) => String(value ?? '').trim() || null;
 const date = (value) =>
   value instanceof Date
     ? value.toISOString().slice(0, 10)
-    : /^\d{4}-\d{2}-\d{2}/.test(String(value ?? ""))
+    : /^\d{4}-\d{2}-\d{2}/.test(String(value ?? ''))
       ? String(value).slice(0, 10)
       : null;
-const week = (value) =>
-  Number.isInteger(value) && value >= 1 && value <= 60 ? value : null;
+const week = (value) => (Number.isInteger(value) && value >= 1 && value <= 60 ? value : null);
 export function examTime(value) {
-  const match = /^(\d{1,2})(?::|h)(\d{2})?(?::\d{2})?$/.exec(
-    String(value ?? "").trim(),
-  );
+  const match = /^(\d{1,2})(?::|h)(\d{2})?(?::\d{2})?$/.exec(String(value ?? '').trim());
   return match && Number(match[1]) < 24 && Number(match[2] ?? 0) < 60
-    ? `${match[1].padStart(2, "0")}:${match[2] ?? "00"}`
+    ? `${match[1].padStart(2, '0')}:${match[2] ?? '00'}`
     : null;
 }
 
-export function mapStudentSchedule(
-  number,
-  rows,
-  changes = [],
-  holidays = [],
-  dated = [],
-) {
+export function mapStudentSchedule(number, rows, changes = [], holidays = [], dated = []) {
   const terms = new Map();
   const classes = [],
     exams = [];
   for (const row of rows) {
-    const termCode = text(row.IDCode) ?? "";
+    const termCode = text(row.IDCode) ?? '';
     const termName = text(row.TermName) ?? termCode;
     const published = row.TermRows === 1 && row.PubLichThi === 1;
     terms.set(termCode, {
@@ -46,8 +37,8 @@ export function mapStudentSchedule(
       id: String(row.ID),
       termCode,
       termName,
-      courseCode: text(row.MaHP) ?? "",
-      classCode: text(row.MalopHP) ?? "",
+      courseCode: text(row.MaHP) ?? '',
+      classCode: text(row.MalopHP) ?? '',
       name: text(row.CourseName),
     };
     classes.push({
@@ -62,13 +53,8 @@ export function mapStudentSchedule(
       endDate: row.ClassRows === 1 ? date(row.NgayCuoi) : null,
     });
     const shared = row.ThiChung === 1;
-    const matched =
-      row.ClassRows === 1 &&
-      (shared ? row.CommonRows === 1 : row.SeparateRows === 1);
-    const examDate =
-      published && matched
-        ? date(shared ? row.CommonDate : row.ExamDate)
-        : null;
+    const matched = row.ClassRows === 1 && (shared ? row.CommonRows === 1 : row.SeparateRows === 1);
+    const examDate = published && matched ? date(shared ? row.CommonDate : row.ExamDate) : null;
     exams.push({
       ...identity,
       group: text(row.Manhom),
@@ -76,11 +62,8 @@ export function mapStudentSchedule(
       date: examDate,
       time: examDate ? examTime(shared ? row.CommonTime : row.ExamTime) : null,
       room: examDate ? text(shared ? row.PersonalRoom : row.ExamRoom) : null,
-      seatNumber:
-        examDate && Number.isInteger(row.STTthi) && row.STTthi > 0
-          ? row.STTthi
-          : null,
-      status: !published ? "unpublished" : examDate ? "scheduled" : "pending",
+      seatNumber: examDate && Number.isInteger(row.STTthi) && row.STTthi > 0 ? row.STTthi : null,
+      status: !published ? 'unpublished' : examDate ? 'scheduled' : 'pending',
     });
   }
   const owned = new Set(classes.map((c) => `${c.termCode}/${c.classCode}`));
@@ -97,7 +80,7 @@ export function mapStudentSchedule(
       termCode: text(r.IDCode),
       classCode: text(r.MaLopHP),
       date: date(r.NgayNB),
-      kind: r.Loai === 1 ? "cancel" : "makeup",
+      kind: r.Loai === 1 ? 'cancel' : 'makeup',
       startPeriod: r.TietDau,
       endPeriod: r.TietCuoi,
       room: text(r.Phong),
@@ -119,7 +102,7 @@ export function mapStudentSchedule(
         termCode: c.termCode,
         classCode: c.classCode,
         date: date(r.Ngay),
-        kind: "holiday",
+        kind: 'holiday',
         startPeriod: r.TietDau > 0 ? r.TietDau : null,
         endPeriod: r.TietCuoi > 0 ? r.TietCuoi : null,
         room: null,
@@ -161,29 +144,22 @@ export function mapStudentSchedule(
 }
 
 /** Current lecturer data owns assigned exam sessions and leave/makeup records. */
-export function createStudentScheduleReader({
-  connect = connectDatabase,
-} = {}) {
+export function createStudentScheduleReader({ connect = connectDatabase } = {}) {
   return async (number, schoolId) => {
-    const pool = await connect("secondary", "DATA_GVien1");
+    const pool = await connect('secondary', 'DATA_GVien1');
     const profile = await pool
       .request()
-      .input("number", sql.NVarChar(30), number)
-      .query(
-        "SELECT TOP(2) MaHS,SoTheSV FROM dbo.tmHoSoSV WHERE SoTheSV=@number",
-      );
+      .input('number', sql.NVarChar(30), number)
+      .query('SELECT TOP(2) MaHS,SoTheSV FROM dbo.tmHoSoSV WHERE SoTheSV=@number');
     if (
       profile.recordset.length !== 1 ||
       text(profile.recordset[0].MaHS) !== schoolId ||
       text(profile.recordset[0].SoTheSV) !== number
     )
-      throw new AppError(
-        "Hồ sơ lịch học không khớp tài khoản đã xác thực.",
-        409,
-        { code: "STUDENT_PROFILE_MISMATCH" },
-      );
-    const read = (query) =>
-      pool.request().input("id", sql.NVarChar(30), schoolId).query(query);
+      throw new AppError('Hồ sơ lịch học không khớp tài khoản đã xác thực.', 409, {
+        code: 'STUDENT_PROFILE_MISMATCH',
+      });
+    const read = (query) => pool.request().input('id', sql.NVarChar(30), schoolId).query(query);
     const [classes, changes, holidays] = await Promise.all([
       read(`SELECT TOP(2001) d.ID,d.IDCode,d.MaHP,d.MalopHP,d.Manhom,l.ClassRows,l.ThiChung,h.CourseName,
           k.TermRows,k.TermName,k.TermStart,k.FirstWeek,k.PubLichThi,l.TKB,l.TKB1,l.TuanHoc,l.TuanCam,l.NgayDau,l.NgayCuoi,
@@ -215,13 +191,11 @@ export function createStudentScheduleReader({
       changes.recordset.length > 4000 ||
       holidays.recordset.length > 4000
     )
-      throw new AppError("Lịch cá nhân vượt giới hạn đọc.", 502);
-    const codes = [
-      ...new Set(classes.recordset.map((r) => text(r.MalopHP)).filter(Boolean)),
-    ];
+      throw new AppError('Lịch cá nhân vượt giới hạn đọc.', 502);
+    const codes = [...new Set(classes.recordset.map((r) => text(r.MalopHP)).filter(Boolean))];
     let dated = [];
     if (codes.length) {
-      const calendar = await connect("primary");
+      const calendar = await connect('primary');
       const request = calendar.request();
       const selectors = codes.map((code, index) => {
         request.input(`class${index}`, sql.NVarChar(50), code);
@@ -229,17 +203,20 @@ export function createStudentScheduleReader({
       });
       const result =
         await request.query(`SELECT TOP(4001) ID,MalopHP,Ngay,TietDau,TietCuoi,Phong,KoShow,LichThi,NgayLe,MaNB
-        FROM dbo.tmPhongHocHT WHERE MalopHP IN (${selectors.join(",")}) AND ISNULL(KoShow,0)=0 AND ISNULL(LichThi,0)=0
+        FROM dbo.tmPhongHocHT WHERE MalopHP IN (${selectors.join(',')}) AND ISNULL(KoShow,0)=0 AND ISNULL(LichThi,0)=0
         AND ISNULL(MaNB,'')='' ORDER BY Ngay,ID;`);
       if (result.recordset.length > 4000)
-        throw new AppError("Lịch theo ngày vượt giới hạn đọc.", 502);
+        throw new AppError('Lịch theo ngày vượt giới hạn đọc.', 502);
       dated = result.recordset;
     }
     return mapStudentSchedule(
       number,
       classes.recordset,
       changes.recordset,
-      [...holidays.recordset, ...dated.filter((r) => r.NgayLe === 1).map(r => ({ ...r, Source: 'room' }))],
+      [
+        ...holidays.recordset,
+        ...dated.filter((r) => r.NgayLe === 1).map((r) => ({ ...r, Source: 'room' })),
+      ],
       dated,
     );
   };
